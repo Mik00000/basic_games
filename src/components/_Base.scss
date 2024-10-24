@@ -1,0 +1,34 @@
+@mixin for-size($size) {
+    // Usage example: @include for-size(mobile) {}
+    @if $size ==mobile {
+        @media screen and (max-width: 767.98px) {
+            @content;
+        }
+    }
+
+    @else if $size ==tablet {
+        @media screen and (min-width: 768px) and (max-width: 1279.98px) {
+            @content;
+        }
+    }
+
+    @else if $size ==laptop {
+        @media screen and (min-width: 1280px) and (max-width: 1599.98px) {
+            @content;
+        }
+    }
+
+    @else if $size ==desktop {
+        @media screen and (min-width: 1600px) {
+            @content;
+        }
+    }
+}
+
+//   $body:#1C121F;
+//   @font-face { 
+//     font-family: "Oxanium"; 
+//     src: 
+//         url("./fonts/Oxanium/Oxanium-VariableFont_wght.woff2") format("woff2"), 
+//         url("./fonts/Oxanium/Oxanium-VariableFont_wght.ttf") format("ttf"); 
+// } 
