@@ -1,0 +1,29 @@
+header.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 30px 17.8vw;
+  align-items: center;
+  .logo {
+    width: 80px;
+    height: 80px;
+    filter: drop-shadow(0 0 24px white);
+  }
+  .nav-list {
+    height: fit-content;
+    ul {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+  }
+  .login-and-menu {
+    height: fit-content;
+    .login-btn {
+      max-width: 140px;
+      height: 52px;
+      padding: 14px 46px;
+      background-color: unset;
+      border: 1px solid $light-background;
+    }
+  }
+}
