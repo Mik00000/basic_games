@@ -84,36 +84,201 @@ div {
   color: #fff;
 }
 
+@font-face {
+  font-family: "Graphik";
+  src: url("/public/fonts/Graphik/GraphikRegular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Graphik-Medium";
+  src: url("/public/fonts/Graphik/GraphikMedium.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
 header.header {
   display: flex;
   justify-content: space-between;
-  padding: 30px 17.8vw;
+  margin: 30px 17.8vw;
   align-items: center;
+  position: sticky;
+  top: 30px;
+  z-index: 4;
+}
+@media screen and (max-width: 767.98px) {
+  header.header {
+    margin: 15px 16px;
+    top: 15px;
+  }
+}
+@media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  header.header {
+    margin: 20px 14vw;
+    top: 20px;
+  }
+}
+@media screen and (min-width: 1280px) and (max-width: 1599.98px) {
+  header.header {
+    margin: 30px 17.8vw;
+    top: 30px;
+  }
 }
 header.header .logo {
   width: 80px;
   height: 80px;
   filter: drop-shadow(0 0 24px white);
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 header.header .nav-list {
   height: -moz-fit-content;
   height: fit-content;
 }
 header.header .nav-list ul {
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
   display: flex;
   gap: 40px;
   list-style: none;
 }
+header.header .nav-list ul a {
+  text-decoration: none;
+}
+@media screen and (max-width: 767.98px) {
+  header.header .nav-list {
+    display: none;
+  }
+}
 header.header .login-and-menu {
   height: -moz-fit-content;
   height: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 17px;
 }
 header.header .login-and-menu .login-btn {
-  max-width: 140px;
-  height: 52px;
-  padding: 14px 46px;
-  background-color: unset;
+  background-color: #181818;
+  color: #fff;
   border: 1px solid #fff;
+  padding: 14px 46px;
+  text-align: center;
+  transition: all 0.3s ease;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  cursor: pointer;
+}
+header.header .login-and-menu .login-btn:hover {
+  background-color: #3e3e3e;
+  color: #fff;
+}
+header.header .login-and-menu .menu-btn {
+  background-color: unset;
+  border: none;
+  outline: none;
+  padding: 10px;
+  display: none;
+}
+header.header .login-and-menu .menu-btn img {
+  width: 44px;
+}
+@media screen and (max-width: 767.98px) {
+  header.header .login-and-menu .menu-btn {
+    display: block;
+  }
+}
+
+.hero .heading {
+  margin-top: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 60px 0;
+  gap: 27px;
+}
+.hero .heading h1 {
+  font-size: 80px;
+  line-height: 88px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  max-width: 729px;
+  text-align: center;
+}
+.hero .heading h2 {
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  max-width: 602px;
+  text-align: center;
+}
+.hero .buttons {
+  display: flex;
+  justify-content: center;
+  gap: 35px;
+  padding: 35px 0;
+}
+.hero .buttons .try-btn {
+  background-color: #4452fe;
+  color: #fff;
+  padding: 20px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  cursor: pointer;
+}
+.hero .buttons .try-btn:hover {
+  background-color: #9098fe;
+  color: #fff;
+}
+.hero .buttons .learn-btn {
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 20px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  cursor: pointer;
+}
+.hero .buttons .learn-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.hero .banner-background {
+  width: 100%;
+  height: 993px;
+  background-color: #4452fe;
+  position: relative;
+}
+.hero .banner-background::after {
+  content: "";
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #0e0e0e 66.15%);
+  width: 100%;
+  position: absolute;
+  height: 66%;
+  bottom: 0;
+}
+.hero .banner-background > * {
+  max-height: 850px;
+  width: 100%;
 }
 
 body {

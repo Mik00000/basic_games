@@ -1,0 +1,223 @@
+@mixin for-size($size) {
+  // Usage example: @include for-size(mobile) {}
+  @if $size ==mobile {
+    @media screen and (max-width: 767.98px) {
+      @content;
+    }
+  } @else if $size ==tablet {
+    @media screen and (min-width: 768px) and (max-width: 1279.98px) {
+      @content;
+    }
+  } @else if $size ==laptop {
+    @media screen and (min-width: 1280px) and (max-width: 1599.98px) {
+      @content;
+    }
+  } @else if $size ==desktop {
+    @media screen and (min-width: 1600px) {
+      @content;
+    }
+  }
+}
+
+@mixin for-text($type) {
+  // Usage example:   @include for-text(headline)
+  @if $type == headline {
+    font-size: 80px;
+    line-height: 88px;
+    letter-spacing: 0.2px; // Константа
+    font-family: "Graphik-Medium";
+    font-weight: 500;
+  } @else if $type == second-headline {
+    font-size: 52px;
+    line-height: 62px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik";
+    font-weight: 400;
+  } @else if $type == title {
+    font-size: 20px;
+    line-height: 30px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik-Medium";
+    font-weight: 500;
+  } @else if $type == sub-heading {
+    font-size: 20px;
+    line-height: 30px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik";
+    font-weight: 400;
+  } @else if $type == button {
+    font-size: 17px;
+    line-height: 25px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik-Medium";
+    font-weight: 500;
+  } @else if $type == subtitle {
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik-Medium";
+    font-weight: 500;
+  } @else if $type == paragraph {
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik";
+    font-weight: 400;
+  } @else if $type == link {
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik-Medium";
+    font-weight: 500;
+  } @else if $type == mobile-menum {
+    font-size: 30px;
+    line-height: 45px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik";
+    font-weight: 400;
+  } @else {
+    @warn "Unknown text type: #{$type}";
+  }
+}
+
+@mixin button-style(
+  $bg-color: transparent,
+  // Колір фону (за замовчуванням — прозорий)
+  $text-color: $light-text,
+  // Колір тексту (за замовчуванням — білий)
+  $border-color: $light-background,
+  // Колір рамки (за замовчуванням — білий)
+  $padding // Внутрішній відступ
+) {
+  background-color: $bg-color;
+  color: $text-color;
+  @if $bg-color == transparent or $bg-color == $dark-background {
+    border: 1px solid $border-color;
+  }
+  padding: $padding;
+  text-align: center;
+  transition: all 0.3s ease;
+  @include for-text(button);
+  cursor: pointer;
+  &:hover {
+    background-color: if(
+      $bg-color == transparent,
+      rgba(255, 255, 255, 0.1),
+      lighten($bg-color, 15%)
+    );
+  }
+}
+
+$primary: #4452fe;
+$secondary: #112d57;
+$first-text: #000;
+$light-text: #fff;
+$second-text: #5c5c5c;
+$dark-background: #181818;
+$light-background: #fff;
+
+//   $body:#1C121F;
+//   @font-face {
+//     font-family: "Oxanium";
+//     src:
+//         url("./fonts/Oxanium/Oxanium-VariableFont_wght.woff2") format("woff2"),
+//         url("./fonts/Oxanium/Oxanium-VariableFont_wght.ttf") format("ttf");
+// }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+ul,
+ol {
+  padding: 0;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+li,
+figure,
+figcaption,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+}
+
+ul,
+ol[class] {
+  list-style: none;
+}
+
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+article > * + * {
+  margin-top: 1em;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+.hidden {
+  display: none !important;
+}
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+li,
+div {
+  color: $light-text;
+}
+
+@font-face {
+  font-family: "Graphik";
+  src: url("/public/fonts/Graphik/GraphikRegular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Graphik-Medium";
+  src: url("/public/fonts/Graphik/GraphikMedium.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}

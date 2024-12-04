@@ -1,6 +1,15 @@
-@import "../components/Base";
+@import "./Base";
 @import "../components/Header";
+@import "../components/Hero";
 
 body{
     background-color: $dark-background;
 }
+.nav-list {
+    display: none;
+  }
+  
+  .nav-list.open {
+    display: block;
+  }
+  

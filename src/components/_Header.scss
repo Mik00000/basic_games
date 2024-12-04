@@ -1,29 +1,70 @@
 header.header {
   display: flex;
   justify-content: space-between;
-  padding: 30px 17.8vw;
+  margin: 30px 17.8vw;
   align-items: center;
+  position: sticky;
+  top: 30px;
+  z-index: 4;
+  @include for-size(mobile) {
+    margin: 15px 16px;
+    top: 15px;
+  }
+  @include for-size(tablet) {
+    margin: 20px 14vw;
+    top: 20px;
+  }
+  @include for-size(laptop) {
+    margin: 30px 17.8vw;
+    top: 30px;
+  }
   .logo {
     width: 80px;
     height: 80px;
     filter: drop-shadow(0 0 24px white);
+    user-select: none;
   }
   .nav-list {
     height: fit-content;
+
     ul {
+      @include for-text(link);
       display: flex;
       gap: 40px;
       list-style: none;
+      a {
+        text-decoration: none;
+      }
+    }
+    @include for-size(mobile) {
+      display: none;
     }
   }
+
   .login-and-menu {
     height: fit-content;
+    display: flex;
+    align-items: center;
+    gap: 17px;
     .login-btn {
-      max-width: 140px;
-      height: 52px;
-      padding: 14px 46px;
+      @include button-style(
+        $bg-color: $dark-background,
+        $padding: 14px 46px
+      );
+    }
+    .menu-btn {
       background-color: unset;
-      border: 1px solid $light-background;
+      border: none;
+      outline: none;
+      padding: 10px;
+      display: none;
+
+      img {
+        width: 44px;
+      }
+      @include for-size(mobile) {
+        display: block;
+      }
     }
   }
 }
