@@ -1,19 +1,38 @@
 @mixin for-size($size) {
-  // Usage example: @include for-size(mobile) {}
-  @if $size ==mobile {
+  @if $size == mobile {
     @media screen and (max-width: 767.98px) {
       @content;
     }
-  } @else if $size ==tablet {
-    @media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  } @else if $size == tablet {
+    @media screen and (min-width: 768px) 
+    // and (max-width: 1279.98px) 
+    {
       @content;
     }
-  } @else if $size ==laptop {
-    @media screen and (min-width: 1280px) and (max-width: 1599.98px) {
+  } @else if $size == laptop {
+    @media screen and (min-width: 1280px) 
+    // and (max-width: 1599.98px)
+    {
       @content;
     }
-  } @else if $size ==desktop {
+  } @else if $size == desktop {
     @media screen and (min-width: 1600px) {
+      @content;
+    }
+  } @else if $size == "not-mobile" {
+    @media screen and (min-width: 768px) {
+      @content;
+    }
+  } @else if $size == "not-tablet" {
+    @media screen and (max-width: 767.98px), screen and (min-width: 1280px) {
+      @content;
+    }
+  } @else if $size == "not-laptop" {
+    @media screen and (max-width: 1279.98px), screen and (min-width: 1600px) {
+      @content;
+    }
+  } @else if $size == "not-desktop" {
+    @media screen and (max-width: 1599.98px) {
       @content;
     }
   }
@@ -22,11 +41,16 @@
 @mixin for-text($type) {
   // Usage example:   @include for-text(headline)
   @if $type == headline {
-    font-size: 80px;
-    line-height: 88px;
-    letter-spacing: 0.2px; // Константа
-    font-family: "Graphik-Medium";
-    font-weight: 500;
+    @include for-size(not-mobile) {
+      font-size: 80px;
+      line-height: 88px;
+      letter-spacing: 0.2px; // Константа
+      font-family: "Graphik-Medium";
+      font-weight: 500;
+    }
+    @include for-size(mobile) {
+      @include for-text(second-headline);
+    }
   } @else if $type == second-headline {
     font-size: 52px;
     line-height: 62px;
@@ -76,18 +100,17 @@
     font-family: "Graphik";
     font-weight: 400;
   } @else {
+    background-color: red;
+    font-size: 100px;
     @warn "Unknown text type: #{$type}";
   }
 }
 
 @mixin button-style(
   $bg-color: transparent,
-  // Колір фону (за замовчуванням — прозорий)
   $text-color: $light-text,
-  // Колір тексту (за замовчуванням — білий)
   $border-color: $light-background,
-  // Колір рамки (за замовчуванням — білий)
-  $padding // Внутрішній відступ
+  $padding
 ) {
   background-color: $bg-color;
   color: $text-color;
@@ -115,15 +138,15 @@ $light-text: #fff;
 $second-text: #5c5c5c;
 $dark-background: #181818;
 $light-background: #fff;
+$primary: #4452fe;
+$secondary: #112d57;
+$first-text: #000;
+$light-text: #fff;
+$second-text: #5c5c5c;
+$dark-background: #181818;
+$light-background: #fff;
 
-//   $body:#1C121F;
-//   @font-face {
-//     font-family: "Oxanium";
-//     src:
-//         url("./fonts/Oxanium/Oxanium-VariableFont_wght.woff2") format("woff2"),
-//         url("./fonts/Oxanium/Oxanium-VariableFont_wght.ttf") format("ttf");
-// }
-
+*,
 *,
 *::before,
 *::after {
