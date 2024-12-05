@@ -1,15 +1,9 @@
 @import "./Base";
 @import "../components/Header";
 @import "../components/Hero";
+@import "../components/Features";
+@import "../components/Gallery";
 
 body{
     background-color: $dark-background;
 }
-.nav-list {
-    display: none;
-  }
-  
-  .nav-list.open {
-    display: block;
-  }
-  

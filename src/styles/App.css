@@ -1,4 +1,5 @@
 *,
+*,
 *::before,
 *::after {
   box-sizing: border-box;
@@ -99,28 +100,26 @@ div {
 header.header {
   display: flex;
   justify-content: space-between;
-  margin: 30px 17.8vw;
   align-items: center;
   position: sticky;
-  top: 30px;
   z-index: 4;
+  padding: 15px 17.8vw;
+  top: 0;
+  background-color: #181818;
 }
 @media screen and (max-width: 767.98px) {
   header.header {
-    margin: 15px 16px;
-    top: 15px;
+    padding: 7px 16px;
   }
 }
 @media screen and (min-width: 768px) and (max-width: 1279.98px) {
   header.header {
-    margin: 20px 14vw;
-    top: 20px;
+    padding: 10px 14vw;
   }
 }
 @media screen and (min-width: 1280px) and (max-width: 1599.98px) {
   header.header {
-    margin: 30px 17.8vw;
-    top: 30px;
+    padding: 15px 17.8vw;
   }
 }
 header.header .logo {
@@ -176,7 +175,6 @@ header.header .login-and-menu .login-btn {
 }
 header.header .login-and-menu .login-btn:hover {
   background-color: #3e3e3e;
-  color: #fff;
 }
 header.header .login-and-menu .menu-btn {
   background-color: unset;
@@ -194,6 +192,9 @@ header.header .login-and-menu .menu-btn img {
   }
 }
 
+.hero {
+  margin-bottom: 100px;
+}
 .hero .heading {
   margin-top: 35px;
   display: flex;
@@ -204,13 +205,26 @@ header.header .login-and-menu .menu-btn img {
   gap: 27px;
 }
 .hero .heading h1 {
-  font-size: 80px;
-  line-height: 88px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
   max-width: 729px;
   text-align: center;
+}
+@media screen and (min-width: 768px) {
+  .hero .heading h1 {
+    font-size: 80px;
+    line-height: 88px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik-Medium";
+    font-weight: 500;
+  }
+}
+@media screen and (max-width: 767.98px) {
+  .hero .heading h1 {
+    font-size: 52px;
+    line-height: 62px;
+    letter-spacing: 0.2px;
+    font-family: "Graphik";
+    font-weight: 400;
+  }
 }
 .hero .heading h2 {
   font-size: 20px;
@@ -242,7 +256,6 @@ header.header .login-and-menu .menu-btn img {
 }
 .hero .buttons .try-btn:hover {
   background-color: #9098fe;
-  color: #fff;
 }
 .hero .buttons .learn-btn {
   background-color: transparent;
@@ -260,7 +273,6 @@ header.header .login-and-menu .menu-btn img {
 }
 .hero .buttons .learn-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
 }
 .hero .banner-background {
   width: 100%;
@@ -279,6 +291,111 @@ header.header .login-and-menu .menu-btn img {
 .hero .banner-background > * {
   max-height: 850px;
   width: 100%;
+}
+
+.features {
+  padding: 62px 0;
+}
+.features > .heading {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80px;
+}
+.features > .heading h1 {
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.features > .heading h2 {
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  max-width: 602px;
+}
+.features .info-block {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+@media screen and (max-width: 767.98px) {
+  .features .info-block {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+.features .info-block .left-part {
+  padding-right: 28px;
+  padding-bottom: 100px;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  margin-bottom: 62px;
+}
+.features .info-block .left-part img {
+  box-shadow: 0 4px 31px 0 rgba(0, 0, 0, 0.15);
+}
+.features .info-block .left-part img:nth-child(2) {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+@media screen and (max-width: 767.98px) {
+  .features .info-block .left-part {
+    padding: 0 0 70px 0;
+    justify-content: center;
+    margin-bottom: 42px;
+  }
+  .features .info-block .left-part img:nth-child(1) {
+    width: 324px;
+  }
+  .features .info-block .left-part img:nth-child(2) {
+    right: 50%;
+    transform: translateX(50%);
+    width: 232px;
+  }
+}
+.features .info-block .right-part {
+  padding: 20px;
+  max-width: 270px;
+}
+@media screen and (min-width: 768px) {
+  .features .info-block .right-part {
+    padding-left: 25px;
+  }
+}
+.features .info-block .right-part li {
+  margin-bottom: 35px;
+}
+.features .info-block .right-part li .heading {
+  display: flex;
+  height: -moz-min-content;
+  height: min-content;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.features .info-block .right-part li .heading h3 {
+  margin-left: 15px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  height: -moz-min-content;
+  height: min-content;
+}
+.features .info-block .right-part li p {
+  padding-left: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
 }
 
 body {
