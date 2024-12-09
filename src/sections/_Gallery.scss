@@ -1,0 +1,17 @@
+.gallery {
+    padding: 62px 0;
+    & > .heading {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 80px;
+      h1 {
+        @include for-text(second-headline);
+      }
+      h2 {
+        @include for-text(sub-heading);
+        max-width: 602px;
+      }
+    }
+}

@@ -7,6 +7,10 @@
     align-items: center;
     flex-direction: column;
     padding: 60px 0;
+    @include for-size(mobile){
+      padding: 60px 20px;
+
+    }
     gap: 27px;
     h1 {
       @include for-text(headline);
@@ -25,13 +29,13 @@
     gap: 35px;
     padding: 35px 0;
     .try-btn{
-      @include button-style(
+      @include for-button(
         $bg-color: $primary,
         $padding: 20px 40px
       );
     }
     .learn-btn{
-      @include button-style(
+      @include for-button(
         $bg-color: transparent,
         $padding: 20px 40px
       );

@@ -1,8 +1,9 @@
 @import "./Base";
-@import "../components/Header";
-@import "../components/Hero";
-@import "../components/Features";
-@import "../components/Gallery";
+@import "../sections/Header";
+@import "../sections/Hero";
+@import "../sections/Features";
+@import "../sections/Gallery";
+@import "../sections/Contents";
 
 body{
     background-color: $dark-background;

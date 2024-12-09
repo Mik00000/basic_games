@@ -1,3 +1,4 @@
+@charset "UTF-8";
 *,
 *,
 *::before,
@@ -114,7 +115,7 @@ header.header {
 }
 @media screen and (min-width: 768px) and (max-width: 1279.98px) {
   header.header {
-    padding: 10px 14vw;
+    padding: 10px 10vw;
   }
 }
 @media screen and (min-width: 1280px) and (max-width: 1599.98px) {
@@ -125,6 +126,7 @@ header.header {
 header.header .logo {
   width: 80px;
   height: 80px;
+  min-width: 80px;
   filter: drop-shadow(0 0 24px white);
   -webkit-user-select: none;
      -moz-user-select: none;
@@ -135,6 +137,7 @@ header.header .nav-list {
   height: fit-content;
 }
 header.header .nav-list ul {
+  padding: 10px;
   font-size: 16px;
   line-height: 24px;
   letter-spacing: 0.2px;
@@ -146,6 +149,12 @@ header.header .nav-list ul {
 }
 header.header .nav-list ul a {
   text-decoration: none;
+  padding: 5px;
+}
+@media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  header.header .nav-list {
+    display: none;
+  }
 }
 @media screen and (max-width: 767.98px) {
   header.header .nav-list {
@@ -160,17 +169,18 @@ header.header .login-and-menu {
   gap: 17px;
 }
 header.header .login-and-menu .login-btn {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
   background-color: #181818;
   color: #fff;
   border: 1px solid #fff;
   padding: 14px 46px;
   text-align: center;
   transition: all 0.3s ease;
-  font-size: 17px;
-  line-height: 25px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
   cursor: pointer;
 }
 header.header .login-and-menu .login-btn:hover {
@@ -186,10 +196,69 @@ header.header .login-and-menu .menu-btn {
 header.header .login-and-menu .menu-btn img {
   width: 44px;
 }
+@media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  header.header .login-and-menu .menu-btn {
+    display: block;
+  }
+}
 @media screen and (max-width: 767.98px) {
   header.header .login-and-menu .menu-btn {
     display: block;
   }
+}
+header.header .burger-menu {
+  position: fixed;
+  bottom: 0; /* Розташування меню внизу */
+  left: 0;
+  width: 0;
+  height: 0;
+  transition: height ease-out 0.25s;
+  overflow: hidden;
+  background-color: #181818;
+  display: flex;
+  width: 100%;
+}
+header.header .burger-menu.open {
+  height: 100vh;
+}
+header.header .burger-menu .content {
+  padding: 15px;
+  margin-top: 60px;
+  width: 100%;
+  height: 100%;
+}
+header.header .burger-menu .content .cross-btn {
+  position: absolute;
+  top: 35px;
+  right: 35px;
+  background-color: unset;
+  outline: none;
+  border: none;
+  padding: 10px;
+  transform: scale(1.8);
+}
+header.header .burger-menu .content .cross-btn .cross-icon {
+  color: #fff;
+}
+header.header .burger-menu .content nav {
+  text-align: center;
+}
+header.header .burger-menu .content nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+header.header .burger-menu .content nav ul a {
+  padding: 10px;
+  font-size: 30px;
+  line-height: 45px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  text-decoration: none;
+}
+header.header .burger-menu .content nav ul a li:active {
+  color: #d9d9d9;
 }
 
 .hero {
@@ -204,7 +273,13 @@ header.header .login-and-menu .menu-btn img {
   padding: 60px 0;
   gap: 27px;
 }
+@media screen and (max-width: 767.98px) {
+  .hero .heading {
+    padding: 60px 20px;
+  }
+}
 .hero .heading h1 {
+  padding: 10px;
   max-width: 729px;
   text-align: center;
 }
@@ -219,6 +294,7 @@ header.header .login-and-menu .menu-btn img {
 }
 @media screen and (max-width: 767.98px) {
   .hero .heading h1 {
+    padding: 10px;
     font-size: 52px;
     line-height: 62px;
     letter-spacing: 0.2px;
@@ -227,6 +303,7 @@ header.header .login-and-menu .menu-btn img {
   }
 }
 .hero .heading h2 {
+  padding: 10px;
   font-size: 20px;
   line-height: 30px;
   letter-spacing: 0.2px;
@@ -242,33 +319,36 @@ header.header .login-and-menu .menu-btn img {
   padding: 35px 0;
 }
 .hero .buttons .try-btn {
-  background-color: #4452fe;
-  color: #fff;
-  padding: 20px 40px;
-  text-align: center;
-  transition: all 0.3s ease;
+  padding: 10px;
   font-size: 17px;
   line-height: 25px;
   letter-spacing: 0.2px;
   font-family: "Graphik-Medium";
   font-weight: 500;
+  background-color: #4452fe;
+  color: #fff;
+  border: none;
+  padding: 20px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
   cursor: pointer;
 }
 .hero .buttons .try-btn:hover {
   background-color: #9098fe;
 }
 .hero .buttons .learn-btn {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
   background-color: transparent;
   color: #fff;
   border: 1px solid #fff;
   padding: 20px 40px;
   text-align: center;
   transition: all 0.3s ease;
-  font-size: 17px;
-  line-height: 25px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
   cursor: pointer;
 }
 .hero .buttons .learn-btn:hover {
@@ -295,6 +375,7 @@ header.header .login-and-menu .menu-btn img {
 
 .features {
   padding: 62px 0;
+  margin-bottom: 100px;
 }
 .features > .heading {
   text-align: center;
@@ -304,6 +385,7 @@ header.header .login-and-menu .menu-btn img {
   margin-bottom: 80px;
 }
 .features > .heading h1 {
+  padding: 10px;
   font-size: 52px;
   line-height: 62px;
   letter-spacing: 0.2px;
@@ -311,6 +393,7 @@ header.header .login-and-menu .menu-btn img {
   font-weight: 400;
 }
 .features > .heading h2 {
+  padding: 10px;
   font-size: 20px;
   line-height: 30px;
   letter-spacing: 0.2px;
@@ -377,10 +460,10 @@ header.header .login-and-menu .menu-btn img {
   height: -moz-min-content;
   height: min-content;
   align-items: center;
-  margin-bottom: 20px;
 }
 .features .info-block .right-part li .heading h3 {
   margin-left: 15px;
+  padding: 10px;
   font-size: 20px;
   line-height: 30px;
   letter-spacing: 0.2px;
@@ -391,11 +474,140 @@ header.header .login-and-menu .menu-btn img {
 }
 .features .info-block .right-part li p {
   padding-left: 10px;
+  padding: 10px;
   font-size: 16px;
   line-height: 24px;
   letter-spacing: 0.2px;
   font-family: "Graphik";
   font-weight: 400;
+}
+
+.gallery {
+  padding: 62px 0;
+}
+.gallery > .heading {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80px;
+}
+.gallery > .heading h1 {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.gallery > .heading h2 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  max-width: 602px;
+}
+
+.contents {
+  padding: 62px 0;
+}
+.contents > .heading {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 44px;
+}
+.contents > .heading h1 {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.contents > .heading h2 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  max-width: 602px;
+}
+.contents .content-cards {
+  display: flex;
+  justify-content: center;
+  gap: 33px;
+  flex-wrap: wrap;
+}
+.contents .content-cards .card {
+  box-shadow: 0 4px 31px 0 rgba(0, 0, 0, 0.15);
+  background: #fff;
+  border-radius: 10px;
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 476px;
+}
+.contents .content-cards .card .heading {
+  text-align: center;
+  max-width: 288px;
+  gap: 10px;
+}
+.contents .content-cards .card .heading h2 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  color: #000;
+}
+.contents .content-cards .card .heading p {
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  color: #5c5c5c;
+}
+.contents .content-cards .card .btn {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #4452fe;
+  color: #fff;
+  border: none;
+  padding: 14px 46px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-bottom: 30px;
+}
+.contents .content-cards .card .btn:hover {
+  background-color: #9098fe;
+}
+.contents .content-cards .card img {
+  filter: drop-shadow(0 4px 31px rgba(0, 0, 0, 0.15));
+}
+@media screen and (max-width: 767.98px) {
+  .contents .content-cards {
+    padding-right: 20px;
+    padding-left: 20px;
+    margin-left: 80px;
+    margin-right: 80px;
+  }
+  .contents .content-cards .card {
+    width: 100%;
+  }
 }
 
 body {

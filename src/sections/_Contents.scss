@@ -1,0 +1,65 @@
+.contents {
+  padding: 62px 0;
+  & > .heading {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 44px;
+    h1 {
+      @include for-text(second-headline);
+    }
+    h2 {
+      @include for-text(sub-heading);
+      max-width: 602px;
+    }
+  }
+  .content-cards {
+    display: flex;
+    justify-content: center;
+    gap: 33px;
+    flex-wrap: wrap;
+
+    .card {
+      box-shadow: 0 4px 31px 0 rgba(0, 0, 0, 0.15);
+      background: $light-background;
+      border-radius: 10px;
+      padding: 40px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 476px;
+
+      .heading {
+        text-align: center;
+        max-width: 288px;
+        gap: 10px;
+        h2 {
+          @include for-text(title);
+          color: $first-text;
+        }
+        p {
+          @include for-text(paragraph);
+          color: $second-text;
+        }
+      }
+      .btn {
+        @include for-button($bg-color: $primary, $padding: 14px 46px);
+        margin-bottom: 30px;
+      }
+      img{
+        filter: drop-shadow(0 4px 31px rgba(0, 0, 0, 0.15));
+      }
+    }
+    @include for-size(mobile) {
+      padding-right: 20px;
+      padding-left: 20px;
+      margin-left: 80px;
+      margin-right: 80px;
+      .card {
+        width: 100%;
+        
+      }
+    }
+  }
+}

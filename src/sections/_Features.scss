@@ -1,5 +1,6 @@
 .features {
   padding: 62px 0;
+  margin-bottom: 100px;
   & > .heading {
     text-align: center;
     display: flex;
@@ -63,7 +64,6 @@
           display: flex;
           height: min-content;
           align-items: center;
-          margin-bottom: 20px;
           h3 {
             margin-left: 15px;
             @include for-text(title);

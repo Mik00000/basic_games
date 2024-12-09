@@ -4,15 +4,11 @@
       @content;
     }
   } @else if $size == tablet {
-    @media screen and (min-width: 768px) 
-    // and (max-width: 1279.98px) 
-    {
+    @media screen and (min-width: 768px) and (max-width: 1279.98px) {
       @content;
     }
   } @else if $size == laptop {
-    @media screen and (min-width: 1280px) 
-    // and (max-width: 1599.98px)
-    {
+    @media screen and (min-width: 1280px) and (max-width: 1599.98px) {
       @content;
     }
   } @else if $size == desktop {
@@ -39,6 +35,7 @@
 }
 
 @mixin for-text($type) {
+  padding: 10px;
   // Usage example:   @include for-text(headline)
   @if $type == headline {
     @include for-size(not-mobile) {
@@ -93,7 +90,7 @@
     letter-spacing: 0.2px;
     font-family: "Graphik-Medium";
     font-weight: 500;
-  } @else if $type == mobile-menum {
+  } @else if $type == mobile-menu {
     font-size: 30px;
     line-height: 45px;
     letter-spacing: 0.2px;
@@ -106,21 +103,26 @@
   }
 }
 
-@mixin button-style(
+@mixin for-button(
   $bg-color: transparent,
   $text-color: $light-text,
   $border-color: $light-background,
   $padding
 ) {
+  // @include for-button($bg-color: $dark-background, $padding: 14px 46px);
+
+  @include for-text(button);
+
   background-color: $bg-color;
   color: $text-color;
   @if $bg-color == transparent or $bg-color == $dark-background {
     border: 1px solid $border-color;
+  }@else{
+    border: none;
   }
   padding: $padding;
   text-align: center;
   transition: all 0.3s ease;
-  @include for-text(button);
   cursor: pointer;
   &:hover {
     background-color: if(
@@ -131,13 +133,6 @@
   }
 }
 
-$primary: #4452fe;
-$secondary: #112d57;
-$first-text: #000;
-$light-text: #fff;
-$second-text: #5c5c5c;
-$dark-background: #181818;
-$light-background: #fff;
 $primary: #4452fe;
 $secondary: #112d57;
 $first-text: #000;
