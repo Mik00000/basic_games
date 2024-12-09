@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import menuImg from "../assets/icons/menu.svg";
+import { ReactComponent as CrossIcon } from "../assets/icons/cross.svg";
+
 import { Link } from "react-router-dom";
 
 export const Header = () => {
@@ -15,7 +17,6 @@ export const Header = () => {
   ];
 
   const toggleMenu = () => {
-    console.log("AA")
     setIsMenuOpen(!isMenuOpen);
   };
 
@@ -24,7 +25,7 @@ export const Header = () => {
       <Link to="/">
         <img src={logo} alt="logo" className="logo" draggable="false" />
       </Link>
-        {/* {`nav-list ${isMenuOpen ? "open" : ""}`} */}
+
       <nav className="nav-list">
         <ul>
           {navData.map((nav) => (
@@ -39,6 +40,22 @@ export const Header = () => {
         <button className="menu-btn btn" onClick={toggleMenu}>
           <img src={menuImg} alt="menu" draggable="false" />
         </button>
+      </div>
+      <div className={`burger-menu ${isMenuOpen ? "open" : ""}`}>
+        <div className="content">
+          <button className="cross-btn btn" onClick={toggleMenu}>
+            <CrossIcon alt="cross-icon" className="cross-icon" /> 
+          </button>
+          <nav>
+            <ul>
+              {navData.map((nav) => (
+                <Link to={nav.url} key={nav.name}>
+                  <li>{nav.name}</li>
+                </Link>
+              ))}
+            </ul>
+          </nav>
+        </div>
       </div>
     </header>
   );

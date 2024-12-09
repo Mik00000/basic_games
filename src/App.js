@@ -1,3 +1,4 @@
+import { Contents } from "./sections/Contents.tsx";
 import { Gallery } from "./sections/Gallery.tsx";
 import { Features } from "./sections/Features.tsx";
 import { Header } from "./sections/Header.tsx";
@@ -17,6 +18,7 @@ function App() {
       </Router>
       <Hero />
       <Features />
+      <Contents />
       <Gallery />
     </div>
   );
