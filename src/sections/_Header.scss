@@ -124,3 +124,6 @@ header.header {
     }
   }
 }
+body:has(.burger-menu.open){
+  overflow-y: hidden;
+}

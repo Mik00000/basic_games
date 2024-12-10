@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import menuImg from "../assets/icons/menu.svg";
 import { ReactComponent as CrossIcon } from "../assets/icons/cross.svg";
-
+import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const logo = require("../assets/logo.png");
 
   const navData = [
     { name: "Home", url: "/home" },
@@ -44,7 +43,7 @@ export const Header = () => {
       <div className={`burger-menu ${isMenuOpen ? "open" : ""}`}>
         <div className="content">
           <button className="cross-btn btn" onClick={toggleMenu}>
-            <CrossIcon alt="cross-icon" className="cross-icon" /> 
+            <CrossIcon alt="cross-icon" className="cross-icon" />
           </button>
           <nav>
             <ul>
