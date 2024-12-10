@@ -261,6 +261,10 @@ header.header .burger-menu .content nav ul a li:active {
   color: #d9d9d9;
 }
 
+body:has(.burger-menu.open) {
+  overflow-y: hidden;
+}
+
 .hero {
   margin-bottom: 100px;
 }
@@ -509,6 +513,42 @@ header.header .burger-menu .content nav ul a li:active {
   font-weight: 400;
   max-width: 602px;
 }
+.gallery .photos {
+  gap: 33px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 44px;
+  margin-left: 30px;
+  margin-right: 30px;
+}
+@media screen and (max-width: 767.98px) {
+  .gallery .photos {
+    flex-wrap: wrap;
+  }
+}
+@media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  .gallery .photos {
+    gap: 22px;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}
+.gallery .photos .item {
+  display: flex;
+  flex-shrink: 1;
+  flex-basis: 225px;
+  height: 285px;
+  border-radius: 12px;
+  box-shadow: 0 4px 31px 0 rgba(0, 0, 0, 0.15);
+}
+.gallery .photos .item.large {
+  flex-basis: 385px;
+}
+@media screen and (max-width: 767.98px) {
+  .gallery .photos .item, .gallery .photos .item.large {
+    flex-basis: 329px;
+  }
+}
 
 .contents {
   padding: 62px 0;
@@ -552,6 +592,8 @@ header.header .burger-menu .content nav ul a li:active {
   flex-direction: column;
   align-items: center;
   width: 476px;
+  padding-left: 25px;
+  padding-right: 25px;
 }
 .contents .content-cards .card .heading {
   text-align: center;
@@ -602,8 +644,8 @@ header.header .burger-menu .content nav ul a li:active {
   .contents .content-cards {
     padding-right: 20px;
     padding-left: 20px;
-    margin-left: 80px;
-    margin-right: 80px;
+    margin-left: 35px;
+    margin-right: 35px;
   }
   .contents .content-cards .card {
     width: 100%;
