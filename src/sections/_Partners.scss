@@ -1,0 +1,78 @@
+.partners {
+  padding: 50px 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 100px;
+  & > .heading {
+    padding: 0 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 44px;
+
+    h1 {
+      @include for-text(second-headline);
+    }
+
+    h2 {
+      @include for-text(sub-heading);
+      max-width: 602px;
+    }
+  }
+
+  ul.icons {
+    margin-bottom: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: 30px; 
+    width: 50%;
+
+    @include for-size(laptop) {
+      width: 60%;
+    }
+
+    @include for-size(tablet) {
+      width: 70%;
+      gap: 40px; 
+    }
+
+    @include for-size(mobile) {
+      width: 90%; 
+      gap: 20px;
+      padding: 0 10px;
+
+      li {
+        flex: 1 1 calc(33.33% - 20px); 
+        max-width: 80px;
+        text-align: center;
+      }
+
+      li a img {
+        max-width: 60px; 
+        height: auto;
+      }
+    }
+
+    li {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      a {
+        display: block;
+        width: fit-content;
+      }
+    }
+  }
+  .btn {
+    display: flex;
+    justify-content: center;
+    button {
+      @include for-button($bg-color: $dark-background, $padding: 13px 40px);
+    }
+  }
+}

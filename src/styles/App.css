@@ -269,6 +269,7 @@ body:has(.burger-menu.open) {
   margin-bottom: 100px;
 }
 .hero .heading {
+  padding: 0 15px;
   margin-top: 35px;
   display: flex;
   justify-content: center;
@@ -317,10 +318,11 @@ body:has(.burger-menu.open) {
   text-align: center;
 }
 .hero .buttons {
+  flex-wrap: wrap;
   display: flex;
   justify-content: center;
   gap: 35px;
-  padding: 35px 0;
+  padding: 35px 15px;
 }
 .hero .buttons .try-btn {
   padding: 10px;
@@ -378,10 +380,11 @@ body:has(.burger-menu.open) {
 }
 
 .features {
-  padding: 62px 0;
+  padding: 2px 0;
   margin-bottom: 100px;
 }
 .features > .heading {
+  padding: 0 15px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -490,6 +493,7 @@ body:has(.burger-menu.open) {
   padding: 62px 0;
 }
 .gallery > .heading {
+  padding: 0 15px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -524,10 +528,14 @@ body:has(.burger-menu.open) {
 @media screen and (max-width: 767.98px) {
   .gallery .photos {
     flex-wrap: wrap;
+    gap: 22px;
+    margin-left: 10px;
+    margin-right: 10px;
   }
 }
 @media screen and (min-width: 768px) and (max-width: 1279.98px) {
   .gallery .photos {
+    flex-wrap: wrap;
     gap: 22px;
     margin-left: 10px;
     margin-right: 10px;
@@ -544,16 +552,44 @@ body:has(.burger-menu.open) {
 .gallery .photos .item.large {
   flex-basis: 385px;
 }
+@media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  .gallery .photos .item, .gallery .photos .item.large {
+    flex-basis: 329px;
+  }
+}
 @media screen and (max-width: 767.98px) {
   .gallery .photos .item, .gallery .photos .item.large {
     flex-basis: 329px;
   }
 }
+.gallery .see-more-btn {
+  display: flex;
+  justify-content: center;
+}
+.gallery .see-more-btn button {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #181818;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 13px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.gallery .see-more-btn button:hover {
+  background-color: #3e3e3e;
+}
 
 .contents {
-  padding: 62px 0;
+  padding: 50px 0;
 }
 .contents > .heading {
+  padding: 0 15px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -650,6 +686,107 @@ body:has(.burger-menu.open) {
   .contents .content-cards .card {
     width: 100%;
   }
+}
+
+.partners {
+  padding: 50px 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 100px;
+}
+.partners > .heading {
+  padding: 0 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 44px;
+}
+.partners > .heading h1 {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.partners > .heading h2 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  max-width: 602px;
+}
+.partners ul.icons {
+  margin-bottom: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  width: 50%;
+}
+@media screen and (min-width: 1280px) and (max-width: 1599.98px) {
+  .partners ul.icons {
+    width: 60%;
+  }
+}
+@media screen and (min-width: 768px) and (max-width: 1279.98px) {
+  .partners ul.icons {
+    width: 70%;
+    gap: 40px;
+  }
+}
+@media screen and (max-width: 767.98px) {
+  .partners ul.icons {
+    width: 90%;
+    gap: 20px;
+    padding: 0 10px;
+  }
+  .partners ul.icons li {
+    flex: 1 1 calc(33.33% - 20px);
+    max-width: 80px;
+    text-align: center;
+  }
+  .partners ul.icons li a img {
+    max-width: 60px;
+    height: auto;
+  }
+}
+.partners ul.icons li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.partners ul.icons li a {
+  display: block;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+.partners .btn {
+  display: flex;
+  justify-content: center;
+}
+.partners .btn button {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #181818;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 13px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.partners .btn button:hover {
+  background-color: #3e3e3e;
 }
 
 body {

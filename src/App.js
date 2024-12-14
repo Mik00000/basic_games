@@ -10,16 +10,20 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
+import { Partners } from "./sections/Partners.tsx";
+import { Testimonials } from "./sections/Testimonials.tsx";
 function App() {
   return (
     <div className="App">
       <Router>
         <Header />
+        <Hero />
+        <Features />
+        <Contents />  
+        <Gallery />
+        <Partners />
+        <Testimonials/>
       </Router>
-      <Hero />
-      <Features />
-      <Contents />
-      <Gallery />
     </div>
   );
 }

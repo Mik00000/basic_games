@@ -1,0 +1,33 @@
+.testimonials {
+  padding: 50px 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  & > .heading {
+    padding: 0 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 44px;
+
+    h1 {
+      @include for-text(second-headline);
+    }
+
+    h2 {
+      @include for-text(sub-heading);
+      max-width: 602px;
+    }
+  }
+
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    button {
+      @include for-button($bg-color: $dark-background, $padding: 13px 40px);
+    }
+  }
+}
