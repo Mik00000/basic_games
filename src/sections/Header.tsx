@@ -14,7 +14,7 @@ export const Header = () => {
     { name: "Services", url: "/services" },
     { name: "Contact", url: "/contact" },
   ];
-
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };

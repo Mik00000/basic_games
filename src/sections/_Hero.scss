@@ -1,6 +1,7 @@
 .hero {
   margin-bottom: 100px;
   .heading {
+    padding: 0 15px;
     margin-top: 35px;
     display: flex;
     justify-content: center;
@@ -24,10 +25,11 @@
     }
   }
   .buttons {
+    flex-wrap: wrap;
     display: flex;
     justify-content: center;
     gap: 35px;
-    padding: 35px 0;
+    padding: 35px 15px;
     .try-btn{
       @include for-button(
         $bg-color: $primary,

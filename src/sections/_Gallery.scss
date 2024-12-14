@@ -1,6 +1,7 @@
 .gallery {
   padding: 62px 0;
   & > .heading {
+    padding: 0 15px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -23,8 +24,14 @@
     margin-right: 30px;
     @include for-size(mobile) {
       flex-wrap: wrap;
+
+      gap: 22px;
+      margin-left: 10px;
+      margin-right: 10px;
     }
     @include for-size(tablet) {
+      flex-wrap: wrap;
+
       gap: 22px;
       margin-left: 10px;
       margin-right: 10px;
@@ -40,12 +47,25 @@
       &.large {
         flex-basis: 385px;
       }
+      @include for-size(tablet) {
+        &,
+        &.large {
+          flex-basis: 329px;
+        }
+      }
       @include for-size(mobile) {
         &,
         &.large {
           flex-basis: 329px;
         }
       }
+    }
+  }
+  .see-more-btn {
+    display: flex;
+    justify-content: center;
+    button {
+      @include for-button($bg-color: $dark-background, $padding: 13px 40px);
     }
   }
 }

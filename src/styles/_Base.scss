@@ -15,19 +15,19 @@
     @media screen and (min-width: 1600px) {
       @content;
     }
-  } @else if $size == "not-mobile" {
+  } @else if $size == not-mobile {
     @media screen and (min-width: 768px) {
       @content;
     }
-  } @else if $size == "not-tablet" {
+  } @else if $size == not-tablet {
     @media screen and (max-width: 767.98px), screen and (min-width: 1280px) {
       @content;
     }
-  } @else if $size == "not-laptop" {
+  } @else if $size == not-laptop {
     @media screen and (max-width: 1279.98px), screen and (min-width: 1600px) {
       @content;
     }
-  } @else if $size == "not-desktop" {
+  } @else if $size == not-desktop {
     @media screen and (max-width: 1599.98px) {
       @content;
     }
