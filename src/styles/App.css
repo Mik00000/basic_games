@@ -137,17 +137,17 @@ header.header .nav-list {
   height: fit-content;
 }
 header.header .nav-list ul {
+  display: flex;
+  gap: 40px;
+  list-style: none;
+}
+header.header .nav-list ul a {
   padding: 10px;
   font-size: 16px;
   line-height: 24px;
   letter-spacing: 0.2px;
   font-family: "Graphik-Medium";
   font-weight: 500;
-  display: flex;
-  gap: 40px;
-  list-style: none;
-}
-header.header .nav-list ul a {
   text-decoration: none;
   padding: 5px;
 }
@@ -787,6 +787,170 @@ body:has(.burger-menu.open) {
 }
 .partners .btn button:hover {
   background-color: #3e3e3e;
+}
+
+.testimonials {
+  padding: 50px 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.testimonials > .heading {
+  padding: 0 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 44px;
+}
+.testimonials > .heading h1 {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.testimonials .content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 23px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 15px;
+}
+@media screen and (min-width: 1600px) {
+  .testimonials .content {
+    margin: 0 300px;
+  }
+}
+@media screen and (min-width: 1280px) and (max-width: 1599.98px) {
+  .testimonials .content {
+    margin: 0 200px;
+  }
+}
+.testimonials .content .block {
+  border: 1px solid #dedede;
+  border-radius: 10px;
+  max-width: 430px;
+  padding: 40px;
+}
+.testimonials .content .block .heading {
+  display: flex;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+.testimonials .content .block .heading .user-photo {
+  width: 50px;
+  height: 50px;
+  border-radius: 100%;
+}
+.testimonials .content .block .heading .user-info .username {
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  text-decoration: none;
+}
+.testimonials .content .block .heading .user-info .user-role {
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+}
+.testimonials .content .block .heading .user-info h3.username, .testimonials .content .block .heading .user-info h3.user-role {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.testimonials .content .block .text {
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+
+footer.footer {
+  display: flex;
+  justify-content: space-between;
+}
+footer.footer .left-part {
+  width: 47%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+footer.footer .left-part nav {
+  display: flex;
+}
+footer.footer .left-part nav .menu h3 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  padding-top: 0;
+  margin-bottom: 30px;
+}
+footer.footer .left-part nav .menu ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+footer.footer .left-part nav .menu ul a {
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  text-decoration: none;
+  text-decoration: none;
+  padding: 5px;
+}
+footer.footer .right-part {
+  width: 47%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+footer.footer .right-part .company-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+footer.footer .right-part .company-info .info-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+footer.footer .right-part .company-info .info-block img {
+  max-width: 40px;
+}
+footer.footer .right-part .company-info .info-block span {
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0 8px;
+}
+footer.footer .right-part .social {
+  display: flex;
+  gap: 4px;
+}
+footer.footer .right-part .social a {
+  padding: 10px;
 }
 
 body {

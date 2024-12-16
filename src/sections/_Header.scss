@@ -27,12 +27,11 @@ header.header {
     height: fit-content;
 
     ul {
-      @include for-text(link);
       display: flex;
       gap: 40px;
       list-style: none;
       a {
-        text-decoration: none;
+        @include for-text(link);
         padding: 5px;
       }
     }

@@ -12,17 +12,30 @@ import {
 } from "react-router-dom";
 import { Partners } from "./sections/Partners.tsx";
 import { Testimonials } from "./sections/Testimonials.tsx";
+import { Footer } from "./sections/Footer.tsx";
+import { Minesweeper } from "./pages/Minesweeper.tsx";
 function App() {
   return (
     <div className="App">
       <Router>
         <Header />
-        <Hero />
-        <Features />
-        <Contents />  
-        <Gallery />
-        <Partners />
-        <Testimonials/>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <Hero />
+                <Features />
+                <Contents />
+                <Gallery />
+                <Partners />
+                <Testimonials />
+              </>
+            }
+          />
+          <Route path="/games/minesweeper" element={<Minesweeper />} />
+        </Routes>
+        <Footer />
       </Router>
     </div>
   );

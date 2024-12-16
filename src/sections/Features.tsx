@@ -1,28 +1,28 @@
 import React from "react";
 import feature1 from "../assets/banner/features-1.png";
 import feature2 from "../assets/banner/features-2.png";
-
+const benefits = [
+  {
+    id:0,
+    heading: "A single source of truth",
+    text: "When you add work to your Slate calendar we automatically calculate useful insights ",
+    icon: "benefits1.svg",
+  },
+  {
+    id:1,
+    heading: "Intuitive interface",
+    text: "When you add work to your Slate calendar we automatically calculate useful insights ",
+    icon: "benefits2.svg",
+  },
+  {
+    id:2,
+    heading: "Or with rules",
+    text: "When you add work to your Slate calendar we automatically calculate useful insights ",
+    icon: "benefits3.svg",
+  },
+];
 export const Features = () => {
-  const benefits = [
-    {
-      id:0,
-      heading: "A single source of truth",
-      text: "When you add work to your Slate calendar we automatically calculate useful insights ",
-      icon: "benefits1.svg",
-    },
-    {
-      id:1,
-      heading: "Intuitive interface",
-      text: "When you add work to your Slate calendar we automatically calculate useful insights ",
-      icon: "benefits2.svg",
-    },
-    {
-      id:2,
-      heading: "Or with rules",
-      text: "When you add work to your Slate calendar we automatically calculate useful insights ",
-      icon: "benefits3.svg",
-    },
-  ];
+
   return (
     <section className="features">
       <div className="heading">
