@@ -1,0 +1,64 @@
+footer.footer {
+  display: flex;
+  justify-content: space-between;
+  .left-part {
+    width: 47%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    nav {
+      display: flex;
+
+      .menu {
+        h3 {
+          @include for-text(title);
+          padding-top: 0;
+          margin-bottom: 30px;
+        }
+        ul {
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+          a {
+            @include for-text(link);
+            text-decoration: none;
+            padding: 5px;
+          }
+        }
+      }
+    }
+  }
+  .right-part {
+    width: 47%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    .company-info {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+      .info-block {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        img {
+          max-width: 40px;
+          
+        }
+        span{
+            @include for-text(link);
+            padding: 0 8px;
+        }
+      }
+    }
+    .social{
+        display: flex;
+        gap:4px;
+        a{
+            padding: 10px;
+        }
+    }
+  }
+}

@@ -15,19 +15,53 @@
     h1 {
       @include for-text(second-headline);
     }
-
-    h2 {
-      @include for-text(sub-heading);
-      max-width: 602px;
-    }
   }
-
-
-  .btn {
+  .content {
     display: flex;
+    flex-wrap: wrap;
+    gap: 23px;
+    align-items: center;
     justify-content: center;
-    button {
-      @include for-button($bg-color: $dark-background, $padding: 13px 40px);
+    @include for-size(desktop){
+        margin: 0 300px;
+    }
+    @include for-size(laptop){
+      margin: 0 200px;
+  }
+  margin: 0 15px;
+    .block {
+      border: 1px solid #dedede;
+      border-radius: 10px;
+      max-width: 430px;
+      padding: 40px;
+      .heading {
+        display: flex;
+        gap: 13px;
+        margin-bottom: 20px;
+        .user-photo {
+          width: 50px;
+          height: 50px;
+          border-radius: 100%;
+        }
+        .user-info {
+
+          .username {
+            @include for-text(link);
+          }
+          .user-role{
+            @include for-text(subtitle);
+          }
+          h3.username, h3.user-role{
+            padding-top: 0;
+            padding-bottom: 0;
+          }
+        }
+      }
+      .text{
+        @include for-text(paragraph)
+      }
     }
   }
+
+
 }

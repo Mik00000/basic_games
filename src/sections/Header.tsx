@@ -3,17 +3,17 @@ import menuImg from "../assets/icons/menu.svg";
 import { ReactComponent as CrossIcon } from "../assets/icons/cross.svg";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
-
+const navData = [
+  { name: "Home", url: "/home" },
+  { name: "Games", url: "/games" },
+  { name: "About", url: "/about" },
+  { name: "Services", url: "/services" },
+  { name: "Contact", url: "/contact" },
+];
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navData = [
-    { name: "Home", url: "/home" },
-    { name: "Games", url: "/games" },
-    { name: "About", url: "/about" },
-    { name: "Services", url: "/services" },
-    { name: "Contact", url: "/contact" },
-  ];
+
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

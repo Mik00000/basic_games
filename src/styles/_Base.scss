@@ -90,6 +90,7 @@
     letter-spacing: 0.2px;
     font-family: "Graphik-Medium";
     font-weight: 500;
+    text-decoration: none;
   } @else if $type == mobile-menu {
     font-size: 30px;
     line-height: 45px;
