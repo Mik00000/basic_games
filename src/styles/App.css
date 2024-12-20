@@ -878,6 +878,7 @@ body:has(.burger-menu.open) {
 footer.footer {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 footer.footer .left-part {
   width: 47%;
@@ -951,6 +952,37 @@ footer.footer .right-part .social {
 }
 footer.footer .right-part .social a {
   padding: 10px;
+}
+@media screen and (max-width: 767.98px) {
+  footer.footer {
+    justify-content: center;
+    gap: 35px;
+    text-align: center;
+    border-top: 1px solid #fff;
+    padding-top: 40px;
+  }
+  footer.footer .left-part, footer.footer .right-part {
+    width: auto;
+  }
+  footer.footer .left-part .info-block img, footer.footer .right-part .info-block img {
+    scale: 0.8;
+  }
+  footer.footer .left-part .social a, footer.footer .right-part .social a {
+    scale: 0.9;
+  }
+}
+
+#field .row {
+  display: flex;
+}
+#field .row .cell {
+  width: 24px !important;
+  height: 24px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 1px solid #999;
 }
 
 body {

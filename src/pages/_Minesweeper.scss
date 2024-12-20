@@ -1,3 +1,14 @@
 #field{
-    .row{}
+    .row{
+        display: flex;
+        .cell{
+            width: 24px!important;
+            height: 24px!important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 1px solid #999;
+        }
+    }
 }

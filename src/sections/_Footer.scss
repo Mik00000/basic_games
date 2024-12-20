@@ -1,6 +1,7 @@
 footer.footer {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   .left-part {
     width: 47%;
     display: flex;
@@ -59,6 +60,27 @@ footer.footer {
         a{
             padding: 10px;
         }
+    }
+  }
+  @include for-size(mobile){
+    justify-content: center;
+    gap:35px;
+    text-align: center;
+    border-top: 1px solid $light-background;
+    padding-top: 40px;
+    .left-part, .right-part{
+      width: auto;
+      .info-block{
+        img{
+          scale: 0.8;
+
+        }
+      }
+      .social{
+        a{
+          scale: 0.9;
+        }
+      }
     }
   }
 }
