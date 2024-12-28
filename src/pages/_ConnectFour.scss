@@ -1,0 +1,50 @@
+$player-color-1: var(--player-color-1);
+$player-color-2: var(--player-color-2);
+
+.connect-four {
+  .field {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    .row {
+      display: flex;
+      .cell {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        overflow: hidden;
+
+        &::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 150px; /* діаметр кола */
+          height: 150px; /* діаметр кола */
+          background-color: transparent; /* прозорий колір */
+          border-radius: 50%;
+          box-shadow: 0 0 0 200px #232930; /* створює враження, що квадрат залишився навколо */
+          transform: translate(-50%, -50%);
+
+          background: var(--after-color, transparent);
+        }
+        &.hovered-col::after {
+          box-shadow: 0 0 0 200px #232930b2;
+        }
+        &.hovered-by-player-1::after {
+          background-color: #{'rgba(var(--player-color-1), 0.4)'};
+        }
+        &.hovered-by-player-2::after {
+          background-color: #{'rgba(var(--player-color-2), 0.4)'};
+        }
+        &.active-by-player-1::after {
+          background-color: rgb(var(--player-color-1));
+        }
+        &.active-by-player-2::after {
+          background-color: rgb(var(--player-color-2));
+        }
+      }
+    }
+  }
+}

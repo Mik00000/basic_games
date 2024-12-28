@@ -985,6 +985,50 @@ footer.footer .right-part .social a {
   border: 1px solid #999;
 }
 
+.connect-four .field {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.connect-four .field .row {
+  display: flex;
+}
+.connect-four .field .row .cell {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+}
+.connect-four .field .row .cell::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150px; /* діаметр кола */
+  height: 150px; /* діаметр кола */
+  background-color: transparent; /* прозорий колір */
+  border-radius: 50%;
+  box-shadow: 0 0 0 200px #232930; /* створює враження, що квадрат залишився навколо */
+  transform: translate(-50%, -50%);
+  background: var(--after-color, transparent);
+}
+.connect-four .field .row .cell.hovered-col::after {
+  box-shadow: 0 0 0 200px rgba(35, 41, 48, 0.6980392157);
+}
+.connect-four .field .row .cell.hovered-by-player-1::after {
+  background-color: rgba(var(--player-color-1), 0.4);
+}
+.connect-four .field .row .cell.hovered-by-player-2::after {
+  background-color: rgba(var(--player-color-2), 0.4);
+}
+.connect-four .field .row .cell.active-by-player-1::after {
+  background-color: rgb(var(--player-color-1));
+}
+.connect-four .field .row .cell.active-by-player-2::after {
+  background-color: rgb(var(--player-color-2));
+}
+
 body {
   background-color: #181818;
 }/*# sourceMappingURL=App.css.map */

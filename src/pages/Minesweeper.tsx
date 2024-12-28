@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const fieldArea = 16;
 const bombPercentage = 20;
@@ -105,6 +105,11 @@ export const Minesweeper: React.FC = () => {
   const [flagCount, setFlagCount] = useState(
     Math.floor((fieldArea ** 2 * bombPercentage) / 100)
   );
+  let flagCountVar: number = flagCount
+  useEffect(() => {
+    console.log(`Var:${flagCountVar}, State:${flagCount}`)
+
+  }, [flagCount]); 
   function revealEmptyCells(field: Cell[][], row: number, col: number): Cell[][] {
     const stack: [number, number][] = [[row, col]];
     const visited = new Set<string>();
@@ -121,7 +126,12 @@ export const Minesweeper: React.FC = () => {
       if(field[r][c].flag) {
         console.log(field[r][c])
         field[r][c].flag = false;
-        setFlagCount((prevCount) => {return prevCount+1})
+        console.log("a")
+        flagCountVar++
+        console.log(flagCountVar)
+        setFlagCount(flagCountVar)
+
+        //Тут проблема, із за StrictMode цей код спрацьовує двічі, це треба виправити
       };
   
       if (field[r][c].bombsAround === 0 && !field[r][c].bomb) {
@@ -147,41 +157,44 @@ export const Minesweeper: React.FC = () => {
     
     return field;
   }
+  function newFieldForSetter(prevField: Cell[][], row: number, col: number, firstClick: boolean): Cell[][] {
+    let newField = prevField;
   
-  const handleClick = (row: number, col: number) => {
-    setField((prevField) => {
-      let newField = prevField;
-
-      if (firstClick) {
-        const flags = prevField.map((r) => r.map((cell) => cell.flag));
-
-        newField = ensureSafeFirstClick(prevField, row, col);
-        newField.forEach((r, rowIndex) =>
-          r.forEach((cell, colIndex) => {
-            if (flags[rowIndex][colIndex]) {
-              cell.flag = true;
-            }
-          })
+    if (firstClick) {
+      const flags = prevField.map((r) => r.map((cell) => cell.flag));
+  
+      newField = ensureSafeFirstClick(prevField, row, col);
+      newField.forEach((r, rowIndex) =>
+        r.forEach((cell, colIndex) => {
+          if (flags[rowIndex][colIndex]) {
+            cell.flag = true;
+          }
+        })
+      );
+    }
+  
+    if (!newField[row][col].flag) {
+      if (newField[row][col].bombsAround === 0 && !newField[row][col].bomb) {
+        newField = revealEmptyCells(
+          [...newField.map((r) => r.map((cell) => ({ ...cell })))],
+          row,
+          col
         );
-
-        setFirstClick(false);
+      } else {
+        newField[row][col].revealed = true;
       }
-
-      if (!newField[row][col].flag) {
-        if (newField[row][col].bombsAround === 0 && !newField[row][col].bomb) {
-          newField = revealEmptyCells(
-            [...newField.map((r) => r.map((cell) => ({ ...cell })))],
-            row,
-            col
-          );
-        } else {
-          newField[row][col].revealed = true;
-        }
-      }
-
-      return [...newField];
-    });
-  };
+    }
+  
+    return [...newField];
+  }
+  
+const handleClick = (row: number, col: number) => {
+  setField((prevField) => {
+    const updatedField = newFieldForSetter(prevField, row, col, firstClick);
+    setFirstClick(false);
+    return updatedField;
+  });
+};
 
   const handleRightClick = (
     event: React.MouseEvent<HTMLButtonElement>,
