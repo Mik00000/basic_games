@@ -14,6 +14,7 @@ import { Partners } from "./sections/Partners.tsx";
 import { Testimonials } from "./sections/Testimonials.tsx";
 import { Footer } from "./sections/Footer.tsx";
 import { Minesweeper } from "./pages/Minesweeper.tsx";
+import { ConnectFour } from "./pages/ConnectFour.tsx";
 function App() {
   return (
     <div className="App">
@@ -34,6 +35,8 @@ function App() {
             }
           />
           <Route path="/games/minesweeper" element={<Minesweeper />} />
+          <Route path="/games/connect4" element={<ConnectFour />} />
+
         </Routes>
         <Footer />
       </Router>

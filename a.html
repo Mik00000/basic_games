@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagination</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .pagination {
+      display: flex;
+      list-style: none;
+      padding: 0;
+    }
+    .pagination li {
+      margin: 0 5px;
+      cursor: pointer;
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      color: #555;
+      user-select: none;
+    }
+    .pagination li.active {
+      font-weight: bold;
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    .pagination li.disabled {
+      color: #ccc;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<ul class="pagination" id="pagination">
+</ul>
+
+<script>
+  const totalPages = 11;
+  const pagination = document.getElementById('pagination');
+
+  function renderPagination(currentPage) {
+    pagination.innerHTML = '';
+
+    // Previous button
+    const prev = document.createElement('li');
+    prev.textContent = '❮';
+    prev.className = currentPage === 1 ? 'disabled' : '';
+    prev.onclick = () => {
+      if (currentPage > 1) renderPagination(currentPage - 1);
+    };
+    pagination.appendChild(prev);
+
+    // First page
+    const firstPage = document.createElement('li');
+    firstPage.textContent = '1';
+    firstPage.className = currentPage === 1 ? 'active' : '';
+    firstPage.onclick = () => renderPagination(1);
+    pagination.appendChild(firstPage);
+
+    // Ellipsis if needed
+    if (currentPage > 3) {
+      const ellipsis = document.createElement('li');
+      ellipsis.textContent = '...';
+      ellipsis.className = 'disabled';
+      pagination.appendChild(ellipsis);
+    }
+
+    // Middle pages
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      const page = document.createElement('li');
+      page.textContent = i;
+      page.className = currentPage === i ? 'active' : '';
+      page.onclick = () => renderPagination(i);
+      pagination.appendChild(page);
+    }
+
+    // Ellipsis if needed
+    if (currentPage < totalPages - 2) {
+      const ellipsis = document.createElement('li');
+      ellipsis.textContent = '...';
+      ellipsis.className = 'disabled';
+      pagination.appendChild(ellipsis);
+    }
+
+    // Last page
+    const lastPage = document.createElement('li');
+    lastPage.textContent = totalPages;
+    lastPage.className = currentPage === totalPages ? 'active' : '';
+    lastPage.onclick = () => renderPagination(totalPages);
+    pagination.appendChild(lastPage);
+
+    // Next button
+    const next = document.createElement('li');
+    next.textContent = '❯';
+    next.className = currentPage === totalPages ? 'disabled' : '';
+    next.onclick = () => {
+      if (currentPage < totalPages) renderPagination(currentPage + 1);
+    };
+    pagination.appendChild(next);
+  }
+
+  // Initialize
+  renderPagination(1);
+</script>
+
+</body>
+</html>
