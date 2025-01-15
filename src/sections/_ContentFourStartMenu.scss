@@ -1,0 +1,137 @@
+.connect-four-start-menu {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid darken($light-background, 5%);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: $light-text;
+
+  .menu-header {
+    margin-bottom: 20px;
+
+    h1 {
+      text-align: center;
+      @include for-text(second-headline);
+      font-size: 36px;
+      color: $primary;
+    }
+  }
+
+  .menu-section {
+    margin-bottom: 20px;
+
+    h2 {
+      text-align: center;
+      @include for-text(sub-heading);
+      color: darken($light-text, 10%);
+      margin-bottom: 10px;
+    }
+
+    .game-modes button,
+    .menu-actions button {
+      display: inline-block;
+      margin: 5px 10px;
+      @include for-button(
+        $bg-color: $primary,
+        $text-color: $light-text,
+        $padding: 10px 15px
+      );
+      @include for-text(link);
+      border-radius: 5px;
+    }
+
+    .game-modes {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      button {
+        &:hover {
+          background: lighten($primary, 15%);
+        }
+
+        &.active {
+          background: $confirm-text;
+        }
+      }
+    }
+  }
+
+  .player-settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    .player {
+      background: $light-background;
+      border: 1px solid darken($light-background, 10%);
+      border-radius: 5px;
+      padding: 10px;
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        color: $first-text;
+        &:last-child {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          margin:0;
+        }
+        input[type="text"] {
+          width: 100%;
+          padding: 8px;
+          @include for-text(paragraph);
+          border: 1px solid darken($light-background, 10%);
+          border-radius: 5px;
+        }
+
+        input[type="color"] {
+          width: 50px;
+          height: 30px;
+          border: none;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  .menu-actions {
+    display: flex;
+    justify-content: space-around;
+
+    .start-button {
+      @include for-button(
+        $bg-color: $confirm-text,
+        $text-color: $light-text,
+        $padding: 10px 20px
+      );
+    }
+
+    .exit-button {
+      @include for-button(
+        $bg-color: $deny-text,
+        $text-color: $light-text,
+        $padding: 10px 20px
+      );
+    }
+
+    button {
+      padding: 10px 20px;
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+}
+.error-message {
+  color: $deny-text;
+  font-size: 14px;
+  margin-top: 5px;
+
+  &.general-error {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+}

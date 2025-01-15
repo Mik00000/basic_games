@@ -1,50 +1,221 @@
-$player-color-1: var(--player-color-1);
-$player-color-2: var(--player-color-2);
+$cellSize: 150px;
+$falling-duration: 0.5s;
+$bounce-height: 7px;
 
 .connect-four {
-  .field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  .top-bar{
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
-    .row {
+    width: 100%;
+    height: 55px;
+    padding: 0 20px;
+    position: relative;
+    .left-part{
+      position: absolute;
+      left: 20px;
+      .exit-btn{
+        @include for-button(
+          $bg-color: $deny-text,
+          $text-color: $light-text,
+          $padding: 10px 20px
+        );
+      }
+    }
+    .mid-part{
       display: flex;
-      .cell {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        overflow: hidden;
+      gap:20px;
+      
+    }
+    .right-part{
+      position: absolute;
+      right: 20px;
+      .restart-btn{
+        @include for-button($bg-color: $secondary, $padding: 10px 46px);
 
+      }
+    }
+  }
+  .field-main {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+
+    .field {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 5%;
+      .row {
+        display: flex;
+
+        .cell {
+          position: relative;
+          width: $cellSize;
+          height: $cellSize;
+          overflow: hidden;
+
+          &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: calc($cellSize * 0.75);
+            height: calc($cellSize * 0.75);
+            background-color: transparent;
+            border-radius: 50%;
+            box-shadow: 0 0 0 200px #232930;
+            transform: translate(-50%, -50%);
+            background: var(--after-color, transparent);
+          }
+
+          &.hovered-col::after {
+            box-shadow: 0 0 0 200px lighten(#232930, 1.7%);
+          }
+        }
+      }
+    }
+
+    .field-with-checkers {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+
+      .row {
+        display: flex;
+
+        .cell {
+          position: relative;
+          width: $cellSize;
+          height: $cellSize;
+          overflow: hidden;
+          &.last-checker::before{
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: calc($cellSize * 0.13);
+            height: calc($cellSize * 0.13);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: darken($light-background,10);
+            z-index: 1;
+          }
+          &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: calc($cellSize * 0.75);
+            height: calc($cellSize * 0.75);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--after-color, transparent);
+          }
+
+          &.hovered-by-player-1::after {
+            background-color: #{"rgba(var(--player-color-1), 0.4)"};
+          }
+          &.hovered-by-player-2::after {
+            background-color: #{"rgba(var(--player-color-2), 0.4)"};
+          }
+          &.active-by-player-1::after {
+            background-color: rgb(var(--player-color-1));
+          }
+          &.active-by-player-2::after {
+            background-color: rgb(var(--player-color-2));
+          }
+
+          // Додаємо анімацію падіння
+          &.falling {
+            animation: fallAnimation $falling-duration ease-out forwards;
+          }
+        }
+      }
+    }
+  }
+  .pop-up {
+    position: fixed;
+    width: 500px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: $dark-background;
+    border-radius: 5%;
+    border: 1px solid lighten($dark-background, 10);
+    transition: opacity 0.3s ease, transform 0.3s ease; // Додавання плавного переходу
+
+    .content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 30px;
+      align-items: center;
+      padding: 8% 20px 20px 20px;
+      .heading {
+        @include for-text(second-headline);
+      }
+      .control-buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        .leave-btn,
+        .restart-btn,
+        .back-btn {
+          @include for-button($bg-color: $secondary, $padding: 14px 46px);
+        }
+      }
+      .winner-checker {
+        position: relative;
+        width: $cellSize;
+        height: $cellSize;
+        overflow: hidden;
+        &.falling {
+          animation: fallAnimation $falling-duration ease-out forwards;
+        }
         &::after {
           content: "";
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 150px; /* діаметр кола */
-          height: 150px; /* діаметр кола */
-          background-color: transparent; /* прозорий колір */
+          width: calc($cellSize * 0.75);
+          height: calc($cellSize * 0.75);
           border-radius: 50%;
-          box-shadow: 0 0 0 200px #232930; /* створює враження, що квадрат залишився навколо */
           transform: translate(-50%, -50%);
-
-          background: var(--after-color, transparent);
-        }
-        &.hovered-col::after {
-          box-shadow: 0 0 0 200px #232930b2;
-        }
-        &.hovered-by-player-1::after {
-          background-color: #{'rgba(var(--player-color-1), 0.4)'};
-        }
-        &.hovered-by-player-2::after {
-          background-color: #{'rgba(var(--player-color-2), 0.4)'};
-        }
-        &.active-by-player-1::after {
-          background-color: rgb(var(--player-color-1));
-        }
-        &.active-by-player-2::after {
-          background-color: rgb(var(--player-color-2));
+          background: rgb(var(--winner-color, transparent));
         }
       }
+    }
+  }
+  // Анімація падіння фішки з пружинистим відскоком
+  @keyframes fallAnimation {
+    0% {
+      transform: translateY(-100vh); /* Початкове положення за межами екрана */
+    }
+    70% {
+      transform: translateY(0); /* Фішка падає в клітинку */
+    }
+    90% {
+      transform: translateY(-$bounce-height); /* Фішка трохи відскакує вгору */
+    }
+    100% {
+      transform: translateY(0); /* Фішка остаточно зупиняється в клітинці */
     }
   }
 }

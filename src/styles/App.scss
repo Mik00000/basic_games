@@ -9,7 +9,16 @@
 @import "../sections/Footer";
 @import "../pages/Minesweeper";
 @import "../pages/ConnectFour";
+@import "../sections/ContentFourStartMenu";
+body {
+  background-color: $dark-background;
+}
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  .main {
 
-body{
-    background-color: $dark-background;
+  }
 }
