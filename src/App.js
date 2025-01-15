@@ -15,29 +15,40 @@ import { Testimonials } from "./sections/Testimonials.tsx";
 import { Footer } from "./sections/Footer.tsx";
 import { Minesweeper } from "./pages/Minesweeper.tsx";
 import { ConnectFour } from "./pages/ConnectFour.tsx";
+import ConnectFourStartMenu from "./sections/ConnectFourStartMenu.tsx";
+import Test from "./components/Test.tsx";
 function App() {
   return (
     <div className="App">
       <Router>
         <Header />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Hero />
-                <Features />
-                <Contents />
-                <Gallery />
-                <Partners />
-                <Testimonials />
-              </>
-            }
-          />
-          <Route path="/games/minesweeper" element={<Minesweeper />} />
-          <Route path="/games/connect4" element={<ConnectFour />} />
-
-        </Routes>
+        <div className="main">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <Hero />
+                  <Features />
+                  <Contents />
+                  <Gallery />
+                  <Partners />
+                  <Testimonials />
+                </>
+              }
+            />
+            <Route path="/games/minesweeper" element={<Minesweeper />} />
+            <Route path="/games/connect4" element={<ConnectFour />} />
+            <Route
+              path="/games/connect4-menu"
+              element={<ConnectFourStartMenu />}
+            />
+            <Route
+              path="/test"
+              element={<Test />}
+            />
+          </Routes>
+        </div>
         <Footer />
       </Router>
     </div>
