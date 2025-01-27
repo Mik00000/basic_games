@@ -6,7 +6,7 @@ export const generateRandomNumber = (min: number, max: number): number => {
 
 type typeOfResultType = "string" | "object" | "str" | "obj"; 
 
-export function hexToRgb(hex: string, typeOfResult: typeOfResultType = "string"): string | null | { r: number, g: number, b: number } {
+export function hexToRgb(hex: string, typeOfResult: typeOfResultType = "string"): string | { r: number, g: number, b: number } {
   const cleanHex = hex.replace('#', '');
   
   // Перевірка на правильність HEX-формату
@@ -19,12 +19,16 @@ export function hexToRgb(hex: string, typeOfResult: typeOfResultType = "string")
   const b = parseInt(cleanHex.substring(4, 6), 16);
 
   // Перевірка, чи потрібно повертати об'єкт чи рядок
-  if (typeOfResult === "object" || typeOfResult === "obj" ) {
+  if (typeOfResult === "object" || typeOfResult === "obj") {
     return { r, g, b };
-  } else {
+  } else if (typeOfResult === "string" || typeOfResult === "str") {
     return `${r}, ${g}, ${b}`;
   }
+
+  // Доданий завершальний return
+  throw new Error('Invalid typeOfResult value');
 }
+
 
 function colorDistance(color1: { r: number, g: number, b: number }, color2: { r: number, g: number, b: number }): number {
   const dr = color1.r - color2.r;

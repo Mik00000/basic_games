@@ -1,51 +1,45 @@
 import React, { useState } from "react";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
+import Timer from "../components/Timer.tsx";
+import { generateRandomNumber } from "../components/utils.ts";
 
 const Test: React.FC = () => {
-  // State для ключа, який використовується для перезапуску таймера
-  const [key, setKey] = useState(0);
+  const TimeToForgotGame = 3 * 60 * 60 * 1000;
+  const [isRunning, setIsRunning] = useState(false);
+  const [timerMaxTime, setTimerMaxTime] = useState<number>(3000);
 
-  // Функція для перезапуску таймера
+  const [key, setKey] = useState(0); // Ключ для перезапуску
+
   const handleRestart = () => {
+    localStorage.removeItem('connectFourTimerTime');
+
     setKey((prevKey) => prevKey + 1);
+    console.log(key)
   };
+  // const handleRestart = () => {
+  //   // setTimerTime((prevTime) => (prevTime === timerMaxTime ? prevTime - 1 : timerMaxTime));
+    
+  // };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <CountdownCircleTimer
-        key={key} // Використовуємо ключ для перезапуску
-        isPlaying
-        duration={10} // Тривалість таймера в секундах
-        colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
-        colorsTime={[10, 6, 3, 0]} // Кольори змінюються залежно від часу
-        onComplete={() => {
-          // Таймер завершується, але можна виконати якусь дію
-          console.log("Timer completed");
-          return { shouldRepeat: false }; // Не повторювати автоматично
-        }}
-      >
-        {({ remainingTime }) => (
-          <div>
-            <p style={{ fontSize: "24px", fontWeight: "bold" }}>{remainingTime}</p>
-            <p>seconds</p>
-          </div>
-        )}
-      </CountdownCircleTimer>
+    <div className="a">
+      <Timer
+        startTime={timerMaxTime}
+        timerName={"connectFourTimerTime"}
+        timeToForgotTimer={TimeToForgotGame}
+        pause={isRunning}
+        key={key}
+      />  
       <button
-        onClick={handleRestart}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "none",
-          backgroundColor: "#007BFF",
-          color: "white",
+        onClick={() => {
+          setIsRunning((prev) => !prev);
         }}
       >
-        Restart Timer
+        {isRunning ? "Pause" : "Resume"}
       </button>
+
+
+
+      <button onClick={handleRestart}>Restart</button> {/* Новий кнопка для оновлення часу */}
     </div>
   );
 };

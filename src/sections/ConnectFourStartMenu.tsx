@@ -31,13 +31,22 @@ const ConnectFourStartMenu: React.FC = () => {
       setGeneralError('Players cannot have the same name.');
       isValid = false;
     }
-    if (playerOneColor === playerTwoColor || areColorsTooSimilar(playerOneColor, playerTwoColor, 70)) {
+    if (playerOneColor === playerTwoColor || areColorsTooSimilar(playerOneColor, playerTwoColor, 75)) {
       setGeneralError('Players cannot have the same or too similar colors.');
       isValid = false;
     }
+    if(areColorsTooSimilar(playerOneColor,"#232930",90)||areColorsTooSimilar(playerOneColor,"#181818",90)){
+      setPlayerOneError('Player 1 cannot have the same color as the field or colors that are too similar to it')
+      isValid = false;
+
+    }
+    if(areColorsTooSimilar(playerTwoColor,"#232930",90)||areColorsTooSimilar(playerTwoColor,"#181818",90)){
+      setPlayerTwoError('Player 2 cannot have the same color as the field or colors that are too similar to it')
+      isValid = false;
+
+    }
     return isValid;
   };
-
   const startGame = () => {
     if (!validateInputs()) {
       return;
@@ -50,6 +59,7 @@ const ConnectFourStartMenu: React.FC = () => {
         playerTwoName,
         playerOneColor,
         playerTwoColor,
+        
       },
     });
   };

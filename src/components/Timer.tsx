@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { formatTime, useStickyStateWithExpiry } from "./utils.ts";
 
 interface TimerProps {
-  startTime: number;
+  startTime: number;  // Час у мілісекундах
   timerName: string;
   timeToForgotTimer?: number;
   pause?: boolean;
-  setTime?: number | null;
+  onComplete?: any;
 }
 
 const Timer: React.FC<TimerProps> = ({
@@ -14,36 +14,54 @@ const Timer: React.FC<TimerProps> = ({
   timerName,
   timeToForgotTimer = 0,
   pause = false,
-  setTime = null,
+  onComplete
 }) => {
-  const [seconds, setSeconds] = useStickyStateWithExpiry(
+  const [milliseconds, setMilliseconds] = useStickyStateWithExpiry(
     startTime,
     timerName,
     timeToForgotTimer,
     "time"
   );
   const [isRunning, setIsRunning] = useState(!pause);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Синхронізація стану isRunning із пропсом pause
   useEffect(() => {
+    // Синхронізуємо isRunning з паузою
     setIsRunning(!pause);
   }, [pause]);
+
   useEffect(() => {
-    if (setTime !== null) setSeconds(setTime);
-  }, [setTime]);
+    if (isRunning) {
+      if (intervalRef.current) clearInterval(intervalRef.current); // очищаємо попередній інтервал
+
+      intervalRef.current = setInterval(() => {
+        setMilliseconds((prev) => Math.max(prev - 10, 0)); // Зменшуємо на 100 мс
+      }, 10); // Запускаємо інтервал кожні 100 мс
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current); // зупиняємо інтервал, коли таймер на паузі
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current); // очищаємо інтервал при размонтуванні компонента
+    };
+  }, [isRunning, setMilliseconds]);
+
   useEffect(() => {
-    if (!isRunning) return; // Якщо таймер на паузі, не запускаємо інтервал
+    if (milliseconds === 0 && onComplete) {
+      onComplete();
+    }
+  }, [milliseconds, onComplete]);
 
-    const interval = setInterval(() => {
-      setSeconds((prev) => Math.max(prev - 1, 0)); // Запобігаємо негативному часу
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isRunning, setSeconds]);
-
+  // Перетворюємо мілісекунди в формат для виведення
+  // const formatMilliseconds = (ms: number) => {
+  //   const seconds = Math.floor(ms / 1000);
+  //   const milliseconds = Math.floor((ms % 1000)/100);
+  //   return `${seconds}:${milliseconds}`;
+  // };
+  // formatMilliseconds(milliseconds)
   return (
-    <div>
-      <h1>Timer: {formatTime(seconds)}s</h1>
+    <div className="number-timer">
+      <h1>{Math.floor(milliseconds / 1000)}s</h1>
     </div>
   );
 };
