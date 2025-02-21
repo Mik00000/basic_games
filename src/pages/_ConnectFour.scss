@@ -1,4 +1,4 @@
-$cellSize: 150px;
+$cellSize: 130px;
 $falling-duration: 0.5s;
 $bounce-height: 7px;
 
@@ -65,7 +65,11 @@ $bounce-height: 7px;
       display: flex;
       .pause-btn{
         @include for-button($bg-color: darken($confirm-text, 10), $padding: 10px 46px);
+        &.paused{
+          background-color: $deny-text;
+        }
       }
+
       .restart-btn {
         @include for-button($bg-color: $secondary, $padding: 10px 46px);
       }
@@ -188,7 +192,7 @@ $bounce-height: 7px;
     border-radius: 5%;
     border: 1px solid lighten($dark-background, 10);
     transition: opacity 0.3s ease, transform 0.3s ease; // Додавання плавного переходу
-
+    z-index: 10;
     .content {
       width: 100%;
       height: 100%;
@@ -268,7 +272,7 @@ $bounce-height: 7px;
 }
 body {
 
-  -webkit-perspective: 800px;
+  perspective: 800px;
 }
 h1{
   text-align: center;
@@ -290,11 +294,11 @@ h1{
 }
 
 .side-a {
-  background-color: #bb0000;
+  background-color: rgb(var(--player-color-1));
 }
 
 .side-b {
-  background-color: #3e3e3e;
+  background-color: rgb(var(--player-color-2));
   transform: rotateY(-180deg);
 }
 
@@ -313,58 +317,38 @@ h1{
 }
 
 #coin.heads {
-  animation: flipHeads 3s ease-out forwards, shadowAnimation 3s ease-out;
+  animation: flipHeads 3s ease-out forwards;
 }
 
 #coin.tails {
-  animation: flipTails 3s ease-out forwards, shadowAnimation 3s ease-out;
+  animation: flipTails 3s ease-out forwards;
 }
+
+
 
 @keyframes flipHeads {
-  from {
-    transform: rotateY(0);
-  }
-  50% {
-    transform: rotateY(900deg) scale(1.2);
-  }
-  to {
-    transform: rotateY(1800deg) scale(1);
-  }
+  from { transform: rotateY(0); -moz-transform: rotateY(0); transform: rotateY(0); }
+  to { transform: rotateY(1800deg); -moz-transform: rotateY(1800deg); transform: rotateY(1800deg); }
 }
-
 @keyframes flipTails {
-  from {
-    transform: rotateY(0);
-  }
-  50% {
-    transform: rotateY(990deg) scale(1.2);
-  }
-  to {
-    transform: rotateY(1980deg) scale(1);
-  }
+  from { transform: rotateY(0); -moz-transform: rotateY(0); transform: rotateY(0); }
+  to { transform: rotateY(1980deg); -moz-transform: rotateY(1980deg); transform: rotateY(1980deg); }
 }
 
-@keyframes shadowAnimation {
-  from {
-    box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.4);
+.pause {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 22.5px;
+  z-index: 1;
+  &::before,
+  &::after {
+    content: "";
+    width: 22.5px;
+    height: 90px;
+    background-color: $light-background;
+    display: block;
   }
-  50% {
-    box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.6);
-  }
-  to {
-    box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.4);
-  }
-}
-
-@keyframes shine {
-  0%, 100% {
-    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.5), transparent 80%);
-  }
-  50% {
-    background: radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.8), transparent 80%);
-  }
-}
-
-#coin div {
-  animation: shine 3s infinite;
 }

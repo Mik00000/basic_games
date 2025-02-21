@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-const fieldArea = 16;
-const bombPercentage = 20;
+const fieldArea = 20;
+const bombPercentage = 80;
 
 type Cell = {
   bomb: boolean;

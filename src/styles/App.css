@@ -1076,6 +1076,9 @@ footer.footer .right-part .social a {
 .connect-four .top-bar .right-part .pause-btn:hover {
   background-color: #2dbc4e;
 }
+.connect-four .top-bar .right-part .pause-btn.paused {
+  background-color: #dc3545;
+}
 .connect-four .top-bar .right-part .restart-btn {
   padding: 10px;
   font-size: 17px;
@@ -1114,8 +1117,8 @@ footer.footer .right-part .social a {
 }
 .connect-four .field-main .field .row .cell {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
   overflow: hidden;
 }
 .connect-four .field-main .field .row .cell::after {
@@ -1123,8 +1126,8 @@ footer.footer .right-part .social a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 112.5px;
-  height: 112.5px;
+  width: 97.5px;
+  height: 97.5px;
   background-color: transparent;
   border-radius: 50%;
   box-shadow: 0 0 0 200px #232930;
@@ -1151,8 +1154,8 @@ footer.footer .right-part .social a {
 }
 .connect-four .field-main .field-with-checkers .row .cell {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
   overflow: hidden;
 }
 .connect-four .field-main .field-with-checkers .row .cell.last-checker::before {
@@ -1160,8 +1163,8 @@ footer.footer .right-part .social a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 19.5px;
-  height: 19.5px;
+  width: 16.9px;
+  height: 16.9px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: #e6e6e6;
@@ -1172,8 +1175,8 @@ footer.footer .right-part .social a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 112.5px;
-  height: 112.5px;
+  width: 97.5px;
+  height: 97.5px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: var(--after-color, transparent);
@@ -1203,6 +1206,7 @@ footer.footer .right-part .social a {
   border-radius: 5%;
   border: 1px solid #323232;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
 }
 .connect-four .pop-up .content {
   width: 100%;
@@ -1252,8 +1256,8 @@ footer.footer .right-part .social a {
 }
 .connect-four .pop-up .content .winner-checker {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
   overflow: hidden;
 }
 .connect-four .pop-up .content .winner-checker.falling {
@@ -1264,8 +1268,8 @@ footer.footer .right-part .social a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 112.5px;
-  height: 112.5px;
+  width: 97.5px;
+  height: 97.5px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: rgb(var(--winner-color, transparent));
@@ -1305,7 +1309,7 @@ footer.footer .right-part .social a {
 }
 
 body {
-  -webkit-perspective: 800px;
+  perspective: 800px;
 }
 
 h1 {
@@ -1329,11 +1333,11 @@ h1 {
 }
 
 .side-a {
-  background-color: #bb0000;
+  background-color: rgb(var(--player-color-1));
 }
 
 .side-b {
-  background-color: #3e3e3e;
+  background-color: rgb(var(--player-color-2));
   transform: rotateY(-180deg);
 }
 
@@ -1352,56 +1356,48 @@ h1 {
 }
 
 #coin.heads {
-  animation: flipHeads 3s ease-out forwards, shadowAnimation 3s ease-out;
+  animation: flipHeads 3s ease-out forwards;
 }
 
 #coin.tails {
-  animation: flipTails 3s ease-out forwards, shadowAnimation 3s ease-out;
+  animation: flipTails 3s ease-out forwards;
 }
 
 @keyframes flipHeads {
   from {
     transform: rotateY(0);
-  }
-  50% {
-    transform: rotateY(900deg) scale(1.2);
+    transform: rotateY(0);
   }
   to {
-    transform: rotateY(1800deg) scale(1);
+    transform: rotateY(1800deg);
+    transform: rotateY(1800deg);
   }
 }
 @keyframes flipTails {
   from {
     transform: rotateY(0);
-  }
-  50% {
-    transform: rotateY(990deg) scale(1.2);
+    transform: rotateY(0);
   }
   to {
-    transform: rotateY(1980deg) scale(1);
+    transform: rotateY(1980deg);
+    transform: rotateY(1980deg);
   }
 }
-@keyframes shadowAnimation {
-  from {
-    box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.4);
-  }
-  50% {
-    box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.6);
-  }
-  to {
-    box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.4);
-  }
+.pause {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 22.5px;
+  z-index: 1;
 }
-@keyframes shine {
-  0%, 100% {
-    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.5), transparent 80%);
-  }
-  50% {
-    background: radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.8), transparent 80%);
-  }
-}
-#coin div {
-  animation: shine 3s infinite;
+.pause::before, .pause::after {
+  content: "";
+  width: 22.5px;
+  height: 90px;
+  background-color: #fff;
+  display: block;
 }
 
 .connect-four-start-menu {
