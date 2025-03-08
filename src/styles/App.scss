@@ -10,6 +10,8 @@
 @import "../pages/Minesweeper";
 @import "../pages/ConnectFour";
 @import "../sections/ContentFourStartMenu";
+@import "../sections/MinesweeperStartMenu";
+
 body {
   background-color: $dark-background;
 }
@@ -20,3 +22,6 @@ body {
   justify-content: space-between;
 
 }
+
+
+

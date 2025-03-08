@@ -1,14 +1,218 @@
-#field{
-    .row{
+$cellSize: 40px; // Розмір клітинки
+
+// Основні кольори
+$dark-background:#181818;
+
+$cell-background: #232930;
+
+$cell-hover: lighten($cell-background, 10);
+$cell-revealed: lighten($cell-background, 5);
+$cell-bomb: #634343;
+
+
+$border-color: lighten($cell-background, 2);
+$border-color-hover: lighten($cell-background, 20);
+$border-color-revealed: lighten($cell-background, 1);
+.minesweeper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+
+    color: $light-background;
+    border-radius: 5%;
+
+    .flag-count {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        user-select: none;
+    }
+
+    #field {
         display: flex;
-        .cell{
-            width: 24px!important;
-            height: 24px!important;
+        flex-direction: column;
+        background-color: lighten($dark-background, 5);
+        border-radius: 2%;
+        padding: 10px;
+
+
+        overflow: hidden;
+        .row:first-child .cell:first-child{
+            border-radius: 30% 0 0 0;
+        }
+        .row:last-child .cell:first-child{
+            border-radius: 0 0 0 30%;
+        }
+        .row:first-child .cell:last-child{
+            border-radius: 0 30% 0 0;
+        }
+        .row:last-child .cell:last-child{
+            border-radius: 0 0 30% 0;
+        }
+    }
+
+    .row {
+        display: flex;
+    }
+
+    .cell {
+        width: $cellSize;
+        height: $cellSize;
+        border: 1px solid $border-color;
+        background-color: $cell-background;
+        font-size: 1.5em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+
+        transition: background-color 0.2s ease;
+        user-select: none;
+
+        &:hover {
+            background-color: $cell-hover;
+            border: 1px solid $border-color-hover;
+        }
+
+        &.revealed {
+            background-color: $cell-revealed;
+            border: 1px solid $border-color-revealed;
+
+        }
+
+
+        &.bomb {
+            position: relative;
+            animation: explode 0.5s forwards;
+        }
+        &.bombs-around-1 {
+            color: #2a71d0;
+        }
+        
+        &.bombs-around-2 {
+            color: #3a9d23;
+        }
+        
+        &.bombs-around-3 {
+            color: #d02a2a;
+        }
+        
+        &.bombs-around-4 {
+            color: #872ca8;
+        }
+        
+        &.bombs-around-5 {
+            color: #a85c2c;
+        }
+        
+        &.bombs-around-6 {
+            color: #2ca899;
+        }
+        
+        &.bombs-around-7 {
+            color: #4c4c9d;
+        }
+        
+        &.bombs-around-8 {
+            color: #cfca34;
+        }
+        
+    }
+
+      .pop-up {
+        position: fixed;
+        width: 500px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: $dark-background;
+        border-radius: 5%;
+        border: 1px solid lighten($dark-background, 10);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        z-index: 10;
+        .content {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          gap: 30px;
+          align-items: center;
+          padding: 8% 20px 20px 20px;
+          .heading {
+            @include for-text(second-headline);
+          }
+          .control-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            .leave-btn,
+            .restart-btn,
+            .back-btn {
+              @include for-button($bg-color: $secondary, $padding: 14px 46px);
+            }
+          }
+          .bomb-example > div{
+            position: relative;
+            animation: explode 0.5s forwards;
+            width: $cellSize;
+            height: $cellSize;
+            border: 1px solid $border-color;
+            background-color: $cell-background;
+            font-size: 1.5em;
             display: flex;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            border: 1px solid #999;
+            cursor: pointer;
+    
+            transition: background-color 0.2s ease;
+            user-select: none;
+          }
         }
+      }
+}
+
+
+@keyframes explode {
+    0% {
+        transform: scale(1);
+        background-color: $cell-background;
+        opacity: 1;
+        box-shadow: none;
+    }
+    20% {
+        transform: scale(1.2);
+        background-color: yellow;
+        opacity: 1;
+        box-shadow: 0 0 10px yellow;
+    }
+    40% {
+        transform: scale(1.5);
+        background-color: orange;
+        opacity: 0.9;
+        box-shadow: 0 0 20px orange;
+    }
+    60% {
+        transform: scale(1.8);
+        background-color: red;
+        opacity: 0.7;
+        box-shadow: 0 0 30px red;
+    }
+    80% {
+        transform: scale(2);
+        background-color: darkred;
+        opacity: 0.4;
+        box-shadow: 0 0 40px darkred;
+    }
+    100% {
+        transform: scale(2.5);
+        background-color: transparent;
+        opacity: 0;
+        box-shadow: none;
+        user-select: none;
+        pointer-events: none; 
     }
 }
+

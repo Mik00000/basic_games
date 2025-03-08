@@ -19,7 +19,7 @@ export const ConnectFour: React.FC = () => {
 
   const MAX_COLS = 5;
   const MAX_ROWS = 5;
-  const TimeToForgotGame = 3 * 60 * 60 * 1000;
+  const TimeToForgotGame = 0.5 * 60 * 60 * 1000;
 
   const [field, setField] = useStickyStateWithExpiry<number[][]>(
     Array.from({ length: MAX_ROWS }, () => Array(MAX_COLS).fill(0)),
@@ -27,7 +27,6 @@ export const ConnectFour: React.FC = () => {
     TimeToForgotGame
   );
 
-  // Обчислюємо, чи поле порожнє
   const fieldIsEmpty = field.every((row) => row.every((cell) => cell === 0));
 
   const [currentPlayer, setCurrentPlayer] = useStickyStateWithExpiry<
@@ -71,12 +70,10 @@ export const ConnectFour: React.FC = () => {
   const [circleTimer1Key, setCircleTimer1Key] = useState(1);
   const [circleTimer2Key, setCircleTimer2Key] = useState(1);
 
-  // Стан для контролю показу поп-апу монети
   const [showCoinToss, setShowCoinToss] = useState(true);
   useEffect(() => {
     if (showCoinToss) setIsPause(true);
   }, [showCoinToss, isPause]);
-  // Стан для відслідковування, чи це нова гра (restart)
   const [isNewGame, setIsNewGame] = useState<boolean>(currentPlayer === null);
 
   const cleanLocalStorage = () => {
@@ -172,7 +169,7 @@ export const ConnectFour: React.FC = () => {
         setWinner(currentPlayer);
         cleanLocalStorage();
       } else if (newField.every((row) => row.every((cell) => cell !== 0))) {
-        setWinner(0); // Нічия
+        setWinner(0);
         cleanLocalStorage();
       } else {
         setCurrentPlayer((prev) => (prev === 1 ? 2 : 1));
@@ -185,14 +182,12 @@ export const ConnectFour: React.FC = () => {
     setLastChecker(null);
     setCurrentPlayer(null);
     setWinner(null);
-    // Перезапуск гри – показуємо поп-ап монети та вважаємо це новою грою
     setShowCoinToss(true);
     setIsNewGame(true);
     cleanLocalStorage();
   };
 
   useEffect(() => {
-    // Оновлення таймерів при зміні currentPlayer
     if (currentPlayer === 1) {
       setCircleTimer2Key((prev) => prev + 1);
       if (timer2RemainingTime !== 22) setTimer2RemainingTime(22);
@@ -202,12 +197,10 @@ export const ConnectFour: React.FC = () => {
     }
   }, [currentPlayer, timer1RemainingTime, timer2RemainingTime]);
 
-  // Виконуємо coin toss, якщо поле порожнє, currentPlayer не встановлено і це нова гра
   useEffect(() => {
     if (fieldIsEmpty && currentPlayer === null && showCoinToss && isNewGame) {
       flipCoin();
     } else if (currentPlayer !== null && !isNewGame && showCoinToss) {
-      // Якщо гра завантажується з локального сховища (не нова), одразу ховаємо поп-up
       setShowCoinToss(false);
     }
   }, [fieldIsEmpty, currentPlayer, showCoinToss, isNewGame]);
@@ -220,7 +213,6 @@ export const ConnectFour: React.FC = () => {
       } else {
         setCurrentPlayer(2);
       }
-      // Якщо це нова гра, залишаємо поп-up видимим 5 секунд
       if (isNewGame) {
         setTimeout(() => {
           setShowCoinToss(false);
@@ -393,7 +385,6 @@ export const ConnectFour: React.FC = () => {
         </div>
       </div>
 
-      {/* Відображення поп-up монети */}
       {showCoinToss && fieldIsEmpty && (
         <div className="pop-up">
           <div className="pick-first-player">
@@ -469,7 +460,7 @@ export const ConnectFour: React.FC = () => {
           </div>
         </div>
       )}
-      {isPause && <div className="pause"></div>}
+      {isPause && <div className="pause"/>}
     </section>
   );
 };
