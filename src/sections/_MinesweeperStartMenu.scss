@@ -1,0 +1,79 @@
+.minesweeper-start-menu {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid darken($light-background, 5%);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: $light-text;
+
+  .menu-header {
+    margin-bottom: 20px;
+
+    h1 {
+      text-align: center;
+      @include for-text(second-headline);
+      font-size: 36px;
+      color: $primary;
+    }
+  }
+
+  .menu-section {
+    margin-bottom: 20px;
+
+    h2 {
+      text-align: center;
+      @include for-text(sub-heading);
+      color: darken($light-text, 10%);
+      margin-bottom: 10px;
+    }
+    .difficulty-slider {
+      display: flex;
+      flex-direction: column;
+      .game-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+      }
+    }
+  }
+
+  .menu-actions {
+    display: flex;
+    justify-content: space-around;
+
+    .start-button {
+      @include for-button(
+        $bg-color: $confirm-text,
+        $text-color: $light-text,
+        $padding: 10px 20px
+      );
+    }
+
+    .exit-button {
+      @include for-button(
+        $bg-color: $deny-text,
+        $text-color: $light-text,
+        $padding: 10px 20px
+      );
+    }
+
+    button {
+      padding: 10px 20px;
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+}
+.error-message {
+  color: $deny-text;
+  font-size: 14px;
+  margin-top: 5px;
+
+  &.general-error {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+}

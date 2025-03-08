@@ -191,7 +191,7 @@ $bounce-height: 7px;
     background-color: $dark-background;
     border-radius: 5%;
     border: 1px solid lighten($dark-background, 10);
-    transition: opacity 0.3s ease, transform 0.3s ease; // Додавання плавного переходу
+    transition: opacity 0.3s ease, transform 0.3s ease;
     z-index: 10;
     .content {
       width: 100%;

@@ -17,6 +17,7 @@ import { Minesweeper } from "./pages/Minesweeper.tsx";
 import { ConnectFour } from "./pages/ConnectFour.tsx";
 import ConnectFourStartMenu from "./sections/ConnectFourStartMenu.tsx";
 import Test from "./components/Test.tsx";
+import MinesweeperStartMenu from "./sections/MinesweeperStartMenu.tsx";
 function App() {
   return (
     <div className="App">
@@ -44,9 +45,10 @@ function App() {
               element={<ConnectFourStartMenu />}
             />
             <Route
-              path="/test"
-              element={<Test />}
+              path="/games/minesweeper-menu"
+              element={<MinesweeperStartMenu />}
             />
+            <Route path="/test" element={<Test />} />
           </Routes>
         </div>
         <Footer />

@@ -1,16 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pagination</title>
-<link rel="stylesheet" href="./src/styles/App.css">
+  <title>Анімація забирання прапору</title>
+  <!-- Підключаємо зкомпільований CSS -->
+  <link rel="stylesheet" href="./src/styles/App.css">
+
 </head>
 <body>
-<div class="ball">
+  <div class="cell">
+    <div class="flag"></div>
+  </div>
 
-</div>
-
-
+  <script>
+    // При кліку на клітинку запускаємо анімацію прапорця
+    document.querySelector('.cell').addEventListener('click', () => {
+      const flag = document.querySelector('.flag');
+      flag.classList.add('removing');
+    });
+  </script>
 </body>
 </html>
