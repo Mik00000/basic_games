@@ -1,69 +1,90 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { formatTime, useStickyStateWithExpiry } from "./utils.ts";
 
 interface TimerProps {
-  startTime: number;  // Час у мілісекундах
+  startTime: number;
   timerName: string;
   timeToForgotTimer?: number;
   pause?: boolean;
   onComplete?: any;
+  isGrowing?: boolean;
+  className?: string;
 }
 
-const Timer: React.FC<TimerProps> = ({
-  startTime,
-  timerName,
-  timeToForgotTimer = 0,
-  pause = false,
-  onComplete
-}) => {
-  const [milliseconds, setMilliseconds] = useStickyStateWithExpiry(
-    startTime,
-    timerName,
-    timeToForgotTimer,
-    "time"
-  );
-  const [isRunning, setIsRunning] = useState(!pause);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+export interface TimerHandle {
+  reset: () => void;
+}
 
-  useEffect(() => {
-    // Синхронізуємо isRunning з паузою
-    setIsRunning(!pause);
-  }, [pause]);
+const Timer = forwardRef<TimerHandle, TimerProps>(
+  (
+    {
+      startTime,
+      timerName,
+      timeToForgotTimer = 0,
+      pause = false,
+      onComplete,
+      isGrowing = false,
+      className
+    },
+    ref
+  ) => {
+    const [milliseconds, setMilliseconds] = useStickyStateWithExpiry(
+      startTime,
+      timerName,
+      timeToForgotTimer,
+      "time"
+    );
+    const [isRunning, setIsRunning] = useState(!pause);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (isRunning) {
-      if (intervalRef.current) clearInterval(intervalRef.current); // очищаємо попередній інтервал
-
-      intervalRef.current = setInterval(() => {
-        setMilliseconds((prev) => Math.max(prev - 10, 0)); // Зменшуємо на 100 мс
-      }, 10); // Запускаємо інтервал кожні 100 мс
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current); // зупиняємо інтервал, коли таймер на паузі
-    }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current); // очищаємо інтервал при размонтуванні компонента
+    const reset = () => {
+      setMilliseconds(startTime);
     };
-  }, [isRunning, setMilliseconds]);
 
-  useEffect(() => {
-    if (milliseconds === 0 && onComplete) {
-      onComplete();
-    }
-  }, [milliseconds, onComplete]);
+    useImperativeHandle(ref, () => ({
+      reset,
+    }));
 
-  // Перетворюємо мілісекунди в формат для виведення
-  // const formatMilliseconds = (ms: number) => {
-  //   const seconds = Math.floor(ms / 1000);
-  //   const milliseconds = Math.floor((ms % 1000)/100);
-  //   return `${seconds}:${milliseconds}`;
-  // };
-  // formatMilliseconds(milliseconds)
-  return (
-    <div className="number-timer">
-      <h1>{Math.floor(milliseconds / 1000)}s</h1>
-    </div>
-  );
-};
+    useEffect(() => {
+      setIsRunning(!pause);
+    }, [pause]);
+
+    useEffect(() => {
+      if (isRunning) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+
+        intervalRef.current = setInterval(() => {
+          setMilliseconds((prev) =>
+            Math.max(isGrowing ? prev + 10 : prev - 10, 0)
+          );
+        }, 10);
+      } else if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
+    }, [isRunning, setMilliseconds, isGrowing]);
+
+    useEffect(() => {
+      if (milliseconds === 0 && onComplete) {
+        onComplete();
+      }
+    }, [milliseconds, onComplete]);
+
+    return (
+      <div className={`number-timer ${className}`}>
+        <h1>{Math.floor(milliseconds / 1000)}s</h1>
+      </div>
+    );
+  }
+);
 
 export default Timer;
