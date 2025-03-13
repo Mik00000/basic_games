@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { formatTime, useStickyStateWithExpiry } from "./utils.ts";
+import { formatTime, useStickyStateWithExpiry } from "./utils";
 
 interface TimerProps {
   startTime: number;

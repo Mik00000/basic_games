@@ -1,8 +1,8 @@
-import { Contents } from "./sections/Contents.tsx";
-import { Gallery } from "./sections/Gallery.tsx";
-import { Features } from "./sections/Features.tsx";
-import { Header } from "./sections/Header.tsx";
-import { Hero } from "./sections/Hero.tsx";
+import { Contents } from "./sections/Contents";
+import { Gallery } from "./sections/Gallery";
+import { Features } from "./sections/Features";
+import { Header } from "./sections/Header";
+import { Hero } from "./sections/Hero";
 import "./styles/App.css";
 import {
   BrowserRouter as Router,
@@ -10,14 +10,13 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { Partners } from "./sections/Partners.tsx";
-import { Testimonials } from "./sections/Testimonials.tsx";
-import { Footer } from "./sections/Footer.tsx";
-import { Minesweeper } from "./pages/Minesweeper.tsx";
-import { ConnectFour } from "./pages/ConnectFour.tsx";
-import ConnectFourStartMenu from "./sections/ConnectFourStartMenu.tsx";
-import Test from "./components/Test.tsx";
-import MinesweeperStartMenu from "./sections/MinesweeperStartMenu.tsx";
+import { Partners } from "./sections/Partners";
+import { Testimonials } from "./sections/Testimonials";
+import { Footer } from "./sections/Footer";
+import { Minesweeper } from "./pages/Minesweeper";
+import { ConnectFour } from "./pages/ConnectFour";
+import ConnectFourStartMenu from "./sections/ConnectFourStartMenu";
+import MinesweeperStartMenu from "./sections/MinesweeperStartMenu";
 function App() {
   return (
     <div className="App">
@@ -48,7 +47,6 @@ function App() {
               path="/games/minesweeper-menu"
               element={<MinesweeperStartMenu />}
             />
-            <Route path="/test" element={<Test />} />
           </Routes>
         </div>
         <Footer />

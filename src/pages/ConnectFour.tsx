@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { hexToRgb, useStickyStateWithExpiry } from "../components/utils.ts";
+import { hexToRgb, useStickyStateWithExpiry } from "../components/utils";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
-import Timer from "../components/Timer.tsx";
-import ShowTextAfterTime from "../components/ShowTextAfterTime.tsx";
+import Timer from "../components/Timer";
+import ShowTextAfterTime from "../components/ShowTextAfterTime";
 
 export const ConnectFour: React.FC = () => {
   const navigate = useNavigate();

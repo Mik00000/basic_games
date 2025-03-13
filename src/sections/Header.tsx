@@ -48,7 +48,7 @@ export const Header = () => {
       <div className={`burger-menu ${isMenuOpen ? "open" : ""}`}>
         <div className="content">
           <button className="cross-btn btn" onClick={toggleMenu}>
-            <CrossIcon alt="cross-icon" className="cross-icon" />
+            <CrossIcon className="cross-icon" />
           </button>
           <nav>
             <ul>
