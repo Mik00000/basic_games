@@ -1,16 +1,16 @@
-import React, { useReducer, useEffect, useState } from "react";
+import React, { useReducer, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useStickyStateWithExpiry } from "../components/utils.ts";
+import Timer, { TimerHandle } from "../components/Timer.tsx";
+import clockIcon from "../assets/icons/clock.svg";
+import shovelIcon from "../assets/icons/shovel.svg";
+import bombIcon from "../assets/icons/bomb.svg";
+import flagIcon from "../assets/icons/flag-1.svg";
 
-let fieldArea = 4;
-let MAX_COLS = 4;
-let MAX_ROWS = 4;
-let bombPercentage = 20;
-
-if (MAX_ROWS < 3) MAX_ROWS = 3;
-if (MAX_COLS < 3) MAX_COLS = 3;
-if (fieldArea < 3) fieldArea = 3;
-if (bombPercentage >= 65) bombPercentage = 65;
-
+const MIN_ROWS = 3;
+const MIN_COLS = 3;
+// const MAX_BOMB_PERCENTAGE = 65;
+const TimeToForgotGame = 0.5 * 60 * 60 * 1000;
 type Cell = {
   bomb: boolean;
   flag: boolean;
@@ -24,6 +24,9 @@ type GameState = {
   flagCount: number;
   isPlayerLoose: boolean;
   isPlayerWin: boolean;
+  rows: number;
+  cols: number;
+  bombCount: number;
 };
 
 type Action =
@@ -33,49 +36,57 @@ type Action =
   | { type: "CELL_DOUBLE_CLICK"; row: number; col: number }
   | { type: "RESET_GAME" };
 
-function initializeField(
+function createBombField(
   rowSize: number,
   colSize: number,
-  bombPercent: number
+  bombCount: number
 ): number[][] {
   const totalCells = rowSize * colSize;
-  const totalBombs = Math.floor((totalCells * bombPercent) / 100);
-  let field = Array(totalBombs)
-    .fill(1)
-    .concat(Array(totalCells - totalBombs).fill(0));
-  field = shuffleArray(field);
+  const totalBombs = Math.max(1, bombCount);
+
+  if (
+    !Number.isFinite(totalBombs) ||
+    totalBombs < 0 ||
+    totalBombs > totalCells
+  ) {
+    console.error("Invalid bomb percentage:", bombCount);
+    return Array(rowSize)
+      .fill(0)
+      .map(() => Array(colSize).fill(0)); // Запасний варіант
+  }
+
+  const bombsArray = Array(totalBombs).fill(1);
+  const emptyArray = Array(totalCells - totalBombs).fill(0);
+  const fieldArray = shuffleArray([...bombsArray, ...emptyArray]);
   const grid: number[][] = [];
   for (let i = 0; i < rowSize; i++) {
-    grid.push(field.slice(i * colSize, (i + 1) * colSize));
+    grid.push(fieldArray.slice(i * colSize, (i + 1) * colSize));
   }
   return grid;
 }
 
 function shuffleArray<T>(array: T[]): T[] {
-  for (let i = array.length - 1; i > 0; i--) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
   }
-  return array;
+  return newArray;
 }
 
-function transformField(field: number[][]): Cell[][] {
-  const countBombsAround = (
-    field: number[][],
-    row: number,
-    col: number
-  ): number => {
-    let count = 0;
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-        if (field[row + i]?.[col + j] === 1) {
-          count++;
-        }
+function countBombsAround(field: number[][], row: number, col: number): number {
+  let count = 0;
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      if (field[row + i]?.[col + j] === 1) {
+        count++;
       }
     }
-    return count;
-  };
+  }
+  return count;
+}
 
+function mapFieldToCells(field: number[][]): Cell[][] {
   return field.map((row, rowIndex) =>
     row.map((cell, colIndex) => ({
       bomb: cell === 1,
@@ -86,39 +97,30 @@ function transformField(field: number[][]): Cell[][] {
   );
 }
 
-function hasBombsAround(field: number[][], row: number, col: number): boolean {
-  for (let i = -1; i <= 1; i++) {
-    for (let j = -1; j <= 1; j++) {
-      if (field[row + i]?.[col + j] === 1) return true;
-    }
-  }
-  return false;
-}
-
-function initializeSafeField(
+function generateSafeField(
   rowSize: number,
   colSize: number,
   safeRow: number,
   safeCol: number,
-  bombPercent: number
+  bombCount: number
 ): Cell[][] {
   let field: number[][];
   do {
-    field = initializeField(rowSize, colSize, bombPercent);
+    field = createBombField(rowSize, colSize, bombCount);
   } while (
     field[safeRow][safeCol] === 1 ||
-    hasBombsAround(field, safeRow, safeCol)
+    countBombsAround(field, safeRow, safeCol) >= 1
   );
-  return transformField(field);
+  return mapFieldToCells(field);
 }
 
-function revealCells(
+function revealEmptyCells(
   field: Cell[][],
   row: number,
   col: number
-): { newField: Cell[][]; flagDelta: number } {
-  const newField = field.map((r) => r.map((cell) => ({ ...cell })));
-  let flagDelta = 0;
+): { updatedField: Cell[][]; flagAdjustment: number } {
+  const updatedField = field.map((r) => r.map((cell) => ({ ...cell })));
+  let flagAdjustment = 0;
   const stack: [number, number][] = [[row, col]];
   const visited = new Set<string>();
 
@@ -128,12 +130,12 @@ function revealCells(
     if (visited.has(key)) continue;
     visited.add(key);
 
-    const cell = newField[r][c];
+    const cell = updatedField[r][c];
     if (cell.revealed) continue;
     cell.revealed = true;
     if (cell.flag) {
       cell.flag = false;
-      flagDelta += 1;
+      flagAdjustment++;
     }
     if (!cell.bomb && cell.bombsAround === 0) {
       for (let i = -1; i <= 1; i++) {
@@ -142,9 +144,9 @@ function revealCells(
           const newCol = c + j;
           if (
             newRow >= 0 &&
-            newRow < newField.length &&
+            newRow < updatedField.length &&
             newCol >= 0 &&
-            newCol < newField[0].length &&
+            newCol < updatedField[0].length &&
             !visited.has(`${newRow},${newCol}`)
           ) {
             stack.push([newRow, newCol]);
@@ -153,83 +155,77 @@ function revealCells(
       }
     }
   }
-  return { newField, flagDelta };
+  return { updatedField, flagAdjustment };
 }
 
-function toggleFlag(
+function updateFlagStatus(
   field: Cell[][],
   row: number,
   col: number,
-  currentFlagCount: number
-): { newField: Cell[][]; newFlagCount: number } {
-  const newField = field.map((r) => r.map((cell) => ({ ...cell })));
-  const cell = newField[row][col];
-  if (cell.revealed) {
-    return { newField, newFlagCount: currentFlagCount };
-  }
+  availableFlags: number
+): { updatedField: Cell[][]; newFlagCount: number } {
+  const updatedField = field.map((r) => r.map((cell) => ({ ...cell })));
+  const cell = updatedField[row][col];
+  if (cell.revealed) return { updatedField, newFlagCount: availableFlags };
   if (cell.flag) {
     cell.flag = false;
-    return { newField, newFlagCount: currentFlagCount + 1 };
-  } else if (currentFlagCount > 0) {
+    return { updatedField, newFlagCount: availableFlags + 1 };
+  } else if (availableFlags > 0) {
     cell.flag = true;
-    return { newField, newFlagCount: currentFlagCount - 1 };
+    return { updatedField, newFlagCount: availableFlags - 1 };
   }
-  return { newField, newFlagCount: currentFlagCount };
+  return { updatedField, newFlagCount: availableFlags };
 }
 
-function handleCellClick(
+function processCellClick(
   state: GameState,
   row: number,
   col: number
 ): GameState {
-  let { field, firstClick, flagCount } = state;
-  if (state.isPlayerLoose || state.isPlayerWin) return state;
+  const { field, firstClick, flagCount, rows, cols, bombCount } = state;
+  if (state.isPlayerLoose || state.isPlayerWin || field[row][col].flag)
+    return state;
 
-  if (field[row][col].flag) return state;
   let newField = field.map((r) => r.map((cell) => ({ ...cell })));
+  let newFlagCount = flagCount;
+  let newFirstClick = firstClick;
 
   if (firstClick) {
-    const oldFlags = field.map((r) => r.map((cell) => cell.flag));
-    newField = initializeSafeField(
-      MAX_ROWS,
-      MAX_COLS,
-      row,
-      col,
-      bombPercentage
+    const preservedFlags = field.map((r) => r.map((cell) => cell.flag));
+    newField = generateSafeField(rows, cols, row, col, bombCount);
+    newField = newField.map((r, rIdx) =>
+      r.map((cell, cIdx) => ({ ...cell, flag: preservedFlags[rIdx][cIdx] }))
     );
-    newField = newField.map((r, rowIndex) =>
-      r.map((cell, colIndex) => ({
-        ...cell,
-        flag: oldFlags[rowIndex][colIndex],
-      }))
-    );
-    const totalBombs = Math.floor((MAX_COLS * MAX_ROWS * bombPercentage) / 100);
+    const totalBombs = bombCount;
     const placedFlags = newField.flat().filter((cell) => cell.flag).length;
-    flagCount = totalBombs - placedFlags;
-    firstClick = false;
+    newFlagCount = totalBombs - placedFlags;
+    newFirstClick = false;
   }
 
   if (!newField[row][col].revealed) {
     if (newField[row][col].bomb) {
       newField[row][col].revealed = true;
       return {
+        ...state,
         field: newField,
-        firstClick,
-        flagCount,
+        firstClick: newFirstClick,
+        flagCount: newFlagCount,
         isPlayerLoose: true,
         isPlayerWin: false,
       };
-    }
-
-    if (!newField[row][col].bomb && newField[row][col].bombsAround === 0) {
-      const result = revealCells(newField, row, col);
-      newField = result.newField;
-      flagCount += result.flagDelta;
+    } else if (newField[row][col].bombsAround === 0) {
+      const { updatedField, flagAdjustment } = revealEmptyCells(
+        newField,
+        row,
+        col
+      );
+      newField = updatedField;
+      newFlagCount += flagAdjustment;
     } else {
       newField[row][col].revealed = true;
       if (newField[row][col].flag) {
         newField[row][col].flag = false;
-        flagCount += 1;
+        newFlagCount++;
       }
     }
   }
@@ -237,27 +233,17 @@ function handleCellClick(
   const allNonBombsRevealed = newField
     .flat()
     .every((cell) => cell.revealed || cell.bomb);
-
-  if (allNonBombsRevealed) {
-    return {
-      field: newField,
-      firstClick,
-      flagCount,
-      isPlayerLoose: false,
-      isPlayerWin: true,
-    };
-  }
-
   return {
+    ...state,
     field: newField,
-    firstClick,
-    flagCount,
+    firstClick: newFirstClick,
+    flagCount: newFlagCount,
     isPlayerLoose: false,
-    isPlayerWin: false,
+    isPlayerWin: allNonBombsRevealed,
   };
 }
 
-function getNeighbors(
+function getNeighborCells(
   field: Cell[][],
   row: number,
   col: number
@@ -280,17 +266,23 @@ function getNeighbors(
   }
   return neighbors;
 }
-function createInitialState(): GameState {
-  const initialField = transformField(
-    initializeField(MAX_ROWS, MAX_COLS, bombPercentage)
-  );
-  const totalBombs = Math.floor((MAX_ROWS * MAX_COLS * bombPercentage) / 100);
+
+function createInitialGameState(
+  rows: number,
+  cols: number,
+  bombCount: number
+): GameState {
+  const initialField = mapFieldToCells(createBombField(rows, cols, bombCount));
+  const totalBombs = bombCount;
   return {
     field: initialField,
     firstClick: true,
     flagCount: totalBombs,
     isPlayerLoose: false,
     isPlayerWin: false,
+    rows,
+    cols,
+    bombCount,
   };
 }
 
@@ -302,39 +294,38 @@ function gameReducer(state: GameState, action: Action): GameState {
   ) {
     return state;
   }
-
   switch (action.type) {
     case "CELL_CLICK":
-      return handleCellClick(state, action.row, action.col);
+      return processCellClick(state, action.row, action.col);
     case "CELL_RIGHT_CLICK": {
-      const { field, flagCount } = state;
-      const result = toggleFlag(field, action.row, action.col, flagCount);
-      return {
-        ...state,
-        field: result.newField,
-        flagCount: result.newFlagCount,
-      };
+      const { updatedField, newFlagCount } = updateFlagStatus(
+        state.field,
+        action.row,
+        action.col,
+        state.flagCount
+      );
+      return { ...state, field: updatedField, flagCount: newFlagCount };
     }
     case "REVEAL_BOMB": {
-      const newField = state.field.map((r) => r.map((cell) => ({ ...cell })));
-      newField[action.row][action.col].flag = false;
-      newField[action.row][action.col].revealed = true;
-      return { ...state, field: newField };
+      const updatedField = state.field.map((r) =>
+        r.map((cell) => ({ ...cell }))
+      );
+      updatedField[action.row][action.col].flag = false;
+      updatedField[action.row][action.col].revealed = true;
+      return { ...state, field: updatedField };
     }
     case "CELL_DOUBLE_CLICK": {
-      const { field } = state;
-      const currentCell = field[action.row][action.col];
+      const currentCell = state.field[action.row][action.col];
       if (!currentCell.revealed) return state;
-
-      const neighbors = getNeighbors(field, action.row, action.col);
-      const flagsCount = neighbors.filter(([r, c]) => field[r][c].flag).length;
-
+      const neighbors = getNeighborCells(state.field, action.row, action.col);
+      const flagsCount = neighbors.filter(
+        ([r, c]) => state.field[r][c].flag
+      ).length;
       if (currentCell.bombsAround !== flagsCount) return state;
-
       let newState = state;
       for (const [r, c] of neighbors) {
         if (!newState.field[r][c].revealed && !newState.field[r][c].flag) {
-          newState = handleCellClick(newState, r, c);
+          newState = processCellClick(newState, r, c);
           if (newState.isPlayerLoose) {
             return newState;
           }
@@ -343,29 +334,55 @@ function gameReducer(state: GameState, action: Action): GameState {
       return newState;
     }
     case "RESET_GAME":
-      return createInitialState();
+      return createInitialGameState(state.rows, state.cols, state.bombCount);
     default:
       return state;
   }
 }
-
-const initialField = transformField(
-  initializeField(MAX_ROWS, MAX_COLS, bombPercentage)
-);
-const totalBombs = Math.floor((MAX_ROWS * MAX_COLS * bombPercentage) / 100);
-const initialState: GameState = {
-  field: initialField,
-  firstClick: true,
-  flagCount: totalBombs,
-  isPlayerLoose: false,
-  isPlayerWin: false,
-};
-
 export const Minesweeper: React.FC = () => {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
-  const [showPopup, setShowPopup] = useState(false);
-  const navigate = useNavigate();
+
   const location = useLocation();
+  const navigate = useNavigate();
+  const settings = location.state || {};
+  const { rows = 4, columns = 4, bombCount = 20 } = settings;
+  const gameRows = Math.max(rows, MIN_ROWS);
+  const gameCols = Math.max(columns, MIN_COLS);
+  const bombNumber = bombCount;
+  const timerRef = useRef<TimerHandle>(null);
+
+  useEffect(() => {
+    if (localStorage.getItem("minesweeperState") == null) handleRestart();
+    if (Object.keys(settings).length === 0) navigate("/games/minesweeper-menu");
+  }, [settings, navigate]);
+  useEffect(() => {
+    if (Object.keys(settings).length === 0) navigate("/games/minesweeper-menu");
+  }, []);
+
+  const initialGameState = createInitialGameState(
+    gameRows,
+    gameCols,
+    bombNumber
+  );
+
+  const [persistedGameState, setPersistedGameState] =
+    useStickyStateWithExpiry<GameState>(
+      initialGameState,
+      "minesweeperState",
+      TimeToForgotGame
+    );
+
+  const [state, dispatch] = useReducer(
+    gameReducer,
+    persistedGameState || initialGameState
+  );
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [pickedTool, setPickedTool] = useState<null | "shovel" | "flag">((window.innerWidth <= 768)?"shovel" : null);
+  console.log(pickedTool)
+  useEffect(() => {
+    setPersistedGameState(state);
+  }, [state]);
+
   useEffect(() => {
     if (state.isPlayerLoose) {
       const timeouts: NodeJS.Timeout[] = [];
@@ -389,9 +406,96 @@ export const Minesweeper: React.FC = () => {
       };
     }
   }, [state.isPlayerLoose]);
+  function handleRestart() {
+    dispatch({ type: "RESET_GAME" });
+    timerRef.current?.reset();
+    setShowPopup(false);
+    setPickedTool(null);
+  }
   return (
     <div className="minesweeper">
-      <div>{state.flagCount} 🚩</div>
+      <div className="top-bar top-bar-1">
+        <div className="left-part">
+          <button
+            onClick={() => navigate("/games/minesweeper-menu")}
+            className="exit-btn"
+          >
+            Exit to Menu
+          </button>
+        </div>
+
+        <div className="mid-part"></div>
+        <div className="right-part">
+          <button
+            onClick={() => {
+              handleRestart();
+            }}
+            className="restart-btn"
+          >
+            Restart
+          </button>
+        </div>
+      </div>
+      
+      <div className="top-bar">
+        <div className="left-part">
+          <button
+            onClick={() => navigate("/games/minesweeper-menu")}
+            className="exit-btn"
+          >
+            Exit to Menu
+          </button>
+          <button
+            className={`shovel-pick picker ${
+              pickedTool === "shovel" ? "picked" : ""
+            }`}
+            onClick={() => setPickedTool("shovel")}
+          >
+            <img src={shovelIcon} alt="shovel" draggable="false" />
+          </button>
+        </div>
+
+        <div className="mid-part">
+          <div className="time">
+            <img src={clockIcon} draggable="false" alt="clock" />
+            <Timer
+              startTime={0}
+              timerName={"minesweeperTimer"}
+              isGrowing={true}
+              timeToForgotTimer={TimeToForgotGame}
+              pause={state.isPlayerLoose}
+              ref={timerRef}
+              className="timer"
+              // onComplete={() => {
+
+              // }}
+            />
+          </div>
+          <div className="flag-count">
+            <h1>{state.flagCount}</h1>{" "}
+            <img src={flagIcon} draggable="false" alt="flag" />
+          </div>
+        </div>
+        <div className="right-part">
+          <button
+            className={`flag-pick picker ${
+              pickedTool === "flag" ? "picked" : ""
+            }`}
+            onClick={() => setPickedTool("flag")}
+          >
+            <img src={flagIcon} alt="flag" draggable="false" />
+          </button>
+          <button
+            onClick={() => {
+              handleRestart();
+            }}
+            className="restart-btn"
+          >
+            Restart
+          </button>
+        </div>
+      </div>
+
       <div id="field">
         {state.field.map((row, rowIndex) => (
           <div className="row" key={`row-${rowIndex}`}>
@@ -409,13 +513,21 @@ export const Minesweeper: React.FC = () => {
                     : ""
                 }`}
                 key={`cell-${rowIndex}-${cellIndex}`}
-                onClick={() =>
-                  dispatch({
-                    type: "CELL_CLICK",
-                    row: rowIndex,
-                    col: cellIndex,
-                  })
-                }
+                onClick={() => {
+                  if (pickedTool === "shovel" || pickedTool === null) {
+                    dispatch({
+                      type: "CELL_CLICK",
+                      row: rowIndex,
+                      col: cellIndex,
+                    });
+                  } else if (pickedTool === "flag") {
+                    dispatch({
+                      type: "CELL_RIGHT_CLICK",
+                      row: rowIndex,
+                      col: cellIndex,
+                    });
+                  }
+                }}
                 onDoubleClick={() =>
                   dispatch({
                     type: "CELL_DOUBLE_CLICK",
@@ -424,21 +536,27 @@ export const Minesweeper: React.FC = () => {
                   })
                 }
                 onContextMenu={(e) => {
-                  e.preventDefault();
-                  dispatch({
-                    type: "CELL_RIGHT_CLICK",
-                    row: rowIndex,
-                    col: cellIndex,
-                  });
+                  if (pickedTool === null) {
+                    e.preventDefault();
+                    dispatch({
+                      type: "CELL_RIGHT_CLICK",
+                      row: rowIndex,
+                      col: cellIndex,
+                    });
+                  }
                 }}
               >
-                {cell.revealed
-                  ? cell.bomb
-                    ? "💣"
-                    : cell.bombsAround || ""
-                  : cell.flag
-                  ? "🚩"
-                  : ""}
+                {cell.revealed ? (
+                  cell.bomb ? (
+                    <img src={bombIcon} draggable="false" alt="bomb" />
+                  ) : (
+                    cell.bombsAround || ""
+                  )
+                ) : cell.flag ? (
+                  <img src={flagIcon} draggable="false" alt="bomb" />
+                ) : (
+                  ""
+                )}
               </button>
             ))}
           </div>
@@ -450,39 +568,33 @@ export const Minesweeper: React.FC = () => {
             <h1 className="heading">
               {state.isPlayerLoose ? "You Lose(" : "You Win!"}
             </h1>
-
             <div className="control-buttons">
               <button
                 className="restart-btn"
                 onClick={() => {
-                  dispatch({ type: "RESET_GAME" });
-                  setShowPopup(false);
+                  handleRestart();
                 }}
               >
                 Restart
               </button>
-              <button
-                className="leave-btn"
-                onClick={() => {
-                  // cleanLocalStorage();
-                  navigate("/games");
-                }}
-              >
+              <button className="leave-btn" onClick={() => navigate("/games")}>
                 Leave
               </button>
               <button
                 className="back-btn"
-                onClick={() => {
-                  // cleanLocalStorage();
-                  navigate("/games/connect4-menu");
-                }}
+                onClick={() => navigate("/games/minesweeper-menu")}
               >
                 Back to menu
               </button>
             </div>
-            {state.isPlayerLoose && (<div className="bomb-example">
-              <div>💣</div>
-            </div>)}
+            {state.isPlayerLoose && (
+              <div className="bomb-example">
+                <div>
+                  {" "}
+                  <img src={bombIcon} draggable="false" alt="bomb" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

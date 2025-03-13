@@ -17,8 +17,8 @@ export const ConnectFour: React.FC = () => {
     playerTwoColor = "#0000FF",
   } = location.state || {};
 
-  const MAX_COLS = 5;
-  const MAX_ROWS = 5;
+  const MAX_COLS = 7;
+  const MAX_ROWS = 7;
   const TimeToForgotGame = 0.5 * 60 * 60 * 1000;
 
   const [field, setField] = useStickyStateWithExpiry<number[][]>(
@@ -233,9 +233,30 @@ export const ConnectFour: React.FC = () => {
         {
           "--player-color-1": playerColor1,
           "--player-color-2": playerColor2,
+          "--row-length": MAX_ROWS,
+
         } as React.CSSProperties
       }
     >
+            <div className="top-bar mobile">
+
+          <button onClick={handleExit} className="exit-btn">
+            Exit to Menu
+          </button>
+
+
+          <button
+            onClick={() => setIsPause((prev) => !prev)}
+            className={`pause-btn ${isPause && "paused"}`}
+
+          >
+            {isPause ? "Resume" : "Pause"}
+          </button>
+          <button onClick={handleRestart} className="restart-btn">
+            Restart
+          </button>
+
+      </div>
       <div className="top-bar">
         <div className="left-part">
           <button onClick={handleExit} className="exit-btn">

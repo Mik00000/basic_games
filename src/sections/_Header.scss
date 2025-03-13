@@ -3,7 +3,7 @@ header.header {
   justify-content: space-between;
   align-items: center;
   position: sticky;
-  z-index: 4;
+  z-index: 10;
   padding: 15px 17.8vw;
   top: 0;
   background-color: $dark-background;
@@ -15,6 +15,9 @@ header.header {
   }
   @include for-size(laptop) {
     padding: 15px 17.8vw;
+  }
+  &.relative{
+    position: relative;
   }
   .logo {
     width: 80px;

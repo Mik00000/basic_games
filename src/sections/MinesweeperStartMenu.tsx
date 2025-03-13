@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 
 interface DifficultyLevel {
   name: string;
@@ -12,45 +12,37 @@ const MinesweeperStartMenu: React.FC = () => {
   const difficultyLevels: DifficultyLevel[] = [
     { name: "Easy", rows: 9, columns: 9, bombCount: 10 },
     { name: "Middle", rows: 16, columns: 16, bombCount: 40 },
-    { name: "Expert", rows: 16, columns: 30, bombCount: 99 }
+    { name: "Expert", rows: 30, columns: 16, bombCount: 99 }
   ];
 
-  const [generalError, setGeneralError] = useState<string>('');
   const [difficulty, setDifficulty] = useState<number>(0);
-  const [rows, setRows] = useState<number>(difficultyLevels[difficulty].rows);
-  const [columns, setColumns] = useState<number>(difficultyLevels[difficulty].columns);
-  const [bombCount, setBombCount] = useState<number>(difficultyLevels[difficulty].bombCount);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    setRows(difficultyLevels[difficulty].rows);
-    setColumns(difficultyLevels[difficulty].columns);
-    setBombCount(difficultyLevels[difficulty].bombCount);
-  }, [difficulty]);
-
-  const validateInputs = (): boolean => {
-    let isValid = true;
-    setGeneralError('');
-    return isValid;
-  };
+  const navigate = useNavigate();
 
   const startGame = () => {
-    if (!validateInputs()) {
-      return;
+    localStorage.removeItem("minesweeperState");
+    const selectedDifficulty = difficultyLevels[difficulty];
+
+    let rows = selectedDifficulty.rows;
+    let columns = selectedDifficulty.columns;
+
+    if (selectedDifficulty.name === "Expert") {
+      if (window.innerWidth >= 768) {
+        rows = 16;
+        columns = 30;
+      }
     }
 
-    router.navigate("/games/connect4", {
+    navigate("/games/minesweeper", {
       state: {  
         rows,
         columns,
-        bombCount
+        bombCount: selectedDifficulty.bombCount
       },
     });
   };
 
   const exitGame = () => {
-    router.navigate("/games");
+    navigate("/games");
   };
 
   return (
@@ -58,8 +50,6 @@ const MinesweeperStartMenu: React.FC = () => {
       <div className="menu-header">
         <h1>Minesweeper</h1>
       </div>
-
-      {generalError && <div className="error-message general-error">{generalError}</div>}
 
       <div className="menu-section">
         <h2>Choose Difficulty</h2>
@@ -80,8 +70,8 @@ const MinesweeperStartMenu: React.FC = () => {
             ))}
           </div>
           <div className="game-info">
-            <p>Field: {rows} x {columns}</p>
-            <p>Bomb count: {bombCount}</p>
+            <p>Field: {difficultyLevels[difficulty].rows} x {difficultyLevels[difficulty].columns}</p>
+            <p>Bomb count: {difficultyLevels[difficulty].bombCount}</p>
           </div>
         </div>
       </div>

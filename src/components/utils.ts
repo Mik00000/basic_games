@@ -59,7 +59,7 @@ type SaveableData = string | number | boolean | object | null;
 export function useStickyStateWithExpiry<T extends SaveableData>(
   defaultValue: T,
   key: string,
-  expiryTime: number, // час життя у мілісекундах
+  expiryTime: number,
   type?: "time" | null
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [value, setValue] = useState<T>(() => {
@@ -70,16 +70,14 @@ export function useStickyStateWithExpiry<T extends SaveableData>(
 
         const now = Date.now();
 
-        // Якщо час дії закінчився
         if (now > expiry) {
           localStorage.removeItem(key);
           return defaultValue;
         }
 
-        // Вираховуємо, наскільки змінилось значення за пропущений час (лише якщо число)
         if (typeof storedValue === 'number' && lastUpdated && type=="time") {
           const elapsedSeconds = Math.floor((now - lastUpdated) / 1000);
-          return Math.max(storedValue - elapsedSeconds, 0) as T; // уникаємо від'ємного значення
+          return Math.max(storedValue - elapsedSeconds, 0) as T; 
         }
 
         return storedValue as T;
