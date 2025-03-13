@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { areColorsTooSimilar } from '../components/utils.ts';
+import { areColorsTooSimilar } from '../components/utils';
 
 const ConnectFourStartMenu: React.FC = () => {
   const [gameMode, setGameMode] = useState<string>('bot');

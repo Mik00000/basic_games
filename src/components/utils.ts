@@ -42,8 +42,8 @@ export function areColorsTooSimilar(hex1: string, hex2: string, threshold: numbe
   let color1, color2;
   
   try {
-    color1 = hexToRgb(hex1, "object");
-    color2 = hexToRgb(hex2, "object");
+    color1 = hexToRgb(hex1, "object") as { r: number; g: number; b: number };
+    color2 = hexToRgb(hex2, "object") as { r: number; g: number; b: number };    
   } catch (error) {
     console.error(error);
     return false; // або тут можна повернути true/false за бажанням, якщо кольори некоректні
@@ -100,7 +100,7 @@ export function useStickyStateWithExpiry<T extends SaveableData>(
 }
 
  
-export const formatTime = (seconds) => {
+export const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;

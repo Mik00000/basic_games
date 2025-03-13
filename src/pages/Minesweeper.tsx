@@ -1,7 +1,7 @@
 import React, { useReducer, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useStickyStateWithExpiry } from "../components/utils.ts";
-import Timer, { TimerHandle } from "../components/Timer.tsx";
+import { useStickyStateWithExpiry } from "../components/utils";
+import Timer, { TimerHandle } from "../components/Timer";
 import clockIcon from "../assets/icons/clock.svg";
 import shovelIcon from "../assets/icons/shovel.svg";
 import bombIcon from "../assets/icons/bomb.svg";
