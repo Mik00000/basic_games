@@ -17,6 +17,20 @@ export const ConnectFour: React.FC = () => {
     playerTwoColor = "#0000FF",
   } = location.state || {};
 
+  useEffect(() => {
+    if (localStorage.getItem("connectFourField") == null) handleRestart();
+    if (!location.state || Object.keys(location.state).length === 0) {
+      navigate("/games/connect4-menu");
+    }
+  }, [location.state, navigate]);
+  
+  useEffect(() => {
+    if (!location.state || Object.keys(location.state).length === 0) {
+      navigate("/games/connect4-menu");
+    }
+  }, []);
+  
+
   const MAX_COLS = 7;
   const MAX_ROWS = 7;
   const TimeToForgotGame = 0.5 * 60 * 60 * 1000;
@@ -234,28 +248,23 @@ export const ConnectFour: React.FC = () => {
           "--player-color-1": playerColor1,
           "--player-color-2": playerColor2,
           "--row-length": MAX_ROWS,
-
         } as React.CSSProperties
       }
     >
-            <div className="top-bar mobile">
+      <div className="top-bar mobile">
+        <button onClick={handleExit} className="exit-btn">
+          Exit to Menu
+        </button>
 
-          <button onClick={handleExit} className="exit-btn">
-            Exit to Menu
-          </button>
-
-
-          <button
-            onClick={() => setIsPause((prev) => !prev)}
-            className={`pause-btn ${isPause && "paused"}`}
-
-          >
-            {isPause ? "Resume" : "Pause"}
-          </button>
-          <button onClick={handleRestart} className="restart-btn">
-            Restart
-          </button>
-
+        <button
+          onClick={() => setIsPause((prev) => !prev)}
+          className={`pause-btn ${isPause && "paused"}`}
+        >
+          {isPause ? "Resume" : "Pause"}
+        </button>
+        <button onClick={handleRestart} className="restart-btn">
+          Restart
+        </button>
       </div>
       <div className="top-bar">
         <div className="left-part">
@@ -296,17 +305,18 @@ export const ConnectFour: React.FC = () => {
             </CountdownCircleTimer>
           </div>
           <h1>
-            {!showCoinToss &&(winner
-              ? winner === 1
-                ? playerOneName
-                : winner === 2
-                ? playerTwoName
-                : "Draw"
-              : currentPlayer !== null
-              ? currentPlayer === 1
-                ? playerOneName
-                : playerTwoName
-              : "")}
+            {!showCoinToss &&
+              (winner
+                ? winner === 1
+                  ? playerOneName
+                  : winner === 2
+                  ? playerTwoName
+                  : "Draw"
+                : currentPlayer !== null
+                ? currentPlayer === 1
+                  ? playerOneName
+                  : playerTwoName
+                : "")}
           </h1>
           <div className="player-2-timers">
             <CountdownCircleTimer
@@ -343,7 +353,6 @@ export const ConnectFour: React.FC = () => {
           <button
             onClick={() => setIsPause((prev) => !prev)}
             className={`pause-btn ${isPause && "paused"}`}
-
           >
             {isPause ? "Resume" : "Pause"}
           </button>
@@ -481,7 +490,7 @@ export const ConnectFour: React.FC = () => {
           </div>
         </div>
       )}
-      {isPause && <div className="pause"/>}
+      {isPause && <div className="pause" />}
     </section>
   );
 };

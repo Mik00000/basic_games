@@ -1,0 +1,62 @@
+.games {
+  margin-bottom: 40px;
+  .heading {
+    @include for-text(second-headline);
+  }
+
+  .games-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    padding: 0 30px;
+  }
+  a{
+    text-decoration: none;
+  }
+  .game {
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    background-size: contain;
+    background-position: center;
+    height: 500px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s ease;
+    border: 1px solid darken($dark-background, 10);
+  
+    &:hover {
+      transform: scale(1.05);
+    }
+  
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0; 
+      background: rgba(0, 0, 0, 0.4); 
+      z-index: 1; 
+    }
+  
+    .info {
+      background: #00000099;
+      color: white;
+      width: 100%;
+      padding: 10px;
+      text-align: center;
+      position: relative; 
+      z-index: 2; 
+      h2 {
+        @include for-text(title);
+      }
+      h3 {
+        @include for-text(sub-heading);
+        opacity: 0.8;
+      }
+    }
+  }
+  
+}

@@ -1338,6 +1338,7 @@ footer.footer .right-part .social a {
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  margin-bottom: 40px;
 }
 .connect-four .top-bar {
   display: flex;
@@ -2137,6 +2138,79 @@ h1 {
   text-align: center;
   font-weight: bold;
   margin-bottom: 10px;
+}
+
+.games {
+  margin-bottom: 40px;
+}
+.games .heading {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.games .games-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  justify-content: center;
+  padding: 0 30px;
+}
+.games a {
+  text-decoration: none;
+}
+.games .game {
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  background-size: contain;
+  background-position: center;
+  height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s ease;
+  border: 1px solid black;
+}
+.games .game:hover {
+  transform: scale(1.05);
+}
+.games .game::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+.games .game .info {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.games .game .info h2 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+}
+.games .game .info h3 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  opacity: 0.8;
 }
 
 body {
