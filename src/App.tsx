@@ -17,6 +17,7 @@ import { Minesweeper } from "./pages/Minesweeper";
 import { ConnectFour } from "./pages/ConnectFour";
 import ConnectFourStartMenu from "./sections/ConnectFourStartMenu";
 import MinesweeperStartMenu from "./sections/MinesweeperStartMenu";
+import Games from "./pages/Games";
 function App() {
   return (
     <div className="App">
@@ -36,6 +37,10 @@ function App() {
                   <Testimonials />
                 </>
               }
+            />
+            <Route
+              path="/games/"
+              element={<Games />}
             />
             <Route path="/games/minesweeper" element={<Minesweeper />} />
             <Route path="/games/connect4" element={<ConnectFour />} />
