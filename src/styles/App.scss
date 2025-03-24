@@ -7,10 +7,10 @@
 @import "../sections/Partners";
 @import "../sections/Testimonials";
 @import "../sections/Footer";
-@import "../pages/Minesweeper";
-@import "../pages/ConnectFour";
-@import "../sections/ContentFourStartMenu";
-@import "../sections/MinesweeperStartMenu";
+@import "../games/minesweeper/Game";
+@import "../games/connectFour//Game";
+@import "../games/minesweeper/StartMenu";
+@import "../games/connectFour/StartMenu";
 @import "../pages/Games";
 
 body {
