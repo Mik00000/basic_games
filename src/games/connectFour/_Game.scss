@@ -75,6 +75,7 @@ $bounce-height: 7px;
       display: flex;
 
       .pause-btn {
+        cursor: pointer;
         @include for-button(
           $bg-color: darken($confirm-text, 10),
           $padding: 10px 46px

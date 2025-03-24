@@ -42,7 +42,7 @@
   .menu-actions {
     display: flex;
     justify-content: space-around;
-
+  
     .start-button {
       @include for-button(
         $bg-color: $confirm-text,

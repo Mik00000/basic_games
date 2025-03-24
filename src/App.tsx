@@ -13,11 +13,12 @@ import {
 import { Partners } from "./sections/Partners";
 import { Testimonials } from "./sections/Testimonials";
 import { Footer } from "./sections/Footer";
-import { Minesweeper } from "./pages/Minesweeper";
-import { ConnectFour } from "./pages/ConnectFour";
-import ConnectFourStartMenu from "./sections/ConnectFourStartMenu";
-import MinesweeperStartMenu from "./sections/MinesweeperStartMenu";
+
+import ConnectFourStartMenu from "./games/connectFour/StartMenu";
+import MinesweeperStartMenu from "./games/minesweeper/StartMenu";
 import Games from "./pages/Games";
+import { ConnectFour } from "./games/connectFour/Game";
+import { Minesweeper } from "./games/minesweeper/Game";
 function App() {
   return (
     <div className="App">

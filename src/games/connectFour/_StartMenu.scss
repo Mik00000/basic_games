@@ -56,7 +56,10 @@
       }
     }
   }
-
+.bot-settings{
+  display: flex;
+  flex-direction: column;
+}
   .player-settings {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -67,7 +70,7 @@
       border: 1px solid darken($light-background, 10%);
       border-radius: 5px;
       padding: 10px;
-
+      
       label {
         display: block;
         margin-bottom: 10px;
@@ -93,6 +96,10 @@
           cursor: pointer;
         }
       }
+    }
+    &:has(.player:first-child:last-child) {
+      display: flex;
+      justify-content: center;
     }
   }
 

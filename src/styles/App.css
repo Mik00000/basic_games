@@ -1409,6 +1409,7 @@ footer.footer .right-part .social a {
   display: flex;
 }
 .connect-four .top-bar .right-part .pause-btn {
+  cursor: pointer;
   padding: 10px;
   font-size: 17px;
   line-height: 25px;
@@ -1859,182 +1860,6 @@ h1 {
     height: calc((100vw - 20px) / var(--row-length) * 0.75);
   }
 }
-.connect-four-start-menu {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  border: 1px solid #f2f2f2;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  color: #fff;
-}
-.connect-four-start-menu .menu-header {
-  margin-bottom: 20px;
-}
-.connect-four-start-menu .menu-header h1 {
-  text-align: center;
-  padding: 10px;
-  font-size: 52px;
-  line-height: 62px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik";
-  font-weight: 400;
-  font-size: 36px;
-  color: #0112db;
-}
-.connect-four-start-menu .menu-section {
-  margin-bottom: 20px;
-}
-.connect-four-start-menu .menu-section h2 {
-  text-align: center;
-  padding: 10px;
-  font-size: 20px;
-  line-height: 30px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik";
-  font-weight: 400;
-  color: #e6e6e6;
-  margin-bottom: 10px;
-}
-.connect-four-start-menu .menu-section .game-modes button,
-.connect-four-start-menu .menu-section .menu-actions button {
-  display: inline-block;
-  margin: 5px 10px;
-  padding: 10px;
-  font-size: 17px;
-  line-height: 25px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
-  background-color: #0112db;
-  color: #fff;
-  border: none;
-  padding: 10px 15px;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  padding: 10px;
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
-  text-decoration: none;
-  border-radius: 5px;
-}
-.connect-four-start-menu .menu-section .game-modes button:hover,
-.connect-four-start-menu .menu-section .menu-actions button:hover {
-  background-color: #2b3bfe;
-}
-.connect-four-start-menu .menu-section .game-modes {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.connect-four-start-menu .menu-section .game-modes button:hover {
-  background: #2b3bfe;
-}
-.connect-four-start-menu .menu-section .game-modes button.active {
-  background: #28a745;
-}
-.connect-four-start-menu .player-settings {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-.connect-four-start-menu .player-settings .player {
-  background: #fff;
-  border: 1px solid #e6e6e6;
-  border-radius: 5px;
-  padding: 10px;
-}
-.connect-four-start-menu .player-settings .player label {
-  display: block;
-  margin-bottom: 10px;
-  color: #000;
-}
-.connect-four-start-menu .player-settings .player label:last-child {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0;
-}
-.connect-four-start-menu .player-settings .player label input[type=text] {
-  width: 100%;
-  padding: 8px;
-  padding: 10px;
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik";
-  font-weight: 400;
-  border: 1px solid #e6e6e6;
-  border-radius: 5px;
-}
-.connect-four-start-menu .player-settings .player label input[type=color] {
-  width: 50px;
-  height: 30px;
-  border: none;
-  cursor: pointer;
-}
-.connect-four-start-menu .menu-actions {
-  display: flex;
-  justify-content: space-around;
-}
-.connect-four-start-menu .menu-actions .start-button {
-  padding: 10px;
-  font-size: 17px;
-  line-height: 25px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
-  background-color: #28a745;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.connect-four-start-menu .menu-actions .start-button:hover {
-  background-color: #48d368;
-}
-.connect-four-start-menu .menu-actions .exit-button {
-  padding: 10px;
-  font-size: 17px;
-  line-height: 25px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik-Medium";
-  font-weight: 500;
-  background-color: #dc3545;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.connect-four-start-menu .menu-actions .exit-button:hover {
-  background-color: #e77681;
-}
-.connect-four-start-menu .menu-actions button {
-  padding: 10px 20px;
-}
-.connect-four-start-menu .menu-actions button:hover {
-  opacity: 0.9;
-}
-
-.error-message {
-  color: #dc3545;
-  font-size: 14px;
-  margin-top: 5px;
-}
-.error-message.general-error {
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
 .minesweeper-start-menu {
   max-width: 600px;
   margin: 0 auto;
@@ -2126,6 +1951,190 @@ h1 {
   padding: 10px 20px;
 }
 .minesweeper-start-menu .menu-actions button:hover {
+  opacity: 0.9;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+}
+.error-message.general-error {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.connect-four-start-menu {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #f2f2f2;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: #fff;
+}
+.connect-four-start-menu .menu-header {
+  margin-bottom: 20px;
+}
+.connect-four-start-menu .menu-header h1 {
+  text-align: center;
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  font-size: 36px;
+  color: #0112db;
+}
+.connect-four-start-menu .menu-section {
+  margin-bottom: 20px;
+}
+.connect-four-start-menu .menu-section h2 {
+  text-align: center;
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  color: #e6e6e6;
+  margin-bottom: 10px;
+}
+.connect-four-start-menu .menu-section .game-modes button,
+.connect-four-start-menu .menu-section .menu-actions button {
+  display: inline-block;
+  margin: 5px 10px;
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #0112db;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 5px;
+}
+.connect-four-start-menu .menu-section .game-modes button:hover,
+.connect-four-start-menu .menu-section .menu-actions button:hover {
+  background-color: #2b3bfe;
+}
+.connect-four-start-menu .menu-section .game-modes {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.connect-four-start-menu .menu-section .game-modes button:hover {
+  background: #2b3bfe;
+}
+.connect-four-start-menu .menu-section .game-modes button.active {
+  background: #28a745;
+}
+.connect-four-start-menu .bot-settings {
+  display: flex;
+  flex-direction: column;
+}
+.connect-four-start-menu .player-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.connect-four-start-menu .player-settings .player {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 5px;
+  padding: 10px;
+}
+.connect-four-start-menu .player-settings .player label {
+  display: block;
+  margin-bottom: 10px;
+  color: #000;
+}
+.connect-four-start-menu .player-settings .player label:last-child {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+}
+.connect-four-start-menu .player-settings .player label input[type=text] {
+  width: 100%;
+  padding: 8px;
+  padding: 10px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  border: 1px solid #e6e6e6;
+  border-radius: 5px;
+}
+.connect-four-start-menu .player-settings .player label input[type=color] {
+  width: 50px;
+  height: 30px;
+  border: none;
+  cursor: pointer;
+}
+.connect-four-start-menu .player-settings:has(.player:first-child:last-child) {
+  display: flex;
+  justify-content: center;
+}
+.connect-four-start-menu .menu-actions {
+  display: flex;
+  justify-content: space-around;
+}
+.connect-four-start-menu .menu-actions .start-button {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.connect-four-start-menu .menu-actions .start-button:hover {
+  background-color: #48d368;
+}
+.connect-four-start-menu .menu-actions .exit-button {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.connect-four-start-menu .menu-actions .exit-button:hover {
+  background-color: #e77681;
+}
+.connect-four-start-menu .menu-actions button {
+  padding: 10px 20px;
+}
+.connect-four-start-menu .menu-actions button:hover {
   opacity: 0.9;
 }
 
