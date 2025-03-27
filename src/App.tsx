@@ -39,12 +39,12 @@ function App() {
                 </>
               }
             />
-            <Route
-              path="/games/"
-              element={<Games />}
-            />
+            <Route path="/games/" element={<Games />} />
             <Route path="/games/minesweeper" element={<Minesweeper />} />
-            <Route path="/games/connect4" element={<ConnectFour />} />
+            <Route
+              path="/games/connect4/:shareInfo?/:onlineGameId?"
+              element={<ConnectFour />}
+            />
             <Route
               path="/games/connect4-menu"
               element={<ConnectFourStartMenu />}

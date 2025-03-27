@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { areColorsTooSimilar } from "../../components/utils";
+import { areColorsTooSimilar, generateRandomGameId } from "../../components/utils";
 
 interface DifficultyLevel {
   name: string;
@@ -68,25 +68,35 @@ const ConnectFourStartMenu: React.FC = () => {
       );
       isValid = false;
     }
+    if (areColorsTooSimilar(playerOneColor, "#FFF", 80)) {
+      setPlayerTwoError("Player 1 cannot have too light color");
+      isValid = false;
+    }
+    if (areColorsTooSimilar(playerTwoColor, "#FFF", 80)) {
+      setPlayerTwoError("Player 2 cannot have too light color");
+      isValid = false;
+    }
     return isValid;
   };
   const startGame = () => {
     if (!validateInputs()) {
       return;
     }
-
-    navigate("/games/connect4", {
+  
+    const gameId = gameMode === "online" ? generateRandomGameId(12) : "";
+  
+    navigate(`/games/connect4/host/${gameId}`, {
       state: {
         gameMode,
         playerOneName,
         playerTwoName,
         playerOneColor,
         playerTwoColor,
-        difficulty
+        difficulty,
       },
     });
   };
-
+  
   const exitGame = () => {
     console.log("Exiting game...");
     navigate("/games");
