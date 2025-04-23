@@ -1,4 +1,4 @@
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
@@ -136,196 +136,122 @@ export const formatTime = (seconds: number) => {
 
 
 
-interface RoomParams {
+export interface RoomParams {
   gameType: string;
   gameId: string;
   maxPlayers?: number;
+  enabled: boolean;
 }
 
-type GameState = any;
+export interface OnlineGameHook {
+  gameState: any;
+  roomInfo: any;
+  error: string | null;
+  createRoom: () => void;
+  joinRoom: () => void;
+  leaveRoom: () => void;
+  updateGame: (newState: any) => void;
+  getRoomInfo: (callback: (data: any) => void) => void;
+  deleteRoom: () => void;
+}
 
-// Використовуємо єдиний екземпляр сокета для всього додатку
-let socket: Socket | null = null;
-
-/**
- * Хук для роботи з онлайн-грою, який забезпечує можливість:
- * - Створювати кімнату
- * - Приєднуватись до кімнати
- * - Покидати кімнату
- * - Оновлювати стан гри
- * - Отримувати інформацію про кімнату
- *
- * @param params - Об'єкт, що містить тип гри, id гри та максимальну кількість гравців
- * @param enabled - Якщо false, онлайн-режим не активується
- * @returns Об'єкт з поточним станом гри, інформацією про кімнату, помилками, а також функціями для роботи з кімнатою
- *
- * Приклад використання:
- * const { gameState, createRoom, joinRoom, leaveRoom, updateGame, getRoomInfo, deleteRoom, error } = useOnlineGame({ gameType: 'chess', gameId: '123', maxPlayers: 2, enabled: true });
- */
-export function useOnlineGame({ gameType, gameId, maxPlayers = 2, enabled }: RoomParams & { enabled: boolean }) {
-  const [gameState, setGameState] = useState<GameState>(null);
+export function useOnlineGame({
+  gameType,
+  gameId,
+  maxPlayers = 2,
+  enabled,
+}: RoomParams): OnlineGameHook {
+  const [gameState, setGameState] = useState<any>(null);
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Використовуємо ref для збереження екземпляра сокета
+  const socketRef = useRef<Socket | null>(null);
+
   useEffect(() => {
     if (!enabled) return;
-    // Ініціалізуємо сокет, якщо ще не створено
-    if (!socket) {
-      socket = io("http://localhost:3001",{
+
+    // Ініціалізація сокета, якщо ще не створено
+    if (!socketRef.current) {
+      socketRef.current = io("http://localhost:3001", {
         transports: ["websocket", "polling"],
+      });
+
+      socketRef.current.on("connect_error", (err) => {
+        console.error("Socket connection error:", err);
+        setError("Помилка підключення до сервера");
       });
     }
 
-    // Обробник отримання оновленого стану гри
-    const handleGameState = (state: GameState) => {
+    const socket = socketRef.current;
+
+    // Обробники подій
+    const handleGameState = (state: any) => {
       setGameState(state);
     };
 
-    // Обробник оновлення інформації про кімнату (наприклад, список гравців)
     const handleRoomUpdate = (data: any) => {
       setRoomInfo(data);
     };
 
-    // Обробник повідомлень про помилки
     const handleError = (msg: string) => {
       setError(msg);
     };
 
-    // Обробник події видалення кімнати
     const handleRoomDeleted = () => {
       setGameState(null);
       setRoomInfo(null);
       setError("Кімната була видалена");
     };
 
-    // Підписуємось на події від сервера
     socket.on("gameState", handleGameState);
     socket.on("roomUpdate", handleRoomUpdate);
     socket.on("errorMessage", handleError);
     socket.on("roomDeleted", handleRoomDeleted);
 
+    // Очищення при розмонтуванні або зміні параметрів
     return () => {
-      // При демонтажі компонента відписуємось від подій
-      socket?.off("gameState", handleGameState);
-      socket?.off("roomUpdate", handleRoomUpdate);
-      socket?.off("errorMessage", handleError);
-      socket?.off("roomDeleted", handleRoomDeleted);
+      socket.off("gameState", handleGameState);
+      socket.off("roomUpdate", handleRoomUpdate);
+      socket.off("errorMessage", handleError);
+      socket.off("roomDeleted", handleRoomDeleted);
     };
   }, [enabled, gameType, gameId, maxPlayers]);
 
-  /**
-   * Функція для створення нової кімнати.
-   * Використання: викликається для ініціалізації нової гри.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
+  // Функції для взаємодії з сервером
   const createRoom = () => {
-    if (socket) {
-      socket.emit("createRoom", { gameType, gameId, maxPlayers });
-    }
+    socketRef.current?.emit("createRoom", { gameType, gameId, maxPlayers });
   };
 
-  /**
-   * Функція для приєднання до існуючої кімнати.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
   const joinRoom = () => {
-    if (socket) {
-      socket.emit("joinRoom", { gameType, gameId, maxPlayers });
-    }
+    socketRef.current?.emit("joinRoom", { gameType, gameId });
   };
 
-  /**
-   * Функція для виходу з кімнати.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
   const leaveRoom = () => {
-    if (socket) {
-      socket.emit("leaveRoom", { gameType, gameId });
-    }
+    socketRef.current?.emit("leaveRoom", { gameType, gameId });
   };
 
-  /**
-   * Функція для оновлення стану гри.
-   *
-   * @param newState - Об'єкт з новим станом гри.
-   *
-   * Повертає: нічого.
-   */
   const updateGame = (newState: any) => {
-    if (socket) {
-      socket.emit("updateGame", { gameType, gameId, newState });
-    }
+    socketRef.current?.emit("updateGame", { gameType, gameId, newState });
   };
 
-  /**
-   * Функція для отримання інформації про кімнату.
-   *
-   * @param callback - Функція зворотного виклику, яка отримує інформацію про кімнату.
-   *                 Наприклад, { exists: boolean, players: string[], maxPlayers: number, state: any }
-   *
-   * Повертає: нічого, інформація повертається через callback.
-   */
-  const getRoomInfo = (callback: (info: any) => void) => {
-    if (socket) {
-      socket.emit("getRoomInfo", { gameType, gameId }, (data: any) => {
-        callback(data);
-      });
-    }
+  const getRoomInfo = (callback: (data: any) => void) => {
+    socketRef.current?.emit("getRoomInfo", { gameType, gameId }, callback);
   };
 
-  /**
-   * Функція для видалення кімнати.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
   const deleteRoom = () => {
-    if (socket) {
-      socket.emit("deleteRoom", { gameType, gameId });
-    }
+    socketRef.current?.emit("deleteRoom", { gameType, gameId });
   };
 
-  return { gameState, roomInfo, error, createRoom, joinRoom, leaveRoom, updateGame, getRoomInfo, deleteRoom };
-}
-
-/**
- * Асинхронна функція для перевірки існування кімнати.
- *
- * @param gameType - Тип гри.
- * @param gameId - Унікальний ідентифікатор гри.
- * @returns Promise, який повертає true, якщо кімната існує, або false, якщо ні.
- *
- * Приклад використання:
- * const exists = await checkOnlineGame('chess', '123');
- */
-export async function checkOnlineGame(gameType: string, gameId: string): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    const tempSocket = io("http://localhost:3001", {
-      transports: ["websocket", "polling"],
-      autoConnect: true,
-    });
-    tempSocket.on("connect", () => {
-      tempSocket.emit("getRoomInfo", { gameType, gameId }, (data: any) => {
-        tempSocket.disconnect();
-        resolve(data.exists);
-      });
-    });
-    tempSocket.on("connect_error", (err) => {
-      tempSocket.disconnect();
-      reject(err);
-    });
-    // Додатково можна встановити таймаут, якщо з'єднання не відбувається
-    setTimeout(() => {
-      if (!tempSocket.connected) {
-        tempSocket.disconnect();
-        reject(new Error("Timeout while connecting to socket"));
-      }
-    }, 5000);
-  });
+  return {
+    gameState,
+    roomInfo,
+    error,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    updateGame,
+    getRoomInfo,
+    deleteRoom,
+  };
 }

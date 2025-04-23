@@ -1,12 +1,11 @@
-import React, { useReducer, useState, useEffect } from "react";
+import React, { useReducer, useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  checkOnlineGame,
-  useOnlineGame,
-  useStickyStateWithExpiry,
   generateRandomGameId,
   generateRandomNumber,
   hexToRgb,
+  useOnlineGame,
+  useStickyStateWithExpiry,
 } from "../../components/utils";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import Timer from "../../components/Timer";
@@ -27,6 +26,8 @@ export const ConnectFour: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { onlineGameId, shareInfo } = useParams();
+
+  // Параметри гри передаються через state роутера
   const {
     gameMode = "local",
     playerOneName = "Player 1",
@@ -45,8 +46,9 @@ export const ConnectFour: React.FC = () => {
 
   const effectivePlayerTwoName = gameMode === "bot" ? "Bot" : playerTwoName;
 
+  // Використовуємо онлайн-хук лише для online режиму
   const {
-    gameState,
+    gameState: remoteGameState,
     createRoom,
     joinRoom,
     leaveRoom,
@@ -61,34 +63,35 @@ export const ConnectFour: React.FC = () => {
     enabled: gameMode === "online",
   });
 
+  // Перевірка існування кімнати та приєднання/створення
   useEffect(() => {
-    const checkGame = async () => {
-      if (onlineGameId && shareInfo) {
-        try {
-          const isRoomExist = await checkOnlineGame("connect4", onlineGameId as string);
+    if (gameMode !== "online") return;
+
+    const checkRoom = async () => {
+      try {
+        const exists = await getRoomInfo((info) => {return info.exists})
+        // Якщо параметри share/host передані, відповідно створюємо або приєднуємося
+        getRoomInfo((info) => {
           if (shareInfo === "share") {
-            if (!isRoomExist) navigate("/games/connect4-menu");
+            if (!info.exists) navigate("/games/connect4-menu");
             else joinRoom();
           } else if (shareInfo === "host") {
-            if (!isRoomExist) createRoom();
-            else joinRoom();
+            if (!info.exists) createRoom();
+            joinRoom();
           } else {
             navigate("/games/connect4-menu");
           }
-        } catch (err) {
-          console.error("Помилка під час перевірки кімнати:", err);
-          navigate("/games/connect4-menu");
-        }
-      } else {
-        if (!location.state || Object.keys(location.state).length === 0) {
-          navigate("/games/connect4-menu");
-        }
+        });
+      } catch (err) {
+        console.error("Error checking online game:", err);
+        navigate("/games/connect4-menu");
       }
     };
 
-    checkGame();
-  }, [onlineGameId, shareInfo, location.state, navigate, createRoom, joinRoom]);
+    checkRoom();
+  }, [gameMode, onlineGameId, shareInfo, getRoomInfo, joinRoom, createRoom, navigate]);
 
+  // Локальний стан гри, синхронізований із online режимом
   const [stickyGameState, setStickyGameState] = useStickyStateWithExpiry(
     initialGameState,
     "connectFourGameState",
@@ -96,19 +99,38 @@ export const ConnectFour: React.FC = () => {
   );
   const [state, dispatch] = useReducer(gameReducer, stickyGameState);
 
+  // Синхронізація локального стану з persistent сховищем і сервером
   useEffect(() => {
     setStickyGameState(state);
     if (gameMode === "online") {
       updateGame(state);
     }
-  }, [state, setStickyGameState, updateGame, gameMode]);
+  }, [state, setStickyGameState, gameMode, updateGame]);
 
-  // Решта коду залишається без змін
+  // Отримання оновлень від серверу: якщо отримано remoteGameState – застосовуємо його
+  useEffect(() => {
+    if (gameMode === "online" && remoteGameState) {
+      dispatch({ type: "SET_STATE", newState: remoteGameState });
+    }
+  }, [remoteGameState, gameMode]);
+
+  // При розмонтуванні компонента виходимо з кімнати (тільки online)
+  useEffect(() => {
+    return () => {
+      if (gameMode === "online") leaveRoom();
+    };
+  }, [gameMode, leaveRoom]);
+
+  // Локальні стани UI
   const [isPause, setIsPause] = useState<boolean>(false);
   const [isGameBlocked, setIsGameBlocked] = useState<boolean>(false);
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
+
   const [player1TimerKey, setPlayer1TimerKey] = useState(0);
   const [player2TimerKey, setPlayer2TimerKey] = useState(0);
+  const [circleTimer1Key, setCircleTimer1Key] = useState(1);
+  const [circleTimer2Key, setCircleTimer2Key] = useState(1);
+
   const [timer1RemainingTime, setTimer1RemainingTime] = useStickyStateWithExpiry<number>(
     CIRCLE_TIMER_DURATION,
     "circleTimer1RemainingTime",
@@ -119,10 +141,9 @@ export const ConnectFour: React.FC = () => {
     "circleTimer2RemainingTime",
     TIME_TO_FORGOT_GAME
   );
-  const [circleTimer1Key, setCircleTimer1Key] = useState(1);
-  const [circleTimer2Key, setCircleTimer2Key] = useState(1);
 
-  const cleanLocalStorage = () => {
+  // Функція для очищення локального сховища
+  const cleanLocalStorage = useCallback(() => {
     const keys = [
       "connectFourGameState",
       "circleTimer1RemainingTime",
@@ -137,7 +158,7 @@ export const ConnectFour: React.FC = () => {
     setCircleTimer2Key((prev) => prev + 1);
     setTimer1RemainingTime(CIRCLE_TIMER_DURATION);
     setTimer2RemainingTime(CIRCLE_TIMER_DURATION);
-  };
+  }, [setTimer1RemainingTime, setTimer2RemainingTime]);
 
   const handleExit = () => {
     cleanLocalStorage();
@@ -149,6 +170,7 @@ export const ConnectFour: React.FC = () => {
     cleanLocalStorage();
   };
 
+  // Запуск coin toss при новій грі, якщо поле порожнє
   useEffect(() => {
     if (state.isNewGame && state.showCoinToss && isBoardEmpty(state.field)) {
       setIsPause(true);
@@ -165,27 +187,29 @@ export const ConnectFour: React.FC = () => {
     }
   }, [state.isNewGame, state.showCoinToss, state.field]);
 
+  // Скидання таймерів при зміні гравця
   useEffect(() => {
     if (state.currentPlayer === 1) {
-      setCircleTimer1Key((prev) => prev + 1);
+      setCircleTimer2Key((prev) => prev + 1);
       if (timer2RemainingTime !== CIRCLE_TIMER_DURATION)
         setTimer2RemainingTime(CIRCLE_TIMER_DURATION);
     } else if (state.currentPlayer === 2) {
-      setCircleTimer2Key((prev) => prev + 1);
+      setCircleTimer1Key((prev) => prev + 1);
       if (timer1RemainingTime !== CIRCLE_TIMER_DURATION)
         setTimer1RemainingTime(CIRCLE_TIMER_DURATION);
     }
-  }, [state.currentPlayer, timer1RemainingTime, timer2RemainingTime]);
+  }, [state.currentPlayer, timer1RemainingTime, timer2RemainingTime, setTimer1RemainingTime, setTimer2RemainingTime]);
 
+  // Хід бота, якщо режим bot і зараз його хід
   useEffect(() => {
     if (gameMode === "bot" && state.currentPlayer === 2 && !state.winner && !isPause) {
       botMove(state, dispatch, difficulty);
     }
   }, [gameMode, state.currentPlayer, state.winner, isPause, state.field, difficulty]);
 
+  // Обробка кліку по колонці
   const handleCellClick = (columnIndex: number) => {
-    if (state.winner !== null || isPause || (gameMode === "bot" && state.currentPlayer === 2))
-      return;
+    if (state.winner !== null || isPause || (gameMode === "bot" && state.currentPlayer === 2)) return;
     if (getLastEmptyRow(state.field, columnIndex) !== null) {
       dispatch({ type: "DROP_CHECKER", column: columnIndex });
     }
@@ -205,6 +229,7 @@ export const ConnectFour: React.FC = () => {
         } as React.CSSProperties
       }
     >
+      {/* Верхня панель для мобільних */}
       <div className="top-bar mobile">
         <button onClick={handleExit} className="exit-btn">
           Exit to Menu
@@ -222,39 +247,33 @@ export const ConnectFour: React.FC = () => {
         </button>
       </div>
 
+      {/* Верхня панель для десктопа */}
       <div className="top-bar">
         <div className="left-part">
           <button onClick={handleExit} className="exit-btn">
             Exit to Menu
           </button>
         </div>
-
         <div className="mid-part">
           <div className="player-1-timers">
             <Timer
               startTime={PLAYER_MAX_GAME_TIME}
               timerName={"connectFourTimerTime1"}
               timeToForgotTimer={TIME_TO_FORGOT_GAME}
-              pause={
-                state.currentPlayer !== 1 || Boolean(state.winner) || isPause
-              }
+              pause={state.currentPlayer !== 1 || Boolean(state.winner) || isPause}
               key={player1TimerKey}
               onComplete={() => dispatch({ type: "SET_WINNER", winner: 2 })}
             />
             <CountdownCircleTimer
               key={circleTimer1Key}
-              isPlaying={
-                state.currentPlayer === 1 && !isPause && !Boolean(state.winner)
-              }
+              isPlaying={state.currentPlayer === 1 && !isPause && !Boolean(state.winner)}
               duration={CIRCLE_TIMER_DURATION}
               initialRemainingTime={timer1RemainingTime}
               colors={"#d9d9d9"}
               trailColor={`rgb(${rgbPlayer1})`}
               size={40}
               strokeWidth={3}
-              onUpdate={(remainingTime) =>
-                setTimer1RemainingTime(remainingTime)
-              }
+              onUpdate={(remainingTime) => setTimer1RemainingTime(remainingTime)}
               onComplete={() => dispatch({ type: "SET_PLAYER", player: 2 })}
             >
               {({ remainingTime }) => remainingTime}
@@ -277,18 +296,14 @@ export const ConnectFour: React.FC = () => {
           <div className="player-2-timers">
             <CountdownCircleTimer
               key={circleTimer2Key * -1}
-              isPlaying={
-                state.currentPlayer === 2 && !isPause && !Boolean(state.winner)
-              }
+              isPlaying={state.currentPlayer === 2 && !isPause && !Boolean(state.winner)}
               duration={CIRCLE_TIMER_DURATION}
               initialRemainingTime={timer2RemainingTime}
               colors={"#d9d9d9"}
               trailColor={`rgb(${rgbPlayer2})`}
               size={40}
               strokeWidth={3}
-              onUpdate={(remainingTime) =>
-                setTimer2RemainingTime(remainingTime)
-              }
+              onUpdate={(remainingTime) => setTimer2RemainingTime(remainingTime)}
               onComplete={() => dispatch({ type: "SET_PLAYER", player: 1 })}
             >
               {({ remainingTime }) => remainingTime}
@@ -297,9 +312,7 @@ export const ConnectFour: React.FC = () => {
               startTime={PLAYER_MAX_GAME_TIME}
               timerName={"connectFourTimerTime2"}
               timeToForgotTimer={TIME_TO_FORGOT_GAME}
-              pause={
-                state.currentPlayer !== 2 || Boolean(state.winner) || isPause
-              }
+              pause={state.currentPlayer !== 2 || Boolean(state.winner) || isPause}
               key={player2TimerKey * -1}
               onComplete={() => dispatch({ type: "SET_WINNER", winner: 1 })}
             />
@@ -320,6 +333,7 @@ export const ConnectFour: React.FC = () => {
         </div>
       </div>
 
+      {/* Поле гри */}
       <div className="field-main">
         <div className="field">
           {state.field.map((row, rowIndex) => (
@@ -335,13 +349,10 @@ export const ConnectFour: React.FC = () => {
                         ? "hovered-col"
                         : ""
                     }`}
-                    onMouseEnter={() =>
-                      setHoveredCell({ row: rowIndex, col: colIndex })
-                    }
+                    onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
                     onMouseLeave={() => setHoveredCell(null)}
                     onClick={() => {
-                      if (lastEmpty !== null && !isPause)
-                        handleCellClick(colIndex);
+                      if (lastEmpty !== null && !isPause) handleCellClick(colIndex);
                     }}
                   />
                 );
@@ -367,13 +378,9 @@ export const ConnectFour: React.FC = () => {
                   <div
                     key={colIndex}
                     className={`cell 
-                        ${
-                          isHovered
-                            ? `hovered-by-player-${state.currentPlayer}`
-                            : ""
-                        }
-                        ${isActive ? `active-by-player-${cell} falling` : ""}
-                        ${isLastChecker ? "last-checker" : ""}`}
+                      ${isHovered ? `hovered-by-player-${state.currentPlayer}` : ""}
+                      ${isActive ? `active-by-player-${cell} falling` : ""}
+                      ${isLastChecker ? "last-checker" : ""}`}
                   />
                 );
               })}
@@ -382,31 +389,19 @@ export const ConnectFour: React.FC = () => {
         </div>
       </div>
 
+      {/* Pop-up для coin toss */}
       {state.showCoinToss && isBoardEmpty(state.field) && (
         <div className="pop-up">
           <div className="pick-first-player">
             <h1 className="heading">
               {state.currentPlayer !== null && (
                 <ShowTextAfterTime
-                  text={
-                    state.currentPlayer === 1
-                      ? playerOneName
-                      : effectivePlayerTwoName
-                  }
+                  text={state.currentPlayer === 1 ? playerOneName : effectivePlayerTwoName}
                   time={3000}
                 />
               )}
             </h1>
-            <div
-              id="coin"
-              className={
-                state.currentPlayer === 1
-                  ? "heads"
-                  : state.currentPlayer === 2
-                  ? "tails"
-                  : ""
-              }
-            >
+            <div id="coin" className={state.currentPlayer === 1 ? "heads" : state.currentPlayer === 2 ? "tails" : ""}>
               <div className="side-a"></div>
               <div className="side-b"></div>
             </div>
@@ -414,17 +409,13 @@ export const ConnectFour: React.FC = () => {
         </div>
       )}
 
+      {/* Pop-up з результатом гри */}
       {state.winner !== null && (
         <div
           className="pop-up"
           style={
             {
-              "--winner-color":
-                state.winner === 1
-                  ? rgbPlayer1
-                  : state.winner === 2
-                  ? rgbPlayer2
-                  : undefined,
+              "--winner-color": state.winner === 1 ? rgbPlayer1 : state.winner === 2 ? rgbPlayer2 : undefined,
             } as React.CSSProperties
           }
         >
@@ -462,6 +453,7 @@ export const ConnectFour: React.FC = () => {
         </div>
       )}
 
+      {/* Фоновий шар для паузи */}
       {isPause && (
         <div
           className="pause"
@@ -473,3 +465,5 @@ export const ConnectFour: React.FC = () => {
     </section>
   );
 };
+
+export default ConnectFour;
