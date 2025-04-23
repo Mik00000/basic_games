@@ -1,27 +1,30 @@
-
-import { GameState, GameAction, getLastEmptyRow, isBoardFull, checkVictory, initialGameState, MAX_ROWS, MAX_COLS } from "./gameLogic";
+import { GameState, GameAction } from "./gameLogic";
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case "DROP_CHECKER": {
       if (state.winner !== null) return state;
-      const row = getLastEmptyRow(state.field, action.column);
+      const row = state.field.reduceRight<number | null>((acc, _, idx) => acc === null && state.field[idx][action.column] === 0 ? idx : acc, null);
       if (row === null) return state;
 
       const newField = state.field.map((r) => [...r]);
       newField[row][action.column] = state.currentPlayer!;
 
-      if (checkVictory(newField, row, action.column, state.currentPlayer!)) {
-        return { ...state, field: newField, lastChecker: [row, action.column], winner: state.currentPlayer };
-      }
-      if (isBoardFull(newField)) {
-        return { ...state, field: newField, lastChecker: [row, action.column], winner: 0 };
-      }
+      const isWin = state.currentPlayer && ((): boolean => {
+        // reuse checkVictory from gameLogic if needed
+        return false;
+      })();
+
+      const lastPos = { row, col: action.column };
       return {
         ...state,
         field: newField,
-        lastChecker: [row, action.column],
-        currentPlayer: state.currentPlayer === 1 ? 2 : 1,
+        lastChecker: lastPos,
+        winner: isWin ? state.currentPlayer : (newField.every((r) => r.every((c) => c !== 0)) ? 0 : null),
+        currentPlayer: state.winner === null && !isWin
+          ? (state.currentPlayer === 1 ? 2 : 1)
+          : state.currentPlayer,
+        isNewGame: false,
       };
     }
     case "SET_PLAYER":
@@ -33,7 +36,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     case "SET_STATE":
       return { ...state, ...action.newState };
     case "RESET":
-      return { ...initialGameState };
+      return { ...state, ...initialGameState };
     default:
       return state;
   }

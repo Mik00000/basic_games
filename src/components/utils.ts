@@ -1,4 +1,4 @@
-import { useState, useEffect, Dispatch, SetStateAction, useRef } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
@@ -136,122 +136,134 @@ export const formatTime = (seconds: number) => {
 
 
 
-export interface RoomParams {
+interface RoomParams {
   gameType: string;
   gameId: string;
   maxPlayers?: number;
   enabled: boolean;
 }
 
-export interface OnlineGameHook {
-  gameState: any;
-  roomInfo: any;
-  error: string | null;
-  createRoom: () => void;
-  joinRoom: () => void;
-  leaveRoom: () => void;
-  updateGame: (newState: any) => void;
-  getRoomInfo: (callback: (data: any) => void) => void;
-  deleteRoom: () => void;
+interface GameState {
+  field: number[][];
+  currentPlayer: number | null;
+  winner: number | null;
+  lastChecker: { row: number; col: number } | null;
+  isNewGame: boolean;
+  showCoinToss: boolean;
 }
 
-export function useOnlineGame({
-  gameType,
-  gameId,
-  maxPlayers = 2,
-  enabled,
-}: RoomParams): OnlineGameHook {
-  const [gameState, setGameState] = useState<any>(null);
-  const [roomInfo, setRoomInfo] = useState<any>(null);
+export function useOnlineGame({ 
+  gameType, 
+  gameId, 
+  maxPlayers = 2, 
+  enabled 
+}: RoomParams) {
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [players, setPlayers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // Використовуємо ref для збереження екземпляра сокета
   const socketRef = useRef<Socket | null>(null);
+
+  const stableParams = JSON.stringify({ gameType, gameId, maxPlayers });
+
+  const handleError = useCallback((msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(null), 5000);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
 
-    // Ініціалізація сокета, якщо ще не створено
-    if (!socketRef.current) {
-      socketRef.current = io("http://localhost:3001", {
-        transports: ["websocket", "polling"],
-      });
+    const newSocket = io("http://localhost:3001", {
+      autoConnect: false,
+      reconnectionAttempts: 3,
+      timeout: 5000,
+    });
 
-      socketRef.current.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-        setError("Помилка підключення до сервера");
-      });
-    }
+    newSocket.on("connect", () => {
+      console.log("Connected to server");
+    });
 
-    const socket = socketRef.current;
+    newSocket.on("connect_error", (err) => {
+      handleError("Connection error: " + err.message);
+    });
 
-    // Обробники подій
-    const handleGameState = (state: any) => {
+    newSocket.on("gameState", (state: GameState) => {
       setGameState(state);
-    };
+    });
 
-    const handleRoomUpdate = (data: any) => {
-      setRoomInfo(data);
-    };
+    newSocket.on("roomUpdate", ({ players, state }) => {
+      setPlayers(players);
+      if (state) setGameState(state);
+    });
 
-    const handleError = (msg: string) => {
-      setError(msg);
-    };
+    newSocket.on("error", handleError);
 
-    const handleRoomDeleted = () => {
-      setGameState(null);
-      setRoomInfo(null);
-      setError("Кімната була видалена");
-    };
+    newSocket.connect();
+    socketRef.current = newSocket;
 
-    socket.on("gameState", handleGameState);
-    socket.on("roomUpdate", handleRoomUpdate);
-    socket.on("errorMessage", handleError);
-    socket.on("roomDeleted", handleRoomDeleted);
-
-    // Очищення при розмонтуванні або зміні параметрів
     return () => {
-      socket.off("gameState", handleGameState);
-      socket.off("roomUpdate", handleRoomUpdate);
-      socket.off("errorMessage", handleError);
-      socket.off("roomDeleted", handleRoomDeleted);
+      newSocket.disconnect();
+      socketRef.current = null;
+      setGameState(null);
+      setPlayers([]);
     };
-  }, [enabled, gameType, gameId, maxPlayers]);
+  }, [enabled, handleError]);
 
-  // Функції для взаємодії з сервером
-  const createRoom = () => {
-    socketRef.current?.emit("createRoom", { gameType, gameId, maxPlayers });
-  };
+  const createRoom = useCallback(() => {
+    if (!socketRef.current) return;
+    
+    socketRef.current.emit("createRoom", { 
+      gameType, 
+      gameId, 
+      maxPlayers 
+    }, (res: { error?: string }) => {
+      if (res.error) handleError(res.error);
+    });
+  }, [stableParams, handleError]);
 
-  const joinRoom = () => {
-    socketRef.current?.emit("joinRoom", { gameType, gameId });
-  };
+  const joinRoom = useCallback(() => {
+    if (!socketRef.current) return;
 
-  const leaveRoom = () => {
-    socketRef.current?.emit("leaveRoom", { gameType, gameId });
-  };
+    socketRef.current.emit("joinRoom", { 
+      gameType, 
+      gameId 
+    }, (res: { error?: string }) => {
+      if (res.error) handleError(res.error);
+    });
+  }, [stableParams, handleError]);
 
-  const updateGame = (newState: any) => {
-    socketRef.current?.emit("updateGame", { gameType, gameId, newState });
-  };
+  const leaveRoom = useCallback(() => {
+    if (!socketRef.current) return;
+    
+    socketRef.current.emit("leaveRoom", { gameType, gameId });
+  }, [stableParams]);
 
-  const getRoomInfo = (callback: (data: any) => void) => {
-    socketRef.current?.emit("getRoomInfo", { gameType, gameId }, callback);
-  };
-
-  const deleteRoom = () => {
-    socketRef.current?.emit("deleteRoom", { gameType, gameId });
-  };
+  const updateGame = useCallback((newState: GameState) => {
+    if (!socketRef.current) return;
+    
+    socketRef.current.emit("updateGame", { 
+      gameType, 
+      gameId, 
+      newState 
+    });
+  }, [stableParams]);
 
   return {
     gameState,
-    roomInfo,
+    players,
     error,
     createRoom,
     joinRoom,
     leaveRoom,
     updateGame,
-    getRoomInfo,
-    deleteRoom,
+    isConnected: socketRef.current?.connected || false
   };
 }
+
+// Генератор ID гри (додати в потрібне місце)
+export const generateGameId = (length = 8) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({ length }, () => 
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join('');
+};
