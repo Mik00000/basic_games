@@ -1,10 +1,11 @@
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
 export const generateRandomNumber = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
+
 export function generateRandomLetters(isUpperCaseLet: boolean = false): string {
   const isUpperCase = isUpperCaseLet ? Math.random() >= 0.5 : false;
   const randomIndex = Math.floor(Math.random() * ALPHABET.length);
@@ -12,15 +13,7 @@ export function generateRandomLetters(isUpperCaseLet: boolean = false): string {
     ? ALPHABET[randomIndex].toUpperCase()
     : ALPHABET[randomIndex];
 }
-export function generateRandomGameId(numberOfSymbols: number): string {
-  if (numberOfSymbols <= 0) throw new Error("Invalid number of symbols");
 
-  return Array.from({ length: numberOfSymbols }, () =>
-    Math.random() >= 0.5
-      ? generateRandomLetters(true)
-      : generateRandomNumber(0, 9).toString()
-  ).join("");
-}
 type typeOfResultType = "string" | "object" | "str" | "obj";
 
 export function hexToRgb(
@@ -134,7 +127,13 @@ export const formatTime = (seconds: number) => {
   return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
 };
 
-
+interface GameRoomInfo {
+  exists: boolean;
+  players: string[];
+  admin: string | null;
+  maxPlayers: number;
+  state: any;
+}
 
 interface RoomParams {
   gameType: string;
@@ -144,188 +143,178 @@ interface RoomParams {
 
 type GameState = any;
 
-// Використовуємо єдиний екземпляр сокета для всього додатку
 let socket: Socket | null = null;
 
-/**
- * Хук для роботи з онлайн-грою, який забезпечує можливість:
- * - Створювати кімнату
- * - Приєднуватись до кімнати
- * - Покидати кімнату
- * - Оновлювати стан гри
- * - Отримувати інформацію про кімнату
- *
- * @param params - Об'єкт, що містить тип гри, id гри та максимальну кількість гравців
- * @param enabled - Якщо false, онлайн-режим не активується
- * @returns Об'єкт з поточним станом гри, інформацією про кімнату, помилками, а також функціями для роботи з кімнатою
- *
- * Приклад використання:
- * const { gameState, createRoom, joinRoom, leaveRoom, updateGame, getRoomInfo, deleteRoom, error } = useOnlineGame({ gameType: 'chess', gameId: '123', maxPlayers: 2, enabled: true });
- */
-export function useOnlineGame({ gameType, gameId, maxPlayers = 2, enabled }: RoomParams & { enabled: boolean }) {
+export const useOnlineGame = (gameType: string, maxPlayers: number = 2) => {
   const [gameState, setGameState] = useState<GameState>(null);
-  const [roomInfo, setRoomInfo] = useState<any>(null);
+  const [roomInfo, setRoomInfo] = useState<GameRoomInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adminId, setAdminId] = useState<string | null>(null); // Додано adminId
+
+  const handleError = useCallback((msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(null), 5000);
+  }, []);
+
+  const handleRoomUpdate = useCallback((data: any) => {
+    setRoomInfo({
+      exists: true,
+      players: data.players,
+      admin: data.admin, // Оновлено
+      maxPlayers: data.maxPlayers,
+      state: data.state,
+    });
+    setAdminId(data.admin); // Оновлено
+    setGameState(data.state);
+  }, []);
+
+  const handleGameState = useCallback((state: GameState) => {
+    setGameState(state);
+  }, []);
+
+  const handleRoomDeleted = useCallback(() => {
+    setGameState(null);
+    setRoomInfo(null);
+    setAdminId(null); // Оновлено
+    handleError("Room was deleted");
+  }, [handleError]);
+
+  const handleAdminChanged = useCallback((newAdminId: string) => { // Додано
+    setAdminId(newAdminId);
+  }, []);
 
   useEffect(() => {
-    if (!enabled) return;
-    // Ініціалізуємо сокет, якщо ще не створено
-    if (!socket) {
-      socket = io("http://localhost:3001",{
-        transports: ["websocket", "polling"],
-      });
-    }
+    const initializeSocket = () => {
+      if (!socket) {
+        socket = io("http://localhost:3001", {
+          transports: ["websocket", "polling"],
+          autoConnect: true,
+        });
 
-    // Обробник отримання оновленого стану гри
-    const handleGameState = (state: GameState) => {
-      setGameState(state);
+        socket.on("connect", () => {
+          console.log("Socket connected");
+          setError(null);
+        });
+
+        socket.on("connect_error", (err) => {
+          handleError(`Connection error: ${err.message}`);
+        });
+      }
+
+      socket.on("gameState", handleGameState);
+      socket.on("roomUpdate", handleRoomUpdate);
+      socket.on("error", handleError);
+      socket.on("roomDeleted", handleRoomDeleted);
+      socket.on("adminChanged", handleAdminChanged); // Додано
+
+      return () => {
+        socket?.off("gameState", handleGameState);
+        socket?.off("roomUpdate", handleRoomUpdate);
+        socket?.off("error", handleError);
+        socket?.off("roomDeleted", handleRoomDeleted);
+        socket?.off("adminChanged", handleAdminChanged); // Додано
+      };
     };
 
-    // Обробник оновлення інформації про кімнату (наприклад, список гравців)
-    const handleRoomUpdate = (data: any) => {
-      setRoomInfo(data);
-    };
+    const cleanup = initializeSocket();
+    return () => cleanup?.();
+  }, [handleGameState, handleRoomUpdate, handleError, handleRoomDeleted, handleAdminChanged]); // Оновлено залежності
 
-    // Обробник повідомлень про помилки
-    const handleError = (msg: string) => {
-      setError(msg);
-    };
+  const createRoom = useCallback((gameId: string, initialState: any) => { // Оновлено
+    if (!socket) return;
+    socket.emit("createRoom", { 
+      gameType, 
+      gameId, 
+      maxPlayers, 
+      initialState 
+    });
+  }, [gameType, maxPlayers]);
 
-    // Обробник події видалення кімнати
-    const handleRoomDeleted = () => {
-      setGameState(null);
-      setRoomInfo(null);
-      setError("Кімната була видалена");
-    };
+  const joinRoom = useCallback((gameId: string) => {
+    if (!socket) return;
+    socket.emit("joinRoom", { gameType, gameId });
+  }, [gameType]);
 
-    // Підписуємось на події від сервера
-    socket.on("gameState", handleGameState);
-    socket.on("roomUpdate", handleRoomUpdate);
-    socket.on("errorMessage", handleError);
-    socket.on("roomDeleted", handleRoomDeleted);
+  const leaveRoom = useCallback((gameId: string) => {
+    if (!socket) return;
+    socket.emit("leaveRoom", { gameType, gameId });
+  }, [gameType]);
 
-    return () => {
-      // При демонтажі компонента відписуємось від подій
-      socket?.off("gameState", handleGameState);
-      socket?.off("roomUpdate", handleRoomUpdate);
-      socket?.off("errorMessage", handleError);
-      socket?.off("roomDeleted", handleRoomDeleted);
-    };
-  }, [enabled, gameType, gameId, maxPlayers]);
+  const updateGame = useCallback((gameId: string, newState: GameState) => {
+    if (!socket) return;
+    socket.emit("updateGame", { gameType, gameId, newState });
+  }, [gameType]);
 
-  /**
-   * Функція для створення нової кімнати.
-   * Використання: викликається для ініціалізації нової гри.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
-  const createRoom = () => {
-    if (socket) {
-      socket.emit("createRoom", { gameType, gameId, maxPlayers });
+  const getRoomInfo = useCallback((gameId: string, callback: (info: GameRoomInfo) => void) => {
+    if (!socket) return;
+    socket.emit("getRoomInfo", { gameType, gameId }, callback);
+  }, [gameType]);
+
+  const deleteRoom = useCallback((gameId: string) => {
+    if (!socket) return;
+    socket.emit("deleteRoom", { gameType, gameId });
+  }, [gameType]);
+
+  return {
+    gameState,
+    roomInfo,
+    adminId, // Додано
+    error,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    updateGame,
+    getRoomInfo,
+    deleteRoom,
+  };
+};
+
+export const generateRandomGameId = (numberOfSymbols: number): string => {
+  if (numberOfSymbols <= 0) throw new Error("Invalid number of symbols");
+
+  const getRandomChar = () => {
+    const isLetter = Math.random() > 0.5;
+    if (isLetter) {
+      const isUpperCase = Math.random() > 0.5;
+      const randomIndex = Math.floor(Math.random() * ALPHABET.length);
+      return isUpperCase
+        ? ALPHABET[randomIndex].toUpperCase()
+        : ALPHABET[randomIndex];
     }
+    return Math.floor(Math.random() * 10).toString();
   };
 
-  /**
-   * Функція для приєднання до існуючої кімнати.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
-  const joinRoom = () => {
-    if (socket) {
-      socket.emit("joinRoom", { gameType, gameId, maxPlayers });
-    }
-  };
+  return Array.from({ length: numberOfSymbols }, getRandomChar).join("");
+};
 
-  /**
-   * Функція для виходу з кімнати.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
-  const leaveRoom = () => {
-    if (socket) {
-      socket.emit("leaveRoom", { gameType, gameId });
-    }
-  };
-
-  /**
-   * Функція для оновлення стану гри.
-   *
-   * @param newState - Об'єкт з новим станом гри.
-   *
-   * Повертає: нічого.
-   */
-  const updateGame = (newState: any) => {
-    if (socket) {
-      socket.emit("updateGame", { gameType, gameId, newState });
-    }
-  };
-
-  /**
-   * Функція для отримання інформації про кімнату.
-   *
-   * @param callback - Функція зворотного виклику, яка отримує інформацію про кімнату.
-   *                 Наприклад, { exists: boolean, players: string[], maxPlayers: number, state: any }
-   *
-   * Повертає: нічого, інформація повертається через callback.
-   */
-  const getRoomInfo = (callback: (info: any) => void) => {
-    if (socket) {
-      socket.emit("getRoomInfo", { gameType, gameId }, (data: any) => {
-        callback(data);
-      });
-    }
-  };
-
-  /**
-   * Функція для видалення кімнати.
-   *
-   * Параметри: немає (значення передаються через useOnlineGame хук).
-   * Повертає: нічого.
-   */
-  const deleteRoom = () => {
-    if (socket) {
-      socket.emit("deleteRoom", { gameType, gameId });
-    }
-  };
-
-  return { gameState, roomInfo, error, createRoom, joinRoom, leaveRoom, updateGame, getRoomInfo, deleteRoom };
-}
-
-/**
- * Асинхронна функція для перевірки існування кімнати.
- *
- * @param gameType - Тип гри.
- * @param gameId - Унікальний ідентифікатор гри.
- * @returns Promise, який повертає true, якщо кімната існує, або false, якщо ні.
- *
- * Приклад використання:
- * const exists = await checkOnlineGame('chess', '123');
- */
-export async function checkOnlineGame(gameType: string, gameId: string): Promise<boolean> {
+export const checkOnlineGame = async (
+  gameType: string,
+  gameId: string
+): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     const tempSocket = io("http://localhost:3001", {
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       autoConnect: true,
     });
+
+    const timeout = setTimeout(() => {
+      tempSocket.disconnect();
+      reject(new Error("Connection timeout"));
+    }, 5000);
+
     tempSocket.on("connect", () => {
       tempSocket.emit("getRoomInfo", { gameType, gameId }, (data: any) => {
+        clearTimeout(timeout);
         tempSocket.disconnect();
         resolve(data.exists);
       });
     });
+
     tempSocket.on("connect_error", (err) => {
+      clearTimeout(timeout);
       tempSocket.disconnect();
       reject(err);
     });
-    // Додатково можна встановити таймаут, якщо з'єднання не відбувається
-    setTimeout(() => {
-      if (!tempSocket.connected) {
-        tempSocket.disconnect();
-        reject(new Error("Timeout while connecting to socket"));
-      }
-    }, 5000);
   });
-}
+};
+
