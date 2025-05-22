@@ -1,12 +1,9 @@
 import React, { useReducer, useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  checkOnlineGame,
-  useOnlineGame,
-  useStickyStateWithExpiry,
-  generateRandomGameId,
   generateRandomNumber,
   hexToRgb,
+  useStickyStateWithExpiry,
 } from "../../components/utils";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import Timer from "../../components/Timer";
@@ -26,7 +23,7 @@ import { botMove } from "./botBrains";
 export const ConnectFour: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { onlineGameId, shareInfo } = useParams();
+
   const {
     gameMode = "local",
     playerOneName = "Player 1",
@@ -45,49 +42,11 @@ export const ConnectFour: React.FC = () => {
 
   const effectivePlayerTwoName = gameMode === "bot" ? "Bot" : playerTwoName;
 
-  const {
-    gameState,
-    createRoom,
-    joinRoom,
-    leaveRoom,
-    updateGame,
-    getRoomInfo,
-    deleteRoom,
-    error,
-  } = useOnlineGame({
-    gameType: "connect4",
-    gameId: onlineGameId as string,
-    maxPlayers: 2,
-    enabled: gameMode === "online",
-  });
-
   useEffect(() => {
-    const checkGame = async () => {
-      if (onlineGameId && shareInfo) {
-        try {
-          const isRoomExist = await checkOnlineGame("connect4", onlineGameId as string);
-          if (shareInfo === "share") {
-            if (!isRoomExist) navigate("/games/connect4-menu");
-            else joinRoom();
-          } else if (shareInfo === "host") {
-            if (!isRoomExist) createRoom();
-            else joinRoom();
-          } else {
-            navigate("/games/connect4-menu");
-          }
-        } catch (err) {
-          console.error("Помилка під час перевірки кімнати:", err);
-          navigate("/games/connect4-menu");
-        }
-      } else {
-        if (!location.state || Object.keys(location.state).length === 0) {
-          navigate("/games/connect4-menu");
-        }
-      }
-    };
-
-    checkGame();
-  }, [onlineGameId, shareInfo, location.state, navigate, createRoom, joinRoom]);
+    if (!location.state || Object.keys(location.state).length === 0) {
+      navigate("/games/connect4-menu");
+    }
+  }, [location.state, navigate]);
 
   const [stickyGameState, setStickyGameState] = useStickyStateWithExpiry(
     initialGameState,
@@ -98,27 +57,32 @@ export const ConnectFour: React.FC = () => {
 
   useEffect(() => {
     setStickyGameState(state);
-    if (gameMode === "online") {
-      updateGame(state);
-    }
-  }, [state, setStickyGameState, updateGame, gameMode]);
+  }, [state, setStickyGameState]);
 
-  // Решта коду залишається без змін
   const [isPause, setIsPause] = useState<boolean>(false);
   const [isGameBlocked, setIsGameBlocked] = useState<boolean>(false);
-  const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
+
+  const [hoveredCell, setHoveredCell] = useState<{
+    row: number;
+    col: number;
+  } | null>(null);
+
   const [player1TimerKey, setPlayer1TimerKey] = useState(0);
   const [player2TimerKey, setPlayer2TimerKey] = useState(0);
-  const [timer1RemainingTime, setTimer1RemainingTime] = useStickyStateWithExpiry<number>(
-    CIRCLE_TIMER_DURATION,
-    "circleTimer1RemainingTime",
-    TIME_TO_FORGOT_GAME
-  );
-  const [timer2RemainingTime, setTimer2RemainingTime] = useStickyStateWithExpiry<number>(
-    CIRCLE_TIMER_DURATION,
-    "circleTimer2RemainingTime",
-    TIME_TO_FORGOT_GAME
-  );
+
+  const [timer1RemainingTime, setTimer1RemainingTime] =
+    useStickyStateWithExpiry<number>(
+      CIRCLE_TIMER_DURATION,
+      "circleTimer1RemainingTime",
+      TIME_TO_FORGOT_GAME
+    );
+  const [timer2RemainingTime, setTimer2RemainingTime] =
+    useStickyStateWithExpiry<number>(
+      CIRCLE_TIMER_DURATION,
+      "circleTimer2RemainingTime",
+      TIME_TO_FORGOT_GAME
+    );
+
   const [circleTimer1Key, setCircleTimer1Key] = useState(1);
   const [circleTimer2Key, setCircleTimer2Key] = useState(1);
 
@@ -151,15 +115,15 @@ export const ConnectFour: React.FC = () => {
 
   useEffect(() => {
     if (state.isNewGame && state.showCoinToss && isBoardEmpty(state.field)) {
-      setIsPause(true);
-      setIsGameBlocked(true);
+      setIsPause(true)
+      setIsGameBlocked(true)
       const flipResult = Math.random();
       setTimeout(() => {
         dispatch({ type: "SET_PLAYER", player: flipResult <= 0.5 ? 1 : 2 });
         setTimeout(() => {
           dispatch({ type: "HIDE_COIN_TOSS" });
-          setIsGameBlocked(false);
-          setIsPause(false);
+          setIsGameBlocked(false)
+          setIsPause(false)
         }, 5000);
       }, 100);
     }
@@ -167,24 +131,33 @@ export const ConnectFour: React.FC = () => {
 
   useEffect(() => {
     if (state.currentPlayer === 1) {
-      setCircleTimer1Key((prev) => prev + 1);
+      setCircleTimer2Key((prev) => prev + 1);
       if (timer2RemainingTime !== CIRCLE_TIMER_DURATION)
         setTimer2RemainingTime(CIRCLE_TIMER_DURATION);
     } else if (state.currentPlayer === 2) {
-      setCircleTimer2Key((prev) => prev + 1);
+      setCircleTimer1Key((prev) => prev + 1);
       if (timer1RemainingTime !== CIRCLE_TIMER_DURATION)
         setTimer1RemainingTime(CIRCLE_TIMER_DURATION);
     }
   }, [state.currentPlayer, timer1RemainingTime, timer2RemainingTime]);
 
   useEffect(() => {
-    if (gameMode === "bot" && state.currentPlayer === 2 && !state.winner && !isPause) {
+    if (
+      gameMode === "bot" &&
+      state.currentPlayer === 2 &&
+      !state.winner &&
+      !isPause
+    ) {
       botMove(state, dispatch, difficulty);
     }
-  }, [gameMode, state.currentPlayer, state.winner, isPause, state.field, difficulty]);
+  }, [gameMode, state.currentPlayer, state.winner, isPause, state.field]);
 
   const handleCellClick = (columnIndex: number) => {
-    if (state.winner !== null || isPause || (gameMode === "bot" && state.currentPlayer === 2))
+    if (
+      state.winner !== null ||
+      isPause ||
+      (gameMode === "bot" && state.currentPlayer === 2)
+    )
       return;
     if (getLastEmptyRow(state.field, columnIndex) !== null) {
       dispatch({ type: "DROP_CHECKER", column: columnIndex });
@@ -210,9 +183,7 @@ export const ConnectFour: React.FC = () => {
           Exit to Menu
         </button>
         <button
-          onClick={() => {
-            if (!isGameBlocked) setIsPause((prev) => !prev);
-          }}
+          onClick={() => {if(!isGameBlocked) setIsPause((prev) => !prev)}}
           className={`pause-btn ${isPause ? "paused" : ""}`}
         >
           {isPause ? "Resume" : "Pause"}
@@ -307,9 +278,7 @@ export const ConnectFour: React.FC = () => {
         </div>
         <div className="right-part">
           <button
-            onClick={() => {
-              if (!isGameBlocked) setIsPause((prev) => !prev);
-            }}
+            onClick={() => {if(!isGameBlocked)setIsPause((prev) => !prev)}}
             className={`pause-btn ${isPause ? "paused" : ""}`}
           >
             {isPause ? "Resume" : "Pause"}
@@ -367,13 +336,13 @@ export const ConnectFour: React.FC = () => {
                   <div
                     key={colIndex}
                     className={`cell 
-                        ${
-                          isHovered
-                            ? `hovered-by-player-${state.currentPlayer}`
-                            : ""
-                        }
-                        ${isActive ? `active-by-player-${cell} falling` : ""}
-                        ${isLastChecker ? "last-checker" : ""}`}
+                      ${
+                        isHovered
+                          ? `hovered-by-player-${state.currentPlayer}`
+                          : ""
+                      }
+                      ${isActive ? `active-by-player-${cell} falling` : ""}
+                      ${isLastChecker ? "last-checker" : ""}`}
                   />
                 );
               })}
@@ -462,14 +431,8 @@ export const ConnectFour: React.FC = () => {
         </div>
       )}
 
-      {isPause && (
-        <div
-          className="pause"
-          onClick={() => {
-            if (!isGameBlocked) setIsPause((prev) => !prev);
-          }}
-        />
-      )}
+      {isPause && <div className="pause" onClick={() => {if(!isGameBlocked) setIsPause((prev) => !prev)}}/>}
     </section>
   );
 };
+

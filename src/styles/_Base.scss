@@ -242,3 +242,25 @@ div {
   font-weight: normal;
   font-style: normal;
 }
+
+
+
+.connection-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 8px 15px;
+  border-radius: 15px;
+  font-weight: bold;
+  z-index: 1000;
+}
+
+.connection-status.connected {
+  background: #4CAF50;
+  color: white;
+}
+
+.connection-status.connecting {
+  background: #FFC107;
+  color: black;
+}

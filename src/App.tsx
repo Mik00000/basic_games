@@ -19,6 +19,7 @@ import MinesweeperStartMenu from "./games/minesweeper/StartMenu";
 import Games from "./pages/Games";
 import { ConnectFour } from "./games/connectFour/Game";
 import { Minesweeper } from "./games/minesweeper/Game";
+import  OnlineTester  from "./components/OnlineTester";
 function App() {
   return (
     <div className="App">
@@ -52,6 +53,10 @@ function App() {
             <Route
               path="/games/minesweeper-menu"
               element={<MinesweeperStartMenu />}
+            />            
+            <Route
+              path="/games/tester"
+              element={<OnlineTester/>}
             />
           </Routes>
         </div>
