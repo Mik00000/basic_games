@@ -19,7 +19,7 @@ export interface RoomParams {
   maxPlayers?: number;
 }
 
-let socketInstance: Socket | null = null; // Змінено назву, щоб уникнути конфлікту з socketId
+let socketInstance: Socket | null = null;
 
 // Функція для отримання або ініціалізації сокета
 const getSocket = (serverUrl: string): Socket => {
@@ -40,12 +40,10 @@ const getSocket = (serverUrl: string): Socket => {
 
 
 export const useOnlineGame = <TGameState extends GenericGameState = GenericGameState>(
-  gameTypeFromProps: string, // Перейменовано, щоб уникнути конфлікту з gameType у roomInfo
-  maxPlayersFromProps: number = 2 // Перейменовано
+  gameTypeFromProps: string,
+  maxPlayersFromProps: number = 2
 ) => {
-  // Стан gameState тепер буде містити тільки сам стан гри
   const [gameState, setGameState] = useState<TGameState | null>(null);
-  // roomInfo буде містити всю інформацію про кімнату
   const [roomInfo, setRoomInfo] = useState<GameRoomInfo<TGameState> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [socketId, setSocketId] = useState<string | null>(null);
@@ -55,10 +53,8 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
   const handleError = useCallback((msg: string) => {
     console.error("OnlineGame Error:", msg);
     setError(msg);
-    // Немає потреби в setTimeout тут, помилка буде видима, доки не зникне або не зміниться
   }, []);
 
-  // Обробник для всіх оновлень кімнати
   const handleRoomUpdate = useCallback((data: Omit<GameRoomInfo<TGameState>, 'exists'>) => {
     console.log("Received roomUpdate:", data);
     setRoomInfo({
@@ -77,15 +73,12 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
   const handleRoomDeleted = useCallback((message: string = "Room was deleted.") => {
     setGameState(null);
     setRoomInfo(null);
-    // Не встановлюємо тут помилку, оскільки це може бути очікувана подія
-    // Замість цього, можна показати повідомлення користувачу
     console.warn("RoomDeleted:", message);
     // Можна додати спеціальний стан, наприклад, setRoomStatus('deleted')
     // setError(message); // Якщо це завжди вважати помилкою для користувача
   }, []);
 
   const handleAdminChanged = useCallback((newAdminId: string) => {
-    // Ця подія тепер дублюється `roomUpdate`, але може бути корисною для логування
     console.log("Admin changed to:", newAdminId);
     setRoomInfo(prev => prev ? { ...prev, admin: newAdminId } : null);
   }, []);
@@ -112,13 +105,14 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
     const onDisconnect = (reason: Socket.DisconnectReason) => {
       console.log("Socket disconnected:", reason);
       setIsConnected(false);
-      setSocketId(null);
+      // setSocketId(null); // Не скидаємо socketId, щоб його можна було бачити навіть після дисконекту
       // Не скидаємо roomInfo та gameState тут, бо може бути перепідключення
       if (reason === "io server disconnect") {
         handleError("Disconnected by server.");
         handleRoomDeleted("Disconnected by server, room may no longer exist.");
       } else if (reason === "io client disconnect") {
         // Клієнт сам викликав disconnect, наприклад, при leaveRoom
+        // або при розмонтуванні компонента, якщо так налаштовано
       } else {
         // Інші причини, спроба перепідключення
         // handleError("Connection lost. Attempting to reconnect...");
@@ -135,14 +129,10 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
     currentSocket.on("connect_error", onConnectError);
     currentSocket.on("disconnect", onDisconnect);
 
-    // Головний слухач для оновлень кімнати
     currentSocket.on("roomUpdate", handleRoomUpdate);
-    // Слухач для помилок від сервера
     currentSocket.on("error", onErrorEvent);
-    // Слухач для видалення кімнати
     currentSocket.on("roomDeleted", handleRoomDeleted);
-    // Слухач для зміни адміна (може бути частиною roomUpdate)
-    currentSocket.on("adminChanged", handleAdminChanged); // Можливо, варто прибрати, якщо roomUpdate покриває
+    currentSocket.on("adminChanged", handleAdminChanged); 
 
     // Функція очищення
     return () => {
@@ -154,10 +144,11 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
       currentSocket.off("roomDeleted", handleRoomDeleted);
       currentSocket.off("adminChanged", handleAdminChanged);
 
-      // Розглянути, чи потрібно відключати сокет при розмонтуванні компонента,
-      // що використовує хук. Якщо хук використовується в багатьох місцях,
-      // то, можливо, не варто відключати тут, а керувати цим глобальніше.
-      // if (socketInstance && socketInstance.active && ShouldDisconnectOnUnmount) {
+      // Важливо: Не відключайте сокет тут, якщо він використовується іншими компонентами
+      // або якщо ви хочете зберегти з'єднання між переходами сторінок.
+      // Глобальне керування сокетом може бути кращим підходом.
+      // if (socketInstance && !Object.keys(socketInstance.listenersAny()).length) {
+      //   console.log("Attempting to disconnect socket as no listeners are attached.");
       //   socketInstance.disconnect();
       //   socketInstance = null;
       // }
@@ -181,28 +172,27 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
       gameType: gameTypeFromProps,
       gameId,
       maxPlayers: maxPlayersFromProps,
-      initialState // Надсилаємо initialState
+      initialState
     });
-  }, [gameTypeFromProps, maxPlayersFromProps, ensureConnected, handleError]); // Додано handleError
+  }, [gameTypeFromProps, maxPlayersFromProps, ensureConnected]);
 
 
   const joinRoom = useCallback((gameId: string, type = gameTypeFromProps) => {
     if (!ensureConnected() || !socketInstance) return;
     console.log(`Attempting to join room: ${type}_${gameId}`);
     socketInstance.emit("joinRoom", { gameType: type, gameId });
-  }, [gameTypeFromProps, ensureConnected, handleError]); // Додано handleError
+  }, [gameTypeFromProps, ensureConnected, ]);
 
   const leaveRoom = useCallback((gameId: string, type = gameTypeFromProps) => {
-    if (!socketInstance) { // Не обов'язково бути підключеним, щоб спробувати вийти
+    if (!socketInstance) {
         console.warn("Socket not available for leaveRoom, room info will be cleared locally.");
     }
     socketInstance?.emit("leaveRoom", { gameType: type, gameId });
-    // Негайно скидаємо стан локально для кращого UX
     setGameState(null);
     setRoomInfo(null);
     // Не скидаємо socketId та isConnected, оскільки з'єднання може бути активним
     console.log(`Left room: ${type}_${gameId}`);
-  }, [gameTypeFromProps]); // handleError тут не потрібен, бо вихід - це дія користувача
+  }, [gameTypeFromProps]);
 
 
   const updateGame = useCallback((gameId: string, newState: TGameState, type = gameTypeFromProps) => {
@@ -212,7 +202,7 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
         gameId,
         newState
     });
-  }, [gameTypeFromProps, ensureConnected, handleError]);
+  }, [gameTypeFromProps, ensureConnected]);
 
 
   const getRoomInfo = useCallback((
@@ -232,23 +222,21 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
             callback({ exists: false });
         }
     });
-  }, [gameTypeFromProps, ensureConnected, handleError]);
+  }, [gameTypeFromProps, ensureConnected]);
 
 
   const deleteRoom = useCallback((gameId: string, type = gameTypeFromProps) => {
     if (!ensureConnected() || !socketInstance) return;
-    // Тут можна додати перевірку, чи поточний користувач є адміном (roomInfo?.admin === socketId)
-    // але остаточне рішення все одно за сервером.
     socketInstance.emit("deleteRoom", { gameType: type, gameId });
-  }, [gameTypeFromProps, ensureConnected, handleError]);
+  }, [gameTypeFromProps, ensureConnected]);
 
 
   return {
     socketId,
     isConnected,
-    gameState, // Тільки стан гри
-    roomInfo,  // Повна інформація про кімнату (включаючи гравців, адміна, стан гри)
-    isAdmin: roomInfo?.admin === socketId && !!socketId, // Додано перевірку на !!socketId
+    gameState,
+    roomInfo, 
+    isAdmin: roomInfo?.admin === socketId && !!socketId,
     error,
     createRoom,
     joinRoom,
@@ -263,59 +251,58 @@ export const useOnlineGame = <TGameState extends GenericGameState = GenericGameS
 export const checkOnlineGame = async (
   gameType: string,
   gameId: string
-): Promise<GameRoomInfo | { exists: false }> => { // Повертає більше інформації
-  return new Promise((resolve, reject) => {
+): Promise<GameRoomInfo | { exists: false }> => {
+  return new Promise((resolve) => { // Removed reject as we resolve with exists: false
     const serverUrl = process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:3001";
-    // Використовуємо існуючий екземпляр сокета, якщо він є і підключений,
-    // або створюємо тимчасовий, якщо це одноразова перевірка без активного хука.
-    // Для простоти, тут завжди створюємо тимчасовий.
-
+    
     let tempSocket: Socket | null = null;
     try {
         tempSocket = io(serverUrl, {
           transports: ["websocket"],
-          autoConnect: false, // Підключаємо вручну
-          timeout: 5000,
+          autoConnect: false, 
+          timeout: 5000, // Socket.IO connection timeout
           reconnection: false,
         });
     } catch (e) {
         console.error("Failed to create temporary socket:", e);
-        return reject(new Error("Failed to initialize connection for game check."));
+        resolve({ exists: false }); // Resolve instead of reject
+        return;
     }
 
+    const localSocket = tempSocket;
 
-    const localSocket = tempSocket; // Для використання в таймауті та обробниках
-
-    const connectionTimeout = setTimeout(() => {
+    const connectionTimeoutId = setTimeout(() => {
+      console.warn(`checkOnlineGame (${gameType}_${gameId}): Connection attempt timed out after 5s.`);
       localSocket.disconnect();
-      console.warn("checkOnlineGame: Connection timeout.");
-      // Замість reject, можна повернути { exists: false }
       resolve({ exists: false });
-      // reject(new Error("Connection timeout while checking game status."));
-    }, 5000);
+    }, 5000); // This is an application-level timeout for the whole operation
 
     localSocket.on("connect", () => {
       localSocket.emit("getRoomInfo", { gameType, gameId }, (data: any) => {
-        clearTimeout(connectionTimeout);
+        clearTimeout(connectionTimeoutId);
         localSocket.disconnect();
         if (data && typeof data.exists === 'boolean') {
           resolve(data as GameRoomInfo | { exists: false });
         } else {
-          console.warn("Unexpected data structure from getRoomInfo in checkOnlineGame:", data);
+          console.warn(`Unexpected data structure from getRoomInfo in checkOnlineGame (${gameType}_${gameId}):`, data);
           resolve({ exists: false });
         }
       });
     });
 
-    localSocket.on("connect_error", (err:any) => {
-      clearTimeout(connectionTimeout);
+    localSocket.on("connect_error", (err: Error) => {
+      clearTimeout(connectionTimeoutId);
       localSocket.disconnect();
-      console.error("Connection error in checkOnlineGame:", err);
-      // Замість reject, можна повернути { exists: false }
+      console.error(`Connection error in checkOnlineGame (${gameType}_${gameId}):`, err.message);
       resolve({ exists: false });
-      // reject(err);
     });
 
-    localSocket.connect(); // Підключаємо вручну
+    try {
+        localSocket.connect();
+    } catch (e) {
+        clearTimeout(connectionTimeoutId);
+        console.error(`Error while trying to connect in checkOnlineGame (${gameType}_${gameId}):`, e);
+        resolve({ exists: false });
+    }
   });
 };
