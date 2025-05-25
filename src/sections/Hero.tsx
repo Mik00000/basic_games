@@ -16,5 +16,6 @@ export const Hero = () => {
       </div>
       <div className="banner-background"></div>
     </section>
+    
   );
 };
