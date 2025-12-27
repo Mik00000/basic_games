@@ -19,7 +19,7 @@ import MinesweeperStartMenu from "./games/minesweeper/StartMenu";
 import Games from "./pages/Games";
 import { ConnectFour } from "./games/connectFour/Game";
 import { Minesweeper } from "./games/minesweeper/Game";
-import  OnlineTester  from "./components/OnlineTester";
+import  OnlineGameTester  from "./components/TestGame";
 function App() {
   return (
     <div className="App">
@@ -43,7 +43,7 @@ function App() {
             <Route path="/games/" element={<Games />} />
             <Route path="/games/minesweeper" element={<Minesweeper />} />
             <Route
-              path="/games/connect4/:shareInfo?/:onlineGameId?"
+              path="/games/connect4/:onlineGameId?"
               element={<ConnectFour />}
             />
             <Route
@@ -56,7 +56,7 @@ function App() {
             />            
             <Route
               path="/games/tester"
-              element={<OnlineTester/>}
+              element={<OnlineGameTester/>}
             />
           </Routes>
         </div>

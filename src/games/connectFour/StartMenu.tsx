@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { areColorsTooSimilar, generateRandomGameId } from "../../components/utils";
+import {
+  areColorsTooSimilar,
+  generateRandomGameId,
+} from "../../components/utils";
 
 interface DifficultyLevel {
   name: string;
@@ -16,6 +19,7 @@ const ConnectFourStartMenu: React.FC = () => {
   const [playerOneError, setPlayerOneError] = useState<string>("");
   const [playerTwoError, setPlayerTwoError] = useState<string>("");
   const [generalError, setGeneralError] = useState<string>("");
+  const [joinGameId, setJoinGameId] = useState<string>("");
   const navigate = useNavigate();
   const [difficulty, setDifficulty] = useState<number>(0);
   const difficultyLevels: DifficultyLevel[] = [
@@ -68,35 +72,57 @@ const ConnectFourStartMenu: React.FC = () => {
       );
       isValid = false;
     }
-    if (areColorsTooSimilar(playerOneColor, "#FFF", 80)) {
+    if (areColorsTooSimilar(playerOneColor, "#FFFFFF", 80)) {
       setPlayerTwoError("Player 1 cannot have too light color");
       isValid = false;
     }
-    if (areColorsTooSimilar(playerTwoColor, "#FFF", 80)) {
+    if (areColorsTooSimilar(playerTwoColor, "#FFFFFF", 80)) {
       setPlayerTwoError("Player 2 cannot have too light color");
       isValid = false;
     }
     return isValid;
   };
-  const startGame = () => {
+const startGame = () => {
     if (!validateInputs()) {
       return;
     }
-  
-    const gameId = gameMode === "online" ? generateRandomGameId(12) : "";
-  
-    navigate(`/games/connect4/host/${gameId}`, {
-      state: {
-        gameMode,
-        playerOneName,
-        playerTwoName,
-        playerOneColor,
-        playerTwoColor,
-        difficulty,
-      },
-    });
+    
+    // Перевіряємо, чи ввів користувач код
+    const isJoining = joinGameId.trim().length > 0;
+
+    if (gameMode === "online") {
+      // Якщо ми приєднуємось - вставляємо ID в URL.
+      // Якщо створюємо - передаємо "create" (твоя логіка в Game.tsx це обробляє).
+      const routeParam = isJoining ? joinGameId : "create";
+
+      navigate(`/games/connect4/${routeParam}`, {
+        state: {
+          gameMode,
+          playerOneName,
+          // Ім'я другого гравця при join не важливе, бо воно прийде з сервера,
+          // але для create воно потрібне як плейсхолдер.
+          playerTwoName, 
+          playerOneColor,
+          playerTwoColor,
+          difficulty,
+          action: isJoining ? "join" : "create", // Оновлюємо екшн
+        },
+      });
+    } else {
+      // Локальна гра або бот
+      navigate(`/games/connect4/host/`, {
+        state: {
+          gameMode,
+          playerOneName,
+          playerTwoName,
+          playerOneColor,
+          playerTwoColor,
+          difficulty,
+        },
+      });
+    }
   };
-  
+
   const exitGame = () => {
     console.log("Exiting game...");
     navigate("/games");
@@ -166,6 +192,19 @@ const ConnectFourStartMenu: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
+      )}
+      {gameMode === "online" && (
+        <div className="online-settings" style={{ marginTop: "15px" }}>
+          <label>
+            Join Room ID (leave empty to create):
+            <input
+              type="text"
+              value={joinGameId}
+              onChange={(e) => setJoinGameId(e.target.value)}
+              placeholder="Enter Code"
+            />
+          </label>
         </div>
       )}
       <div className="menu-section">

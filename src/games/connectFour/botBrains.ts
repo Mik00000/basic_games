@@ -64,7 +64,6 @@ export const botMove = (
   dispatch: Dispatch,
   difficulty: number
 ): void => {
-  console.log(difficulty)
   const validMoves = getValidMoves(state.field);
   if (validMoves.length === 0) return;
 
