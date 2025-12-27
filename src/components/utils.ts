@@ -21,10 +21,10 @@ export function hexToRgb(
   typeOfResult: typeOfResultType = "string"
 ): string | { r: number; g: number; b: number } {
   const cleanHex = hex.replace("#", "");
-
+  // console.log("CleanHex: " + cleanHex)
   // Перевірка на правильність HEX-формату
   if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
-    throw new Error("Invalid HEX color");
+    throw new Error("Invalid HEX color: " + cleanHex);
   }
 
   const r = parseInt(cleanHex.substring(0, 2), 16);
@@ -85,7 +85,7 @@ export function useStickyStateWithExpiry<T extends SaveableData>(
     if (savedItem) {
       try {
         const {
-          value: storedValue,
+          value: storedValue, 
           expiry,
           lastUpdated,
         } = JSON.parse(savedItem);
@@ -127,147 +127,7 @@ export const formatTime = (seconds: number) => {
   return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
 };
 
-interface GameRoomInfo {
-  exists: boolean;
-  players: string[];
-  admin: string | null;
-  maxPlayers: number;
-  state: any;
-}
 
-interface RoomParams {
-  gameType: string;
-  gameId: string;
-  maxPlayers?: number;
-}
-
-type GameState = any;
-
-let socket: Socket | null = null;
-
-export const useOnlineGame = (gameType: string, maxPlayers: number = 2) => {
-  const [gameState, setGameState] = useState<GameState>(null);
-  const [roomInfo, setRoomInfo] = useState<GameRoomInfo | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [adminId, setAdminId] = useState<string | null>(null); // Додано adminId
-
-  const handleError = useCallback((msg: string) => {
-    setError(msg);
-    setTimeout(() => setError(null), 5000);
-  }, []);
-
-  const handleRoomUpdate = useCallback((data: any) => {
-    setRoomInfo({
-      exists: true,
-      players: data.players,
-      admin: data.admin, // Оновлено
-      maxPlayers: data.maxPlayers,
-      state: data.state,
-    });
-    setAdminId(data.admin); // Оновлено
-    setGameState(data.state);
-  }, []);
-
-  const handleGameState = useCallback((state: GameState) => {
-    setGameState(state);
-  }, []);
-
-  const handleRoomDeleted = useCallback(() => {
-    setGameState(null);
-    setRoomInfo(null);
-    setAdminId(null); // Оновлено
-    handleError("Room was deleted");
-  }, [handleError]);
-
-  const handleAdminChanged = useCallback((newAdminId: string) => { // Додано
-    setAdminId(newAdminId);
-  }, []);
-
-  useEffect(() => {
-    const initializeSocket = () => {
-      if (!socket) {
-        socket = io("http://localhost:3001", {
-          transports: ["websocket", "polling"],
-          autoConnect: true,
-        });
-
-        socket.on("connect", () => {
-          console.log("Socket connected");
-          setError(null);
-        });
-
-        socket.on("connect_error", (err) => {
-          handleError(`Connection error: ${err.message}`);
-        });
-      }
-
-      socket.on("gameState", handleGameState);
-      socket.on("roomUpdate", handleRoomUpdate);
-      socket.on("error", handleError);
-      socket.on("roomDeleted", handleRoomDeleted);
-      socket.on("adminChanged", handleAdminChanged); // Додано
-
-      return () => {
-        socket?.off("gameState", handleGameState);
-        socket?.off("roomUpdate", handleRoomUpdate);
-        socket?.off("error", handleError);
-        socket?.off("roomDeleted", handleRoomDeleted);
-        socket?.off("adminChanged", handleAdminChanged); // Додано
-      };
-    };
-
-    const cleanup = initializeSocket();
-    return () => cleanup?.();
-  }, [handleGameState, handleRoomUpdate, handleError, handleRoomDeleted, handleAdminChanged]); // Оновлено залежності
-
-  const createRoom = useCallback((gameId: string, initialState: any) => { // Оновлено
-    if (!socket) return;
-    socket.emit("createRoom", { 
-      gameType, 
-      gameId, 
-      maxPlayers, 
-      initialState 
-    });
-  }, [gameType, maxPlayers]);
-
-  const joinRoom = useCallback((gameId: string) => {
-    if (!socket) return;
-    socket.emit("joinRoom", { gameType, gameId });
-  }, [gameType]);
-
-  const leaveRoom = useCallback((gameId: string) => {
-    if (!socket) return;
-    socket.emit("leaveRoom", { gameType, gameId });
-  }, [gameType]);
-
-  const updateGame = useCallback((gameId: string, newState: GameState) => {
-    if (!socket) return;
-    socket.emit("updateGame", { gameType, gameId, newState });
-  }, [gameType]);
-
-  const getRoomInfo = useCallback((gameId: string, callback: (info: GameRoomInfo) => void) => {
-    if (!socket) return;
-    socket.emit("getRoomInfo", { gameType, gameId }, callback);
-  }, [gameType]);
-
-  const deleteRoom = useCallback((gameId: string) => {
-    if (!socket) return;
-    socket.emit("deleteRoom", { gameType, gameId });
-  }, [gameType]);
-
-  return {
-    gameState,
-    roomInfo,
-    adminId, // Додано
-    error,
-    createRoom,
-    joinRoom,
-    leaveRoom,
-    updateGame,
-    getRoomInfo,
-    deleteRoom,
-  };
-};
 
 export const generateRandomGameId = (numberOfSymbols: number): string => {
   if (numberOfSymbols <= 0) throw new Error("Invalid number of symbols");
@@ -285,36 +145,5 @@ export const generateRandomGameId = (numberOfSymbols: number): string => {
   };
 
   return Array.from({ length: numberOfSymbols }, getRandomChar).join("");
-};
-
-export const checkOnlineGame = async (
-  gameType: string,
-  gameId: string
-): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    const tempSocket = io("http://localhost:3001", {
-      transports: ["websocket"],
-      autoConnect: true,
-    });
-
-    const timeout = setTimeout(() => {
-      tempSocket.disconnect();
-      reject(new Error("Connection timeout"));
-    }, 5000);
-
-    tempSocket.on("connect", () => {
-      tempSocket.emit("getRoomInfo", { gameType, gameId }, (data: any) => {
-        clearTimeout(timeout);
-        tempSocket.disconnect();
-        resolve(data.exists);
-      });
-    });
-
-    tempSocket.on("connect_error", (err) => {
-      clearTimeout(timeout);
-      tempSocket.disconnect();
-      reject(err);
-    });
-  });
 };
 

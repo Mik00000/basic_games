@@ -23,8 +23,15 @@ export type GameAction =
   | { type: "SET_STATE"; newState: Partial<GameState> };
 
 export const getLastEmptyRow = (field: number[][], colIndex: number): number | null => {
+  // Захист: якщо поля немає, повертаємо null
+  if (!field) return null;
+
   for (let row = MAX_ROWS - 1; row >= 0; row--) {
-    if (field[row][colIndex] === 0) return row;
+    // ЗАХИСТ ВІД КРАШУ:
+    // Перевіряємо, чи існує рядок field[row] перед тим як брати [colIndex]
+    if (field[row] && field[row][colIndex] === 0) {
+        return row;
+    }
   }
   return null;
 };
