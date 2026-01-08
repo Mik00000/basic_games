@@ -84,3 +84,4 @@ export const initialGameState: GameState = {
   isNewGame: true,
   showCoinToss: true,
 };
+

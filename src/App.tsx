@@ -19,50 +19,60 @@ import MinesweeperStartMenu from "./games/minesweeper/StartMenu";
 import Games from "./pages/Games";
 import { ConnectFour } from "./games/connectFour/Game";
 import { Minesweeper } from "./games/minesweeper/Game";
-import  OnlineGameTester  from "./components/TestGame";
+import OnlineGameTester from "./components/TestGame";
+import ConnectFourLobby from "./games/connectFour/Lobby";
+import GameLayout from "./sections/GameLayout";
+import { GameProvider } from "./context/GameContext";
 function App() {
   return (
-    <div className="App">
-      <Router>
-        <Header />
-        <div className="main">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <Hero />
-                  <Features />
-                  <Contents />
-                  <Gallery />
-                  <Partners />
-                  <Testimonials />
-                </>
-              }
-            />
-            <Route path="/games/" element={<Games />} />
-            <Route path="/games/minesweeper" element={<Minesweeper />} />
-            <Route
-              path="/games/connect4/:onlineGameId?"
-              element={<ConnectFour />}
-            />
-            <Route
-              path="/games/connect4-menu"
-              element={<ConnectFourStartMenu />}
-            />
-            <Route
-              path="/games/minesweeper-menu"
-              element={<MinesweeperStartMenu />}
-            />            
-            <Route
-              path="/games/tester"
-              element={<OnlineGameTester/>}
-            />
-          </Routes>
-        </div>
-        <Footer />
-      </Router>
-    </div>
+    <GameProvider>
+      <div className="App">
+        <Router>
+          <Header />
+          <div className="main">
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <Hero />
+                    <Features />
+                    <Contents />
+                    <Gallery />
+                    <Partners />
+                    <Testimonials />
+                  </>
+                }
+              />
+              <Route path="/games/" element={<Games />} />
+
+              <Route element={<GameLayout />}>
+                <Route path="/games/minesweeper" element={<Minesweeper />} />
+                <Route
+                  path="/games/connect4/:onlineGameId?"
+                  element={<ConnectFour />}
+                />
+              </Route>
+
+              <Route
+                path="/games/connect4-menu"
+                element={<ConnectFourStartMenu />}
+              />
+              <Route
+                path="/games/connect4/lobby/:roomId"
+                element={<ConnectFourLobby />}
+              />
+              <Route
+                path="/games/minesweeper-menu"
+                element={<MinesweeperStartMenu />}
+              />
+              <Route path="/games/tester" element={<OnlineGameTester />} />
+            </Routes>
+          </div>
+          <Footer />
+        </Router>
+      </div>
+    </GameProvider>
   );
 }
 

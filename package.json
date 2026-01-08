@@ -8,28 +8,20 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.126",
     "lucide-react": "^0.525.0",
     "react": "^19.0.0",
     "react-countdown-circle-timer": "^3.2.1",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.3.0",
-    "react-scripts": "5.0.1",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "smart-start": "react-scripts start && tsx ~/Projects/Web_Development/server_stuff/src/server.mts"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "smart-start": "vite & tsx ~/Projects/Web_Development/server_stuff/src/server.mts"
   },
   "browserslist": {
     "production": [
@@ -44,8 +36,18 @@
     ]
   },
   "devDependencies": {
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^25.0.3",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "typescript": "^5.8.3"
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.1",
+    "vite-plugin-svgr": "^4.5.0"
   }
 }

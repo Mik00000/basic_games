@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import menuImg from "../assets/icons/menu.svg";
-import { ReactComponent as CrossIcon } from "../assets/icons/cross.svg";
+import CrossIcon from "../assets/icons/cross.svg?react";
 import logo from "../assets/logo.png";
+import { useGameStatus } from "../context/GameContext";
 
 const navData = [
   { name: "Home", url: "/home" },
@@ -17,12 +18,12 @@ export const Header = () => {
   const location = useLocation();
 
   const isGameSubPage = location.pathname.startsWith("/games/");
-
+  const { isInGame } = useGameStatus();
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  return (
+  return !isInGame ? (
     <header className={`header ${isGameSubPage ? "relative" : ""}`}>
       <Link to="/">
         <img src={logo} alt="logo" className="logo" draggable="false" />
@@ -62,5 +63,7 @@ export const Header = () => {
         </div>
       </div>
     </header>
+  ) : (
+    <div style={{ marginTop: "10px" }}></div>
   );
 };

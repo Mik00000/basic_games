@@ -20,6 +20,9 @@ const ConnectFourStartMenu: React.FC = () => {
   const [playerTwoError, setPlayerTwoError] = useState<string>("");
   const [generalError, setGeneralError] = useState<string>("");
   const [joinGameId, setJoinGameId] = useState<string>("");
+  const [joinOrCreateRoom, setJoinOrCreateRoom] = useState<"create" | "join">(
+    "create"
+  );
   const navigate = useNavigate();
   const [difficulty, setDifficulty] = useState<number>(0);
   const difficultyLevels: DifficultyLevel[] = [
@@ -80,34 +83,45 @@ const ConnectFourStartMenu: React.FC = () => {
       setPlayerTwoError("Player 2 cannot have too light color");
       isValid = false;
     }
+    if (
+      gameMode === "online" &&
+      joinOrCreateRoom == "join" &&
+      joinGameId.length <= 0
+    ) {
+      setGeneralError("Enter Game ID");
+    }
     return isValid;
   };
-const startGame = () => {
+  const startGame = () => {
     if (!validateInputs()) {
       return;
     }
-    
+
     // Перевіряємо, чи ввів користувач код
-    const isJoining = joinGameId.trim().length > 0;
 
     if (gameMode === "online") {
-      // Якщо ми приєднуємось - вставляємо ID в URL.
-      // Якщо створюємо - передаємо "create" (твоя логіка в Game.tsx це обробляє).
-      const routeParam = isJoining ? joinGameId : "create";
+      if (joinOrCreateRoom == "join") {
+        if (joinGameId.length > 0) {
+          navigate(`/games/connect4/lobby/${joinGameId}`, {
+            state: {
+              playerOneName, // Передаємо ім'я
+              playerOneColor, // Передаємо колір
+              // Інше не важливо, воно налаштується в лобі
+            },
+          });
+        }
+      } else {
+        navigate(`/games/connect4/lobby/new`, {
+          state: {
+            playerOneName, // Передаємо ім'я
+            playerOneColor, // Передаємо колір
+            // Інше не важливо, воно налаштується в лобі
+          },
+        });
+      }
+      // const lobbyId = joinOrCreateRoom == "join" ? joinGameId : "new";
 
-      navigate(`/games/connect4/${routeParam}`, {
-        state: {
-          gameMode,
-          playerOneName,
-          // Ім'я другого гравця при join не важливе, бо воно прийде з сервера,
-          // але для create воно потрібне як плейсхолдер.
-          playerTwoName, 
-          playerOneColor,
-          playerTwoColor,
-          difficulty,
-          action: isJoining ? "join" : "create", // Оновлюємо екшн
-        },
-      });
+      // Редірект на ЛОБІ
     } else {
       // Локальна гра або бот
       navigate(`/games/connect4/host/`, {
@@ -195,73 +209,147 @@ const startGame = () => {
         </div>
       )}
       {gameMode === "online" && (
-        <div className="online-settings" style={{ marginTop: "15px" }}>
-          <label>
-            Join Room ID (leave empty to create):
-            <input
-              type="text"
-              value={joinGameId}
-              onChange={(e) => setJoinGameId(e.target.value)}
-              placeholder="Enter Code"
-            />
-          </label>
+        <div className="menu-section">
+          <div className="join-or-create">
+            <h2>Online Settings</h2>
+            <div className="buttons">
+              <button
+                className={`choose-room-btn ${
+                  joinOrCreateRoom === "create" ? "active" : ""
+                }`}
+                onClick={() => setJoinOrCreateRoom("create")}
+              >
+                Create Room
+              </button>
+              <button
+                className={`choose-room-btn ${
+                  joinOrCreateRoom === "join" ? "active" : ""
+                }`}
+                onClick={() => setJoinOrCreateRoom("join")}
+              >
+                Join Room
+              </button>
+            </div>
+            <div className="content"></div>
+          </div>
         </div>
       )}
       <div className="menu-section">
-        <h2>Player Settings</h2>
+        {gameMode !== "online" && <h2>Player Settings</h2>}
         <div className="player-settings">
-          <div className="player">
-            <label>
-              {gameMode !== "bot" ? "Player 1 Name:" : "Player Name:"}
-              <input
-                type="text"
-                value={playerOneName}
-                onChange={(e) => setPlayerOneName(e.target.value)}
-              />
-            </label>
-            {playerOneError && (
-              <div className="error-message">{playerOneError}</div>
-            )}
-            <label>
-              {gameMode !== "bot" ? "Player 1 Color:" : "Player Color:"}
-              <input
-                type="color"
-                value={playerOneColor}
-                onChange={(e) => setPlayerOneColor(e.target.value)}
-              />
-            </label>
-          </div>
-          {gameMode !== "bot" && (
-            <div className="player">
-              <label>
-                Player 2 Name:
-                <input
-                  type="text"
-                  value={playerTwoName}
-                  onChange={(e) => setPlayerTwoName(e.target.value)}
-                />
-              </label>
-              {playerTwoError && (
-                <div className="error-message">{playerTwoError}</div>
+          {(gameMode == "online" && joinOrCreateRoom == "join") || (
+            <div className="player-wrapper">
+              {gameMode == "online" && joinOrCreateRoom == "create" && (
+                <span className="option-heading">Create Room</span>
               )}
-              <label>
-                Player 2 Color:
-                <input
-                  type="color"
-                  value={playerTwoColor}
-                  onChange={(e) => setPlayerTwoColor(e.target.value)}
-                />
-              </label>
+              <div className="player">
+                <label>
+                  {gameMode !== "bot" && gameMode !== "online"
+                    ? "Player 1 Name:"
+                    : "Name:"}
+                  <input
+                    type="text"
+                    value={playerOneName}
+                    onChange={(e) => setPlayerOneName(e.target.value)}
+                  />
+                </label>
+                {playerOneError && (
+                  <div className="error-message">{playerOneError}</div>
+                )}
+                <label>
+                  {gameMode !== "bot" && gameMode !== "online"
+                    ? "Player 1 Color:"
+                    : "Color:"}
+                  <input
+                    type="color"
+                    value={playerOneColor}
+                    onChange={(e) => setPlayerOneColor(e.target.value)}
+                  />
+                </label>
+              </div>
+              {gameMode === "online" && (
+                <button onClick={startGame} className="start-button">
+                  Create
+                </button>
+              )}
+            </div>
+          )}
+          {gameMode == "bot" || gameMode == "online" || (
+            <div className="player-wrapper">
+              <div className="player">
+                <label>
+                  Player 2 Name:
+                  <input
+                    type="text"
+                    value={playerTwoName}
+                    onChange={(e) => setPlayerTwoName(e.target.value)}
+                  />
+                </label>
+                {playerTwoError && (
+                  <div className="error-message">{playerTwoError}</div>
+                )}
+                <label>
+                  Player 2 Color:
+                  <input
+                    type="color"
+                    value={playerTwoColor}
+                    onChange={(e) => setPlayerTwoColor(e.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+          {gameMode === "online" && joinOrCreateRoom === "join" && (
+            <div className="player-wrapper">
+              <span className="option-heading">Join Room</span>
+              <div className="online-settings">
+                <label>
+                  Name
+                  <input
+                    type="text"
+                    value={playerOneName}
+                    onChange={(e) => setPlayerOneName(e.target.value)}
+                  />
+                </label>
+                {playerOneError && (
+                  <div className="error-message">{playerOneError}</div>
+                )}
+                <label>
+                  Color
+                  <input
+                    type="color"
+                    value={playerOneColor}
+                    onChange={(e) => setPlayerOneColor(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Room ID:
+                  <input
+                    type="text"
+                    value={joinGameId}
+                    onChange={(e) => setJoinGameId(e.target.value)}
+                    placeholder="ID"
+                  />
+                </label>
+              </div>
+              <button onClick={startGame} className="start-button">
+                Join
+              </button>
             </div>
           )}
         </div>
       </div>
 
       <div className="menu-actions">
-        <button onClick={startGame} className="start-button">
-          Start Game
-        </button>
-        <button onClick={exitGame} className="exit-button">
+        {gameMode !== "online" && (
+          <button onClick={startGame} className="start-button">
+            Join Game
+          </button>
+        )}
+        <button
+          onClick={exitGame}
+          className={`exit-button ${gameMode == "online" && "wider"}`}
+        >
           Exit
         </button>
       </div>

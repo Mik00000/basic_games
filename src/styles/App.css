@@ -206,7 +206,7 @@ header.header .login-and-menu .login-btn {
   cursor: pointer;
 }
 header.header .login-and-menu .login-btn:hover {
-  background-color: #3e3e3e;
+  background-color: rgb(62.25, 62.25, 62.25);
 }
 header.header .login-and-menu .menu-btn {
   background-color: unset;
@@ -280,7 +280,7 @@ header.header .burger-menu .content nav ul a {
   text-decoration: none;
 }
 header.header .burger-menu .content nav ul a li:active {
-  color: #d9d9d9;
+  color: rgb(216.75, 216.75, 216.75);
 }
 
 body:has(.burger-menu.open) {
@@ -353,7 +353,7 @@ body:has(.burger-menu.open) {
   letter-spacing: 0.2px;
   font-family: "Graphik-Medium";
   font-weight: 500;
-  background-color: #0112db;
+  background-color: rgb(1.170212766, 17.5531914894, 218.829787234);
   color: #fff;
   border: none;
   padding: 20px 40px;
@@ -362,7 +362,7 @@ body:has(.burger-menu.open) {
   cursor: pointer;
 }
 .hero .buttons .try-btn:hover {
-  background-color: #2b3bfe;
+  background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
 .hero .buttons .learn-btn {
   padding: 10px;
@@ -385,7 +385,7 @@ body:has(.burger-menu.open) {
 .hero .banner-background {
   width: 100%;
   height: 993px;
-  background-color: #0112db;
+  background-color: rgb(1.170212766, 17.5531914894, 218.829787234);
   position: relative;
 }
 .hero .banner-background::after {
@@ -604,7 +604,7 @@ body:has(.burger-menu.open) {
   cursor: pointer;
 }
 .gallery .see-more-btn button:hover {
-  background-color: #3e3e3e;
+  background-color: rgb(62.25, 62.25, 62.25);
 }
 
 .contents {
@@ -683,7 +683,7 @@ body:has(.burger-menu.open) {
   letter-spacing: 0.2px;
   font-family: "Graphik-Medium";
   font-weight: 500;
-  background-color: #0112db;
+  background-color: rgb(1.170212766, 17.5531914894, 218.829787234);
   color: #fff;
   border: none;
   padding: 14px 46px;
@@ -693,7 +693,7 @@ body:has(.burger-menu.open) {
   margin-bottom: 30px;
 }
 .contents .content-cards .card .btn:hover {
-  background-color: #2b3bfe;
+  background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
 .contents .content-cards .card img {
   filter: drop-shadow(0 4px 31px rgba(0, 0, 0, 0.15));
@@ -808,7 +808,7 @@ body:has(.burger-menu.open) {
   cursor: pointer;
 }
 .partners .btn button:hover {
-  background-color: #3e3e3e;
+  background-color: rgb(62.25, 62.25, 62.25);
 }
 
 .testimonials {
@@ -1033,7 +1033,7 @@ footer.footer .right-part .social a {
   cursor: pointer;
 }
 .minesweeper .top-bar .left-part .exit-btn:hover {
-  background-color: #e77681;
+  background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
 }
 .minesweeper .top-bar .mid-part {
   display: flex;
@@ -1101,7 +1101,7 @@ footer.footer .right-part .social a {
   cursor: pointer;
 }
 .minesweeper .top-bar .right-part .restart-btn:hover {
-  background-color: #1e4e97;
+  background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
 }
 @media screen and (min-width: 768px) {
   .minesweeper .top-bar.top-bar-1 {
@@ -1123,19 +1123,19 @@ footer.footer .right-part .social a {
   width: 48px;
   aspect-ratio: 1/1;
   background-color: #112d57;
-  border: 1px solid #15386c;
+  border: 1px solid rgb(21.1682692308, 56.0336538462, 108.3317307692);
   border-radius: 10%;
 }
 .minesweeper .top-bar .picker.picked {
-  background-color: #0b1c37;
+  background-color: rgb(10.7475961538, 28.4495192308, 55.0024038462);
 }
 .minesweeper .top-bar .picker:hover {
-  background-color: #0d2242;
+  background-color: rgb(12.8317307692, 33.9663461538, 65.6682692308);
 }
 .minesweeper #field {
   display: flex;
   flex-direction: column;
-  background-color: #252525;
+  background-color: rgb(36.75, 36.75, 36.75);
   border-radius: 2%;
   padding: 10px;
   width: -moz-fit-content;
@@ -1166,7 +1166,7 @@ footer.footer .right-part .social a {
 .minesweeper .cell {
   width: 40px;
   height: 40px;
-  border: 1px solid #272e36;
+  border: 1px solid rgb(39.3012048193, 46.0385542169, 53.8987951807);
   background-color: #232930;
   font-size: 28px;
   display: flex;
@@ -1187,12 +1187,12 @@ footer.footer .right-part .social a {
   aspect-ratio: 1/1;
 }
 .minesweeper .cell:hover {
-  background-color: #39424d;
-  border: 1px solid #4e5b6b;
+  background-color: rgb(56.5060240964, 66.1927710843, 77.4939759036);
+  border: 1px solid rgb(78.0120481928, 91.3855421687, 106.9879518072);
 }
 .minesweeper .cell.revealed {
-  background-color: #2e363f;
-  border: 1px solid #252c33;
+  background-color: rgb(45.7530120482, 53.5963855422, 62.7469879518);
+  border: 1px solid rgb(37.1506024096, 43.5192771084, 50.9493975904);
 }
 .minesweeper .cell.bomb {
   position: relative;
@@ -1238,7 +1238,7 @@ footer.footer .right-part .social a {
   transform: translate(-50%, -50%);
   background-color: #181818;
   border-radius: 5%;
-  border: 1px solid #323232;
+  border: 1px solid rgb(49.5, 49.5, 49.5);
   transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 2;
 }
@@ -1286,14 +1286,14 @@ footer.footer .right-part .social a {
 .minesweeper .pop-up .content .control-buttons .leave-btn:hover,
 .minesweeper .pop-up .content .control-buttons .restart-btn:hover,
 .minesweeper .pop-up .content .control-buttons .back-btn:hover {
-  background-color: #1e4e97;
+  background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
 }
 .minesweeper .pop-up .content .bomb-example > div {
   position: relative;
   animation: explode 0.5s forwards;
   width: 40px;
   height: 40px;
-  border: 1px solid #272e36;
+  border: 1px solid rgb(39.3012048193, 46.0385542169, 53.8987951807);
   background-color: #232930;
   font-size: 28px;
   display: flex;
@@ -1389,7 +1389,7 @@ footer.footer .right-part .social a {
   cursor: pointer;
 }
 .connect-four .top-bar .left-part .exit-btn:hover {
-  background-color: #e77681;
+  background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
 }
 .connect-four .top-bar .mid-part {
   display: flex;
@@ -1403,6 +1403,7 @@ footer.footer .right-part .social a {
           user-select: none;
   display: flex;
   gap: 20px;
+  align-items: center;
 }
 .connect-four .top-bar .mid-part .player-1-timers div:not(.number-timer)::after,
 .connect-four .top-bar .mid-part .player-2-timers div:not(.number-timer)::after {
@@ -1436,7 +1437,7 @@ footer.footer .right-part .social a {
   letter-spacing: 0.2px;
   font-family: "Graphik-Medium";
   font-weight: 500;
-  background-color: #1e7e34;
+  background-color: rgb(30.1449275362, 125.8550724638, 52);
   color: #fff;
   border: none;
   padding: 10px 46px;
@@ -1445,7 +1446,7 @@ footer.footer .right-part .social a {
   cursor: pointer;
 }
 .connect-four .top-bar .right-part .pause-btn:hover {
-  background-color: #2dbc4e;
+  background-color: rgb(44.9275362319, 187.5724637681, 77.5);
 }
 .connect-four .top-bar .right-part .pause-btn.paused {
   background-color: #dc3545;
@@ -1466,7 +1467,7 @@ footer.footer .right-part .social a {
   cursor: pointer;
 }
 .connect-four .top-bar .right-part .restart-btn:hover {
-  background-color: #1e4e97;
+  background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
 }
 @media screen and (min-width: 768px) {
   .connect-four .top-bar.mobile {
@@ -1498,7 +1499,7 @@ footer.footer .right-part .social a {
     cursor: pointer;
   }
   .connect-four .top-bar .exit-btn:hover {
-    background-color: #e77681;
+    background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
   }
   .connect-four .top-bar .restart-btn {
     padding: 10px;
@@ -1516,7 +1517,7 @@ footer.footer .right-part .social a {
     cursor: pointer;
   }
   .connect-four .top-bar .restart-btn:hover {
-    background-color: #1e4e97;
+    background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
   }
   .connect-four .top-bar .pause-btn {
     padding: 10px;
@@ -1525,7 +1526,7 @@ footer.footer .right-part .social a {
     letter-spacing: 0.2px;
     font-family: "Graphik-Medium";
     font-weight: 500;
-    background-color: #1e7e34;
+    background-color: rgb(30.1449275362, 125.8550724638, 52);
     color: #fff;
     border: none;
     padding: 10px 46px;
@@ -1534,7 +1535,7 @@ footer.footer .right-part .social a {
     cursor: pointer;
   }
   .connect-four .top-bar .pause-btn:hover {
-    background-color: #2dbc4e;
+    background-color: rgb(44.9275362319, 187.5724637681, 77.5);
   }
   .connect-four .top-bar .pause-btn.paused {
     background-color: #dc3545;
@@ -1558,14 +1559,21 @@ footer.footer .right-part .social a {
     width: 100%;
   }
 }
-.connect-four .field-main {
+.connect-four .field-wrapper {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding: 20px 0;
+  width: 100%;
+}
+.connect-four .field-wrapper .field-main {
   position: relative;
   width: -moz-fit-content;
   width: fit-content;
   height: -moz-fit-content;
   height: fit-content;
 }
-.connect-four .field-main .field {
+.connect-four .field-wrapper .field-main .field {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1573,32 +1581,32 @@ footer.footer .right-part .social a {
   overflow: hidden;
   border-radius: 5%;
 }
-.connect-four .field-main .field .row {
+.connect-four .field-wrapper .field-main .field .row {
   display: flex;
 }
-.connect-four .field-main .field .row .cell {
+.connect-four .field-wrapper .field-main .field .row .cell {
   position: relative;
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
   overflow: hidden;
 }
-.connect-four .field-main .field .row .cell::after {
+.connect-four .field-wrapper .field-main .field .row .cell::after {
   content: "";
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 97.5px;
-  height: 97.5px;
+  width: 75px;
+  height: 75px;
   background-color: transparent;
   border-radius: 50%;
   box-shadow: 0 0 0 200px #232930;
   transform: translate(-50%, -50%);
   background: var(--after-color, transparent);
 }
-.connect-four .field-main .field .row .cell.hovered-col::after {
-  box-shadow: 0 0 0 200px #272d35;
+.connect-four .field-wrapper .field-main .field .row .cell.hovered-col::after {
+  box-shadow: 0 0 0 200px rgb(38.6560240964, 45.2827710843, 53.0139759036);
 }
-.connect-four .field-main .field-with-checkers {
+.connect-four .field-wrapper .field-main .field-with-checkers {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -1610,52 +1618,113 @@ footer.footer .right-part .social a {
   align-items: center;
   flex-direction: column;
 }
-.connect-four .field-main .field-with-checkers .row {
+.connect-four .field-wrapper .field-main .field-with-checkers .row {
   display: flex;
 }
-.connect-four .field-main .field-with-checkers .row .cell {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell {
   position: relative;
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
   overflow: hidden;
 }
-.connect-four .field-main .field-with-checkers .row .cell.last-checker::before {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell.last-checker::before {
   content: "";
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 16.9px;
-  height: 16.9px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  background: #e6e6e6;
+  background: rgb(229.5, 229.5, 229.5);
   z-index: 1;
 }
-.connect-four .field-main .field-with-checkers .row .cell::after {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell::after {
   content: "";
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 97.5px;
-  height: 97.5px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: var(--after-color, transparent);
 }
-.connect-four .field-main .field-with-checkers .row .cell.hovered-by-player-1::after {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell.hovered-by-player-1::after {
   background-color: rgba(var(--player-color-1), 0.4);
 }
-.connect-four .field-main .field-with-checkers .row .cell.hovered-by-player-2::after {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell.hovered-by-player-2::after {
   background-color: rgba(var(--player-color-2), 0.4);
 }
-.connect-four .field-main .field-with-checkers .row .cell.active-by-player-1::after {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell.active-by-player-1::after {
   background-color: rgb(var(--player-color-1));
 }
-.connect-four .field-main .field-with-checkers .row .cell.active-by-player-2::after {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell.active-by-player-2::after {
   background-color: rgb(var(--player-color-2));
 }
-.connect-four .field-main .field-with-checkers .row .cell.falling {
+.connect-four .field-wrapper .field-main .field-with-checkers .row .cell.falling {
   animation: fallAnimation 0.5s ease-out forwards;
+}
+.connect-four .field-wrapper .pause-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -webkit-backdrop-filter: blur(5px);
+          backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 99;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 40px;
+  box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.5);
+}
+.connect-four .field-wrapper .pause-overlay .pop-up {
+  box-shadow: 0 0 75px 30px rgba(0, 0, 0, 0.7);
+}
+.connect-four .field-wrapper .pause-overlay .pop-up .pause-heading {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.connect-four .field-wrapper .pause-overlay .pop-up .pause-icon {
+  display: flex;
+  gap: 22.5px;
+  z-index: 1;
+}
+.connect-four .field-wrapper .pause-overlay .pop-up .pause-icon::before, .connect-four .field-wrapper .pause-overlay .pop-up .pause-icon::after {
+  content: "";
+  width: 22.5px;
+  height: 90px;
+  background-color: #fff;
+  display: block;
+}
+.connect-four .field-wrapper .pause-overlay .pop-up .pause-btn {
+  font-size: 1.5rem;
+  padding: 10px 30px;
+  margin-top: 20px;
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 20px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.connect-four .field-wrapper .pause-overlay .pop-up .pause-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 .connect-four .pop-up {
   position: absolute;
@@ -1665,7 +1734,7 @@ footer.footer .right-part .social a {
   transform: translate(-50%, -50%);
   background-color: #181818;
   border-radius: 5%;
-  border: 1px solid #323232;
+  border: 1px solid rgb(49.5, 49.5, 49.5);
   transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 10;
 }
@@ -1713,12 +1782,12 @@ footer.footer .right-part .social a {
 .connect-four .pop-up .content .control-buttons .leave-btn:hover,
 .connect-four .pop-up .content .control-buttons .restart-btn:hover,
 .connect-four .pop-up .content .control-buttons .back-btn:hover {
-  background-color: #1e4e97;
+  background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
 }
 .connect-four .pop-up .content .winner-checker {
   position: relative;
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
   overflow: hidden;
 }
 .connect-four .pop-up .content .winner-checker.falling {
@@ -1729,8 +1798,8 @@ footer.footer .right-part .social a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 97.5px;
-  height: 97.5px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: rgb(var(--winner-color, transparent));
@@ -1833,23 +1902,6 @@ h1 {
     transform: rotateY(1980deg);
   }
 }
-.pause {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  gap: 22.5px;
-  z-index: 1;
-}
-.pause::before, .pause::after {
-  content: "";
-  width: 22.5px;
-  height: 90px;
-  background-color: #fff;
-  display: block;
-}
-
 @media (max-width: 600px) {
   .connect-four .field-main .field .row .cell {
     width: calc((100vw - 20px) / var(--row-length));
@@ -1884,7 +1936,7 @@ h1 {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  border: 1px solid #f2f2f2;
+  border: 1px solid rgb(242.25, 242.25, 242.25);
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   color: #fff;
@@ -1901,7 +1953,7 @@ h1 {
   font-family: "Graphik";
   font-weight: 400;
   font-size: 36px;
-  color: #0112db;
+  color: rgb(1.170212766, 17.5531914894, 218.829787234);
 }
 .minesweeper-start-menu .menu-section {
   margin-bottom: 20px;
@@ -1914,7 +1966,7 @@ h1 {
   letter-spacing: 0.2px;
   font-family: "Graphik";
   font-weight: 400;
-  color: #e6e6e6;
+  color: rgb(229.5, 229.5, 229.5);
   margin-bottom: 10px;
 }
 .minesweeper-start-menu .menu-section .difficulty-slider {
@@ -1947,7 +1999,7 @@ h1 {
   cursor: pointer;
 }
 .minesweeper-start-menu .menu-actions .start-button:hover {
-  background-color: #48d368;
+  background-color: rgb(72.268115942, 211.231884058, 104);
 }
 .minesweeper-start-menu .menu-actions .exit-button {
   padding: 10px;
@@ -1965,7 +2017,7 @@ h1 {
   cursor: pointer;
 }
 .minesweeper-start-menu .menu-actions .exit-button:hover {
-  background-color: #e77681;
+  background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
 }
 .minesweeper-start-menu .menu-actions button {
   padding: 10px 20px;
@@ -1989,7 +2041,7 @@ h1 {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  border: 1px solid #f2f2f2;
+  border: 1px solid rgb(242.25, 242.25, 242.25);
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   color: #fff;
@@ -2006,7 +2058,7 @@ h1 {
   font-family: "Graphik";
   font-weight: 400;
   font-size: 36px;
-  color: #0112db;
+  color: rgb(1.170212766, 17.5531914894, 218.829787234);
 }
 .connect-four-start-menu .menu-section {
   margin-bottom: 20px;
@@ -2019,7 +2071,7 @@ h1 {
   letter-spacing: 0.2px;
   font-family: "Graphik";
   font-weight: 400;
-  color: #e6e6e6;
+  color: rgb(229.5, 229.5, 229.5);
   margin-bottom: 10px;
 }
 .connect-four-start-menu .menu-section .game-modes button,
@@ -2032,7 +2084,7 @@ h1 {
   letter-spacing: 0.2px;
   font-family: "Graphik-Medium";
   font-weight: 500;
-  background-color: #0112db;
+  background-color: rgb(1.170212766, 17.5531914894, 218.829787234);
   color: #fff;
   border: none;
   padding: 10px 15px;
@@ -2050,7 +2102,7 @@ h1 {
 }
 .connect-four-start-menu .menu-section .game-modes button:hover,
 .connect-four-start-menu .menu-section .menu-actions button:hover {
-  background-color: #2b3bfe;
+  background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
 .connect-four-start-menu .menu-section .game-modes {
   display: flex;
@@ -2058,9 +2110,42 @@ h1 {
   flex-wrap: wrap;
 }
 .connect-four-start-menu .menu-section .game-modes button:hover {
-  background: #2b3bfe;
+  background: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
 .connect-four-start-menu .menu-section .game-modes button.active {
+  background: #28a745;
+}
+.connect-four-start-menu .menu-section .join-or-create {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.connect-four-start-menu .menu-section .join-or-create .buttons {
+  border-radius: 10px;
+  overflow: hidden;
+  width: 80%;
+}
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: rgb(1.170212766, 17.5531914894, 218.829787234);
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 0;
+  width: 50%;
+}
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn:hover {
+  background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
+}
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn.active {
   background: #28a745;
 }
 .connect-four-start-menu .bot-settings {
@@ -2072,24 +2157,43 @@ h1 {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
-.connect-four-start-menu .player-settings .player {
+.connect-four-start-menu .player-settings .player-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.connect-four-start-menu .player-settings .player-wrapper .option-heading {
+  text-align: center;
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.connect-four-start-menu .player-settings .player-wrapper .player,
+.connect-four-start-menu .player-settings .player-wrapper .online-settings {
   background: #fff;
-  border: 1px solid #e6e6e6;
+  border: 1px solid rgb(229.5, 229.5, 229.5);
   border-radius: 5px;
   padding: 10px;
+  height: 100%;
 }
-.connect-four-start-menu .player-settings .player label {
+.connect-four-start-menu .player-settings .player-wrapper .player label,
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label {
   display: block;
   margin-bottom: 10px;
   color: #000;
 }
-.connect-four-start-menu .player-settings .player label:last-child {
+.connect-four-start-menu .player-settings .player-wrapper .player label:has(input[type=color]),
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label:has(input[type=color]) {
   display: flex;
   align-items: center;
   gap: 5px;
   margin: 0;
 }
-.connect-four-start-menu .player-settings .player label input[type=text] {
+.connect-four-start-menu .player-settings .player-wrapper .player label input[type=text],
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label input[type=text] {
   width: 100%;
   padding: 8px;
   padding: 10px;
@@ -2098,16 +2202,42 @@ h1 {
   letter-spacing: 0.2px;
   font-family: "Graphik";
   font-weight: 400;
-  border: 1px solid #e6e6e6;
+  border: 1px solid rgb(229.5, 229.5, 229.5);
   border-radius: 5px;
 }
-.connect-four-start-menu .player-settings .player label input[type=color] {
+.connect-four-start-menu .player-settings .player-wrapper .player label input[type=color],
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label input[type=color] {
   width: 50px;
   height: 30px;
   border: none;
   cursor: pointer;
 }
-.connect-four-start-menu .player-settings:has(.player:first-child:last-child) {
+.connect-four-start-menu .player-settings .player-wrapper .start-button {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+.connect-four-start-menu .player-settings .player-wrapper .start-button:hover {
+  background-color: rgb(72.268115942, 211.231884058, 104);
+}
+.connect-four-start-menu .player-settings .player-wrapper .online-settings {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.connect-four-start-menu .player-settings:has(.player-wrapper:first-child:last-child) {
   display: flex;
   justify-content: center;
 }
@@ -2131,7 +2261,7 @@ h1 {
   cursor: pointer;
 }
 .connect-four-start-menu .menu-actions .start-button:hover {
-  background-color: #48d368;
+  background-color: rgb(72.268115942, 211.231884058, 104);
 }
 .connect-four-start-menu .menu-actions .exit-button {
   padding: 10px;
@@ -2149,7 +2279,11 @@ h1 {
   cursor: pointer;
 }
 .connect-four-start-menu .menu-actions .exit-button:hover {
-  background-color: #e77681;
+  background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
+}
+.connect-four-start-menu .menu-actions .exit-button.wider {
+  padding: 10px 64px;
+  border-radius: 4px;
 }
 .connect-four-start-menu .menu-actions button {
   padding: 10px 20px;
@@ -2167,6 +2301,239 @@ h1 {
   text-align: center;
   font-weight: bold;
   margin-bottom: 10px;
+}
+
+.connect-four-lobby {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.connect-four-lobby .menu-header h1 {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+}
+.connect-four-lobby .menu-header h2 {
+  padding: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.connect-four-lobby .menu-header h2::before, .connect-four-lobby .menu-header h2::after {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-in-out;
+}
+.connect-four-lobby .menu-header h2::after {
+  content: "ID Copied";
+  position: absolute;
+  left: 50%;
+  bottom: -40px;
+  font-size: 16px;
+  padding: 5px 10px;
+  background: #112d57;
+  border-radius: 12px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.connect-four-lobby .menu-header h2::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  bottom: -10px;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid #112d57;
+  pointer-events: none;
+}
+.connect-four-lobby .menu-header h2.copied::after {
+  opacity: 1;
+  visibility: visible;
+  bottom: -36px;
+}
+.connect-four-lobby .menu-header h2.copied::before {
+  opacity: 1;
+  visibility: visible;
+  bottom: 2px;
+}
+.connect-four-lobby .menu-header h2:hover {
+  opacity: 0.8;
+}
+.connect-four-lobby .menu-header h2 svg {
+  width: 18px;
+  height: 18px;
+  margin-left: 10px;
+}
+.connect-four-lobby .menu-section h2 {
+  margin-bottom: 15px;
+}
+.connect-four-lobby .player-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.connect-four-lobby .player-settings .player {
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.3s ease;
+}
+.connect-four-lobby .player-settings .player.waiting {
+  padding: 20px;
+  border: 2px dashed #555;
+  justify-content: center;
+  color: #888;
+  animation: pulse-fade 2s infinite ease-in-out;
+}
+.connect-four-lobby .player-settings .player .player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.connect-four-lobby .player-settings .player .player-info .role {
+  display: flex;
+}
+.connect-four-lobby .player-settings .player .player-info .role svg {
+  width: 20px;
+  height: 20px;
+}
+.connect-four-lobby .player-settings .player .player-info .username {
+  font-size: 1.2rem;
+  font-weight: bold;
+  position: relative;
+}
+.connect-four-lobby .player-settings .player .player-info .edit {
+  display: flex;
+  padding: 6px;
+}
+.connect-four-lobby .player-settings .player .player-info .edit svg {
+  width: 16px;
+  height: 16px;
+  color: white;
+}
+.connect-four-lobby .player-settings .player .player-controls {
+  display: flex;
+  align-items: center;
+}
+.connect-four-lobby .player-settings .player .player-controls label {
+  margin-right: 5px;
+}
+.connect-four-lobby .player-settings .player .player-controls .color-picker-wrapper {
+  border-radius: 100%;
+  overflow: hidden;
+  background: var(--userColor);
+  width: 35px;
+  height: 35px;
+  margin-left: 10px;
+}
+.connect-four-lobby .player-settings .player .player-controls .color-picker-wrapper .color-picker-input {
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  height: 100%;
+}
+.connect-four-lobby .player-settings .player .opponent-color-indicator {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  margin: 7px;
+}
+.connect-four-lobby .menu-actions {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.connect-four-lobby .menu-actions .waiting-text {
+  color: white;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.connect-four-lobby .menu-actions .start-button {
+  opacity: 1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.connect-four-lobby .menu-actions .start-button:hover {
+  background-color: rgb(72.268115942, 211.231884058, 104);
+}
+.connect-four-lobby .menu-actions .start-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.connect-four-lobby .menu-actions .exit-button {
+  padding: 10px;
+  font-size: 17px;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik-Medium";
+  font-weight: 500;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.connect-four-lobby .menu-actions .exit-button:hover {
+  background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
+}
+@keyframes pulse-fade {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pop-up-warning {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.pop-up-warning .heading {
+  font-size: 2rem;
 }
 
 .games {

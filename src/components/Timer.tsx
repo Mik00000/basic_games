@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { formatTime, useStickyStateWithExpiry } from "./utils";
+import { useStickyStateWithExpiry } from "./utils";
 
 interface TimerProps {
   startTime: number;
@@ -15,6 +15,9 @@ interface TimerProps {
   onComplete?: any;
   isGrowing?: boolean;
   className?: string;
+  // НОВІ ПРОПСИ ДЛЯ ОНЛАЙНУ
+  syncTime?: number; // Якщо передано, таймер форсується до цього часу
+  isServerControlled?: boolean; // Прапорець режиму
 }
 
 export interface TimerHandle {
@@ -30,54 +33,76 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
       pause = false,
       onComplete,
       isGrowing = false,
-      className
+      className,
+      syncTime,
+      isServerControlled = false
     },
     ref
   ) => {
-    const [milliseconds, setMilliseconds] = useStickyStateWithExpiry(
+    // Локальний хук використовуємо тільки якщо це НЕ серверний режим
+    const [storedMilliseconds, setStoredMilliseconds] = useStickyStateWithExpiry(
       startTime,
       timerName,
       timeToForgotTimer,
       "time"
     );
-    const [isRunning, setIsRunning] = useState(!pause);
+
+    // Внутрішній стейт для відображення
+    const [milliseconds, setMilliseconds] = useState(
+      isServerControlled && syncTime !== undefined ? syncTime : storedMilliseconds
+    );
+
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const reset = () => {
-      setMilliseconds(startTime);
+      const time = startTime;
+      setMilliseconds(time);
+      if (!isServerControlled) setStoredMilliseconds(time);
     };
 
-    useImperativeHandle(ref, () => ({
-      reset,
-    }));
+    useImperativeHandle(ref, () => ({ reset }));
 
+    // 1. СИНХРОНІЗАЦІЯ З СЕРВЕРОМ
     useEffect(() => {
-      setIsRunning(!pause);
-    }, [pause]);
-
-    useEffect(() => {
-      if (isRunning) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-
-        intervalRef.current = setInterval(() => {
-          setMilliseconds((prev) =>
-            Math.max(isGrowing ? prev + 10 : prev - 10, 0)
-          );
-        }, 10);
-      } else if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (isServerControlled && syncTime !== undefined) {
+        setMilliseconds(syncTime);
       }
+    }, [syncTime, isServerControlled]);
+
+    // 2. ІНТЕРВАЛ (Тікання)
+    useEffect(() => {
+      // Якщо на паузі або час вийшов - стоп
+      if (pause || (!isGrowing && milliseconds <= 0)) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        return;
+      }
+
+      intervalRef.current = setInterval(() => {
+        setMilliseconds((prev) => {
+          const nextVal = Math.max(isGrowing ? prev + 10 : prev - 10, 0);
+          
+          // В локальному режимі зберігаємо в localStorage
+          if (!isServerControlled) {
+             // Це трохи важко для performance кожні 10мс писати в storage, 
+             // але залишаємо як було у тебе для сумісності
+             setStoredMilliseconds(nextVal); 
+          }
+          return nextVal;
+        });
+      }, 10);
 
       return () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
-    }, [isRunning, setMilliseconds, isGrowing]);
+    }, [pause, isGrowing, isServerControlled, setStoredMilliseconds]); // Прибрав milliseconds з deps щоб не було re-create інтервалу
 
+    // 3. ЗАВЕРШЕННЯ
     useEffect(() => {
-      if (milliseconds === 0 && onComplete) {
+      // В онлайні ми не викликаємо onComplete, бо сервер вирішує кінець
+      if (!isServerControlled && milliseconds === 0 && onComplete) {
         onComplete();
       }
-    }, [milliseconds, onComplete]);
+    }, [milliseconds, onComplete, isServerControlled]);
 
     return (
       <div className={`number-timer ${className}`}>

@@ -28,7 +28,6 @@ const Games = () => {
       <div className="games-list">
         {games.map((game) => (
           <Link to={game.url} draggable="false">
-            {" "}
             <div className="game"
             style={{
                 backgroundImage:`url(${game.img})`

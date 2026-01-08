@@ -1,0 +1,253 @@
+.connect-four-lobby {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+
+  .menu-header {
+    h1 {
+      @include for-text(second-headline);
+    }
+    h2 {
+      @include for-text(title);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      &::before,
+      &::after {
+        opacity: 0; // Невидимі
+        visibility: hidden; // Не перекривають кліки
+        transition: all 0.3s ease-in-out; // Плавність появи
+      }
+
+      &::after {
+        content: "ID Copied";
+        position: absolute;
+        left: 50%;
+        // Початкова позиція трохи нижче (для ефекту випливання)
+        bottom: -40px;
+        font-size: 16px;
+        padding: 5px 10px;
+        background: $secondary;
+        border-radius: 12px;
+        transform: translateX(-50%);
+        // Важливо: pointer-events none, щоб тултіп не ламав клік, якщо він перекриває щось
+        pointer-events: none;
+      }
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        bottom: -10px;
+        transform: translateX(-50%);
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-bottom: 10px solid $secondary;
+        pointer-events: none;
+      }
+
+      &.copied {
+        &::after {
+          opacity: 1;
+          visibility: visible;
+          bottom: -36px;
+        }
+
+        &::before {
+          opacity: 1;
+          visibility: visible;
+          bottom: 2px;
+        }
+      }
+      &:hover {
+        opacity: 0.8;
+      }
+      svg {
+        width: 18px;
+        height: 18px;
+        margin-left: 10px;
+      }
+    }
+  }
+
+  .menu-section {
+    h2 {
+      margin-bottom: 15px; // Додав трохи відступу для краси
+    }
+  }
+
+  .player-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .player {
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid transparent; // Колір задається через inline style
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.3s ease;
+
+      &.waiting {
+        padding: 20px;
+        border: 2px dashed #555;
+        justify-content: center;
+        color: #888;
+        animation: pulse-fade 2s infinite ease-in-out;
+      }
+
+      .player-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .role{
+          display: flex;
+          svg{
+            width: 20px;
+            height: 20px;
+          }
+        }
+        .username {
+          font-size: 1.2rem;
+          font-weight: bold;
+          position: relative;
+
+          // &::after {
+          //   content: "";
+          //   position: absolute;
+          //   top: 0;
+          //   right: 0;
+          //   width: 17px;
+          //   height: 17px;
+          //   background-color: lighten($secondary,15);
+          //   -webkit-mask-image: url("../assets/icons/pencil.svg");
+          //   mask-image: url("../assets/icons/pencil.svg");
+
+          //   -webkit-mask-repeat: no-repeat;
+          //   mask-repeat: no-repeat;
+
+          //   -webkit-mask-position: center;
+          //   mask-position: center;
+
+          //   -webkit-mask-size: contain;
+          //   mask-size: contain;
+          // }
+        }
+        .edit {
+          display: flex;
+          padding: 6px;
+          svg {
+            width: 16px;
+            height: 16px;
+            color: white;
+          }
+        }
+      }
+
+      .player-controls {
+        display: flex;
+        align-items: center;
+
+        label {
+          margin-right: 5px;
+        }
+        .color-picker-wrapper {
+          border-radius: 100%;
+          overflow: hidden;
+          background: var(--userColor);
+          width: 35px;
+          height: 35px;
+          margin-left: 10px;
+
+          .color-picker-input {
+            opacity: 0;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+
+      .opponent-color-indicator {
+        width: 21px;
+        height: 21px;
+        border-radius: 50%;
+        margin: 7px;
+        // background задається інлайново
+      }
+    }
+  }
+
+  .menu-actions {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; // Відступ між кнопками/текстом
+
+    .waiting-text {
+      color: white;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .start-button {
+      // Тут твої базові стилі кнопки (padding, bg-color і т.д.)
+      // Я додав логіку disabled через CSS, а не JS
+      opacity: 1;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      @include for-button(
+        $bg-color: $confirm-text,
+        $text-color: $light-text,
+        $padding: 10px 20px
+      );
+      border-radius: 10px;
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .exit-button {
+      @include for-button(
+        $bg-color: $deny-text,
+        $text-color: $light-text,
+        $padding: 10px 20px
+      );
+      border-radius: 10px;
+    }
+  }
+  @keyframes pulse-fade {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
+// Стилі для попапів (якщо вони не глобальні)
+.pop-up-warning {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+
+  .heading {
+    font-size: 2rem;
+  }
+}

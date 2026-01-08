@@ -55,49 +55,94 @@
         }
       }
     }
+    .join-or-create {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      .buttons {
+        border-radius: 10px;
+        overflow: hidden;
+        width: 80%;
+        .choose-room-btn {
+          @include for-button(
+            $bg-color: $primary,
+            $text-color: $light-text,
+            $padding: 10px 15px
+          );
+          border-radius: 0;
+          width: 50%;
+          &.active {
+            background: $confirm-text;
+          }
+        }
+      }
+    }
   }
-.bot-settings{
-  display: flex;
-  flex-direction: column;
-}
+  .bot-settings {
+    display: flex;
+    flex-direction: column;
+  }
   .player-settings {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    .player-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      .option-heading {
+        text-align: center;
+        @include for-text(sub-heading);
+      }
+      .player,
+      .online-settings {
+        background: $light-background;
+        border: 1px solid darken($light-background, 10%);
+        border-radius: 5px;
+        padding: 10px;
+        height: 100%;
+        label {
+          display: block;
+          margin-bottom: 10px;
+          color: $first-text;
+          &:has(input[type="color"]) {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0;
+          }
+          input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            @include for-text(paragraph);
+            border: 1px solid darken($light-background, 10%);
+            border-radius: 5px;
+          }
 
-    .player {
-      background: $light-background;
-      border: 1px solid darken($light-background, 10%);
-      border-radius: 5px;
-      padding: 10px;
-      
-      label {
-        display: block;
-        margin-bottom: 10px;
-        color: $first-text;
-        &:last-child {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          margin:0;
-        }
-        input[type="text"] {
-          width: 100%;
-          padding: 8px;
-          @include for-text(paragraph);
-          border: 1px solid darken($light-background, 10%);
-          border-radius: 5px;
-        }
-
-        input[type="color"] {
-          width: 50px;
-          height: 30px;
-          border: none;
-          cursor: pointer;
+          input[type="color"] {
+            width: 50px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+          }
         }
       }
+      .start-button {
+        @include for-button(
+          $bg-color: $confirm-text,
+          $text-color: $light-text,
+          $padding: 10px 20px
+        );
+        border-radius: 4px;
+        margin-top: 8px;
+      }
+      .online-settings {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
     }
-    &:has(.player:first-child:last-child) {
+    &:has(.player-wrapper:first-child:last-child) {
       display: flex;
       justify-content: center;
     }
@@ -121,6 +166,13 @@
         $text-color: $light-text,
         $padding: 10px 20px
       );
+      &.wider {
+        padding: 10px 64px;
+        border-radius: 4px;
+      }
+    }
+    &:has(.exit-button.wider) {
+      // justify-content: start;
     }
 
     button {

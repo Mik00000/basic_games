@@ -32,7 +32,7 @@ export const Gallery = () => {
       <div className="see-more-btn">
         <Link to="/">
           <button>See More</button>
-        </Link>{" "}
+        </Link>
       </div>
     </section>
   );

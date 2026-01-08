@@ -42,7 +42,7 @@ export const Features = () => {
             {benefits.map((block) => (
               <li key={block.id}>
                 <div className="heading">
-                <img src={require(`../assets/icons/${block.icon}`)} alt="benefit-icon" />
+                <img src={new URL(`../assets/icons/${block.icon}`, import.meta.url).href} alt="benefit-icon" />
                 <h3>{block.heading}</h3>
                 </div>
                 <p>{block.text}</p>

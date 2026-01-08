@@ -11,7 +11,11 @@
 @import "../games/connectFour//Game";
 @import "../games/minesweeper/StartMenu";
 @import "../games/connectFour/StartMenu";
+@import "../games/connectFour/Loby";
+
+
 @import "../pages/Games";
+
 
 body {
   background-color: $dark-background;
