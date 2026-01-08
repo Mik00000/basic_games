@@ -40,7 +40,7 @@ export const Testimonials = () => {
           <div className="block" key={index}>
             <div className="heading">
               <img
-                src={require(`../assets/users/${testimonial.photo}`)}
+                src={new URL(`../assets/users/${testimonial.photo}`, import.meta.url).href}
                 alt="user-photo"
                 className="user-photo"
               />

@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { io, type Socket } from "socket.io-client"
+import { useState, useEffect, useCallback, useRef } from "react";
+import { io, type Socket } from "socket.io-client";
+import type { VoteType } from "../types/gameTypes";
 import type {
   GameState,
   Player,
@@ -13,283 +14,470 @@ import type {
   ServerToClientEvents,
   ClientToServerEvents,
   RolePermissions,
-} from "../types/gameTypes"
+} from "../types/gameTypes";
 
 interface UseOnlineGameOptions {
-  serverUrl?: string
-  autoReconnect?: boolean
-  reconnectionAttempts?: number
-  reconnectionDelay?: number
+  serverUrl?: string;
+  autoReconnect?: boolean;
+  reconnectionAttempts?: number;
+  reconnectionDelay?: number;
 }
 
 interface UseOnlineGameReturn<T extends GameState> {
-  isConnected: boolean
-  isConnecting: boolean
-  socketId: string | null
-  currentRoom: Partial<GameRoom> | null
-  currentPlayer: Player | null
-  gameState: T | null
-  canUndo: boolean
-  canRedo: boolean
-  chatMessages: ChatMessage[]
-  error: string | null
-  isRateLimited: boolean
-  createRoom: (data: Omit<CreateRoomData, "initialState"> & { initialState: T }) => Promise<CallbackResponse>
-  joinRoom: (data: JoinRoomData) => Promise<CallbackResponse>
-  leaveRoom: () => Promise<CallbackResponse>
-  makeMove: (moveData: any) => Promise<CallbackResponse>
-  sendChatMessage: (text: string) => Promise<CallbackResponse>
-  undoMove: () => Promise<CallbackResponse>
-  redoMove: () => Promise<CallbackResponse>
-  updateRolePermissions: (role: string, permissions: Partial<RolePermissions>) => Promise<CallbackResponse>
-  clearError: () => void
-  reconnect: () => void
-  disconnect: () => void
+  isConnected: boolean;
+  isConnecting: boolean;
+  socketId: string | null;
+  currentRoom: Partial<GameRoom> | null;
+  currentPlayer: Player | null;
+  gameState: T | null;
+  canUndo: boolean;
+  canRedo: boolean;
+  chatMessages: ChatMessage[];
+  error: string | null;
+  errorDetails: any | null; // For more complex error handling
+  isRateLimited: boolean;
+  inactivityWarning: { message: string; timeLeft: number } | null;
+  createRoom: (
+    data: Omit<CreateRoomData, "initialState"> & { initialState: T }
+  ) => Promise<CallbackResponse>;
+  joinRoom: (data: JoinRoomData) => Promise<CallbackResponse>;
+  leaveRoom: () => Promise<CallbackResponse>;
+  startGame: () => Promise<CallbackResponse>;
+  makeMove: (moveData: unknown) => Promise<CallbackResponse>;
+  sendChatMessage: (text: string) => Promise<CallbackResponse>;
+  sendVote: (type: VoteType) => Promise<CallbackResponse>;
+  undoMove: () => Promise<CallbackResponse>;
+  redoMove: () => Promise<CallbackResponse>;
+  updateRolePermissions: (
+    role: string,
+    permissions: Partial<RolePermissions>
+  ) => Promise<CallbackResponse>;
+  updatePlayerData: (data: {
+    username?: string;
+    color?: string;
+    [key: string]: unknown;
+  }) => Promise<CallbackResponse>;
+  clearError: () => void;
+  reconnect: () => void;
+  disconnect: () => void;
+  sendHeartbeat: () => Promise<CallbackResponse>;
 }
 
+// 1. Глобальна змінна для сокета (Singleton pattern)
+let globalSocket: Socket<ServerToClientEvents, ClientToServerEvents> | null =
+  null;
+
 export function useOnlineGame<T extends GameState = GameState>(
-  options: UseOnlineGameOptions = {},
+  options: UseOnlineGameOptions = {}
 ): UseOnlineGameReturn<T> {
   const {
-    serverUrl = process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:3001",
+    serverUrl = import.meta.env.REACT_APP_SOCKET_SERVER_URL ||
+      "http://localhost:3001",
     autoReconnect = true,
     reconnectionAttempts = 5,
     reconnectionDelay = 1000,
-  } = options
+  } = options;
 
-  const [isConnected, setIsConnected] = useState(false)
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [socketId, setSocketId] = useState<string | null>(null)
-  const [currentRoom, setCurrentRoom] = useState<Partial<GameRoom> | null>(null)
-  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null)
-  const [gameState, setGameState] = useState<T | null>(null)
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [isRateLimited, setIsRateLimited] = useState(false)
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [socketId, setSocketId] = useState<string | null>(null);
+  const [currentRoom, setCurrentRoom] = useState<Partial<GameRoom> | null>(
+    null
+  );
+  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  const [gameState, setGameState] = useState<T | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<any | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [inactivityWarning, setInactivityWarning] = useState<{
+    message: string;
+    timeLeft: number;
+  } | null>(null);
 
-  const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // useRef для збереження посилання на поточні стейт-сеттери
+  const socketRef = useRef<Socket<
+    ServerToClientEvents,
+    ClientToServerEvents
+  > | null>(null);
 
   useEffect(() => {
-    if (!socketRef.current) {
-      setIsConnecting(true)
-
-      const socket = io(serverUrl, {
+    // 2. Ініціалізація глобального сокета, якщо його ще немає
+    if (!globalSocket) {
+      setIsConnecting(true);
+      globalSocket = io(serverUrl, {
         transports: ["websocket", "polling"],
         autoConnect: true,
         reconnection: autoReconnect,
         reconnectionAttempts,
         reconnectionDelay,
         timeout: 20000,
-      })
-
-      socketRef.current = socket
-
-      socket.on("connect", () => {
-        console.log("🔌 Connected to server")
-        setIsConnected(true)
-        setIsConnecting(false)
-        setSocketId(socket.id || null)
-        setError(null)
-      })
-
-      socket.on("disconnect", (reason) => {
-        console.log("🔌 Disconnected from server:", reason)
-        setIsConnected(false)
-        setSocketId(null)
-        if (reason === "io server disconnect") socket.connect()
-      })
-
-      socket.on("connect_error", (error) => {
-        console.error("🔌 Connection error:", error)
-        setIsConnecting(false)
-        setError(`Connection failed: ${error.message}`)
-      })
-
-      socket.on("roomCreated", ({ roomId, room }) => {
-        setCurrentRoom(room)
-        setGameState(room.state as T)
-        setChatMessages(room.chatHistory || [])
-      })
-
-      socket.on("roomJoined", ({ room, player }) => {
-        setCurrentRoom(room)
-        setCurrentPlayer(player)
-        setGameState(room.state as T)
-        setChatMessages(room.chatHistory || [])
-      })
-
-      // <--- НОВЕ: Обробка відновлення сесії
-      socket.on("sessionRestored", ({ room, player, gameData }) => {
-        console.log("🔄 Session restored successfully")
-        setCurrentRoom(room)
-        setCurrentPlayer(player)
-        setGameState(room.state as T)
-        setChatMessages(room.chatHistory || [])
-        // Якщо потрібно відновити локальні дані гри, можна використати gameData
-      })
-
-      socket.on("roomLeft", ({ roomId }) => {
-        setCurrentRoom(null)
-        setCurrentPlayer(null)
-        setGameState(null)
-        setChatMessages([])
-        setCanUndo(false)
-        setCanRedo(false)
-        localStorage.removeItem("game_session") // Очищаємо сесію при виході
-      })
-
-      socket.on("roomUpdated", ({ room }) => {
-        setCurrentRoom(room)
-        if (room.state) setGameState(room.state as T)
-      })
-
-      socket.on("gameStateUpdated", ({ state, canUndo: canUndoState, canRedo: canRedoState }) => {
-        setGameState(state as T)
-        setCanUndo(canUndoState)
-        setCanRedo(canRedoState)
-      })
-
-      socket.on("playerJoined", (player) => console.log("👤 Player joined:", player.username))
-      socket.on("playerLeft", ({ username }) => console.log("👤 Player left:", username))
-      socket.on("adminChanged", ({ username }) => console.log("👑 New admin:", username))
-      
-      socket.on("chatMessage", (message) => setChatMessages((prev) => [...prev, message]))
-      
-      socket.on("error", ({ code, message }) => {
-        console.error("❌ Server error:", code, message)
-        setError(`${code}: ${message}`)
-      })
-
-      socket.on("rateLimited", ({ message, retryAfter }) => {
-        setError(message)
-        setIsRateLimited(true)
-        setTimeout(() => setIsRateLimited(false), retryAfter * 1000)
-      })
+      });
     }
 
+    const socket = globalSocket;
+    socketRef.current = socket;
+
+    // Оновлюємо локальний стан підключення одразу
+    setIsConnected(socket.connected);
+    setSocketId(socket.id || null);
+
+    // --- Визначаємо обробники подій ---
+
+    const onConnect = () => {
+      console.log("🔌 Connected to server");
+      setIsConnected(true);
+      setIsConnecting(false);
+      setSocketId(socket.id || null);
+      setError(null);
+    };
+
+    const onDisconnect = (reason: string) => {
+      console.log("🔌 Disconnected:", reason);
+      setIsConnected(false);
+      setSocketId(null);
+      if (reason === "io server disconnect") socket.connect();
+    };
+
+    const onConnectError = (err: Error) => {
+      console.error("🔌 Connection error:", err);
+      setIsConnecting(false);
+      setError(`Connection failed: ${err.message}`);
+    };
+
+    const onRoomCreated = ({ room }: { roomId: string; room: GameRoom }) => {
+      setCurrentRoom(room);
+      setGameState(room.state as T);
+      setChatMessages(room.chatHistory || []);
+    };
+
+    const onRoomJoined = ({
+      room,
+      player,
+    }: {
+      room: GameRoom;
+      player: Player;
+    }) => {
+      setCurrentRoom(room);
+      setCurrentPlayer(player);
+      setGameState(room.state as T);
+      setChatMessages(room.chatHistory || []);
+    };
+
+    const onSessionRestored = ({
+      room,
+      player,
+    }: {
+      room: GameRoom;
+      player: Player;
+      gameData?: unknown;
+    }) => {
+      console.log("🔄 Session restored");
+      setCurrentRoom(room);
+      setCurrentPlayer(player);
+      setGameState(room.state as T);
+      setChatMessages(room.chatHistory || []);
+    };
+
+    const onRoomUpdated = ({ room }: { room: GameRoom }) => {
+      setCurrentRoom(room);
+      if (room.state) setGameState(room.state as T);
+    };
+
+    const onGameStateUpdated = ({
+      state,
+      canUndo,
+      canRedo,
+    }: {
+      state: GameState;
+      canUndo: boolean;
+      canRedo: boolean;
+    }) => {
+      setGameState(state as T);
+      setCanUndo(canUndo);
+      setCanRedo(canRedo);
+    };
+
+    const onChatMessage = (message: ChatMessage) => {
+      setChatMessages((prev) => [...prev, message]);
+    };
+    const onRoomLeft = () => {
+      setCurrentRoom(null);
+      setCurrentPlayer(null);
+      setGameState(null);
+      setChatMessages([]);
+      localStorage.removeItem("game_session");
+    };
+
+    const onError = ({
+      code,
+      message,
+      details,
+    }: {
+      code: string;
+      message: string;
+      details?: any;
+    }) => {
+      console.error("❌ Error:", code, message);
+      setError(`${code}: ${message}`);
+      if (details) setErrorDetails(details);
+    };
+
+    const onInactivityWarning = (data: {
+      message: string;
+      timeLeft: number;
+    }) => {
+      setInactivityWarning(data);
+    };
+
+    // --- Підписуємось на події ---
+    // Якщо TS свариться на назви подій, переконайтеся, що вони є в ServerToClientEvents
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
+    socket.on("roomCreated", onRoomCreated);
+    socket.on("roomJoined", onRoomJoined);
+    socket.on("sessionRestored", onSessionRestored);
+    socket.on("roomUpdated", onRoomUpdated);
+    socket.on("gameStateUpdated", onGameStateUpdated);
+    socket.on("chatMessage", onChatMessage);
+    socket.on("roomLeft", onRoomLeft);
+    socket.on("error", onError);
+    socket.on("inactivityWarning", onInactivityWarning);
+
+    // Додаткові події (логи)
+    // Примітка: "gameStarted" має бути в ServerToClientEvents, інакше TS тут підкреслить
+    socket.on("gameStarted", () =>
+      console.log("Game started logic handled by routing")
+    );
+    socket.on("playerJoined", (p: Player) =>
+      console.log("Joined:", p.username)
+    );
+
+    // 3. CLEANUP
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect()
-        socketRef.current = null
-      }
-    }
-  }, [serverUrl, autoReconnect, reconnectionAttempts, reconnectionDelay])
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
+      socket.off("roomCreated", onRoomCreated);
+      socket.off("roomJoined", onRoomJoined);
+      socket.off("sessionRestored", onSessionRestored);
+      socket.off("roomUpdated", onRoomUpdated);
+      socket.off("gameStateUpdated", onGameStateUpdated);
+      socket.off("chatMessage", onChatMessage);
+      socket.off("roomLeft", onRoomLeft);
+      socket.off("error", onError);
+      socket.off("inactivityWarning", onInactivityWarning);
+    };
+  }, [serverUrl, autoReconnect, reconnectionAttempts, reconnectionDelay]);
 
-  // <--- НОВЕ: Логіка автоматичного реконнекту
+  // Логіка авто-реконнекту
   useEffect(() => {
-    // Якщо ми підключені, але ще не в кімнаті, пробуємо відновити сесію
-    if (isConnected && !currentRoom && !currentPlayer) {
-      const savedSession = localStorage.getItem("game_session")
+    if (isConnected && !currentRoom && !currentPlayer && globalSocket) {
+      const savedSession = localStorage.getItem("game_session");
       if (savedSession) {
         try {
-          const { roomId, playerId, username } = JSON.parse(savedSession)
-          console.log("🔄 Attempting to rejoin session:", roomId)
-          
-          socketRef.current?.emit("rejoinRoom", { roomId, playerId, username }, (response) => {
-            if (!response.success) {
-              console.warn("❌ Rejoin failed:", response.error)
-              localStorage.removeItem("game_session") // Сесія невалідна, видаляємо
+          const { roomId, playerId, username } = JSON.parse(savedSession);
+          globalSocket.emit(
+            "rejoinRoom",
+            { roomId, playerId, username },
+            (res) => {
+              if (!res.success) localStorage.removeItem("game_session");
             }
-          })
+          );
         } catch (e) {
-          localStorage.removeItem("game_session")
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          console.error("Failed to parse session", e);
+          localStorage.removeItem("game_session");
         }
       }
     }
-  }, [isConnected, currentRoom, currentPlayer])
+  }, [isConnected, currentRoom, currentPlayer]);
 
-  // <--- НОВЕ: Збереження сесії при успішному вході
+  // Збереження сесії
   useEffect(() => {
     if (currentRoom?.id && currentPlayer?.id) {
-      localStorage.setItem("game_session", JSON.stringify({
-        roomId: currentRoom.id,
-        playerId: currentPlayer.id,
-        username: currentPlayer.username
-      }))
+      localStorage.setItem(
+        "game_session",
+        JSON.stringify({
+          roomId: currentRoom.id,
+          playerId: currentPlayer.id,
+          username: currentPlayer.username,
+        })
+      );
     }
-  }, [currentRoom?.id, currentPlayer?.id, currentPlayer?.username])
+  }, [currentRoom?.id, currentPlayer?.id, currentPlayer?.username]);
 
-  // Actions
-  const createRoom = useCallback(async (data: Omit<CreateRoomData, "initialState"> & { initialState: T }) => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
-    return new Promise<CallbackResponse>((resolve) => {
-      socketRef.current!.emit("createRoom", data, resolve)
-    })
-  }, [isConnected])
+  // --- Actions ---
+
+  const createRoom = useCallback(
+    async (
+      data: Omit<CreateRoomData, "initialState"> & { initialState: T }
+    ) => {
+      if (!globalSocket || !globalSocket.connected)
+        return {
+          success: false,
+          error: { code: "OFFLINE", message: "Offline" },
+        };
+      return new Promise<CallbackResponse>((resolve) =>
+        globalSocket!.emit("createRoom", data, resolve)
+      );
+    },
+    []
+  );
 
   const joinRoom = useCallback(async (data: JoinRoomData) => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
-    return new Promise<CallbackResponse>((resolve) => {
-      socketRef.current!.emit("joinRoom", data, resolve)
-    })
-  }, [isConnected])
+    if (!globalSocket || !globalSocket.connected)
+      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("joinRoom", data, resolve)
+    );
+  }, []);
 
   const leaveRoom = useCallback(async () => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
+    if (!globalSocket || !globalSocket.connected)
+      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
     return new Promise<CallbackResponse>((resolve) => {
-      socketRef.current!.emit("leaveRoom", (response) => {
+      globalSocket!.emit("leaveRoom", (response) => {
         if (response.success) {
-          setError(null)
-          localStorage.removeItem("game_session") // Важливо: очищаємо сесію
+          setError(null);
+          localStorage.removeItem("game_session");
         }
-        resolve(response)
-      })
-    })
-  }, [isConnected])
+        resolve(response);
+      });
+    });
+  }, []);
 
-  const makeMove = useCallback(async (moveData: any) => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
+  const startGame = useCallback(async () => {
+    if (!globalSocket || !globalSocket.connected)
+      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("startGame", resolve)
+    );
+  }, []);
+
+  const makeMove = useCallback(async (moveData: unknown) => {
+    if (!globalSocket || !globalSocket.connected)
+      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
     return new Promise<CallbackResponse>((resolve) => {
-      socketRef.current!.emit("makeMove", moveData, (response) => {
-        if (response.success) setError(null)
-        else setError(response.error?.message || "Failed to make move")
-        resolve(response)
-      })
-    })
-  }, [isConnected])
+      globalSocket!.emit("makeMove", moveData, (response) => {
+        if (response.success) setError(null);
+        else setError(response.error?.message || "Failed to make move");
+        resolve(response);
+      });
+    });
+  }, []);
 
   const sendChatMessage = useCallback(async (text: string) => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
-    return new Promise<CallbackResponse>((resolve) => {
-      socketRef.current!.emit("sendChatMessage", { text }, resolve)
-    })
-  }, [isConnected])
+    if (!globalSocket || !globalSocket.connected)
+      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("sendChatMessage", { text }, resolve)
+    );
+  }, []);
+
+  const sendVote = useCallback(async (type: VoteType) => {
+    if (!globalSocket || !globalSocket.connected)
+      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("sendVote", { type }, resolve)
+    );
+  }, []);
 
   const undoMove = useCallback(async () => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
-    return new Promise<CallbackResponse>((resolve) => socketRef.current!.emit("undoMove", resolve))
-  }, [isConnected])
+    if (!globalSocket) return { success: false };
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("undoMove", resolve)
+    );
+  }, []);
 
   const redoMove = useCallback(async () => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
-    return new Promise<CallbackResponse>((resolve) => socketRef.current!.emit("redoMove", resolve))
-  }, [isConnected])
+    if (!globalSocket) return { success: false };
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("redoMove", resolve)
+    );
+  }, []);
 
-  const updateRolePermissions = useCallback(async (role: string, permissions: Partial<RolePermissions>) => {
-    if (!socketRef.current || !isConnected) return { success: false, error: { code: "OFFLINE", message: "Offline" } }
-    return new Promise<CallbackResponse>((resolve) => {
-      socketRef.current!.emit("updateRolePermissions", { role, permissions }, resolve)
-    })
-  }, [isConnected])
+  const updateRolePermissions = useCallback(
+    async (role: string, permissions: Partial<RolePermissions>) => {
+      if (!globalSocket) return { success: false };
+      return new Promise<CallbackResponse>((resolve) =>
+        globalSocket!.emit(
+          "updateRolePermissions",
+          { role, permissions },
+          resolve
+        )
+      );
+    },
+    []
+  );
+
+  const updatePlayerData = useCallback(
+    async (data: {
+      username?: string;
+      color?: string;
+      [key: string]: unknown;
+    }) => {
+      if (!globalSocket) return { success: false };
+      // Оновлення передаємо як { gameData: data }
+      return new Promise<CallbackResponse>((resolve) =>
+        globalSocket!.emit("updatePlayerData", { gameData: data }, resolve)
+      );
+    },
+    []
+  );
 
   const clearError = useCallback(() => {
-    setError(null)
-    setIsRateLimited(false)
-  }, [])
+    setError(null);
+    setIsRateLimited(false);
+  }, []);
+  const reconnect = useCallback(() => globalSocket?.connect(), []);
 
-  const reconnect = useCallback(() => socketRef.current?.connect(), [])
-  const disconnect = useCallback(() => socketRef.current?.disconnect(), [])
+  const manualDisconnect = useCallback(() => {
+    if (globalSocket) {
+      globalSocket.disconnect();
+    }
+  }, []);
+
+  const sendHeartbeat = useCallback(async () => {
+    if (!globalSocket || !globalSocket.connected) return { success: false };
+    setInactivityWarning(null); // Clear local warning instantly on action
+    return new Promise<CallbackResponse>((resolve) =>
+      globalSocket!.emit("heartbeat", resolve)
+    );
+  }, []);
 
   return {
-    isConnected, isConnecting, socketId,
-    currentRoom, currentPlayer, gameState,
-    canUndo, canRedo, chatMessages,
-    error, isRateLimited,
-    createRoom, joinRoom, leaveRoom, makeMove,
-    sendChatMessage, undoMove, redoMove, updateRolePermissions,
-    clearError, reconnect, disconnect,
-  }
+    isConnected,
+    isConnecting,
+    socketId,
+    currentRoom,
+    currentPlayer,
+    gameState,
+    canUndo,
+    canRedo,
+    chatMessages,
+    error,
+    errorDetails,
+    isRateLimited,
+    inactivityWarning,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    startGame,
+    makeMove,
+    sendChatMessage,
+    undoMove,
+    redoMove,
+    updateRolePermissions,
+    updatePlayerData,
+    clearError,
+    reconnect,
+    disconnect: manualDisconnect,
+    sendVote,
+    sendHeartbeat,
+  };
 }

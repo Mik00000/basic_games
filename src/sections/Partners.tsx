@@ -43,7 +43,7 @@ export const Partners = () => {
           <li key={index}>
             <Link to={icon.url} key={icon.pathName}>
               <img
-                src={require(`../assets/icons/${icon.pathName}`)}
+                src={new URL(`../assets/icons/${icon.pathName}`, import.meta.url).href}
                 draggable="false"
                 alt={icon.pathName}
               />
