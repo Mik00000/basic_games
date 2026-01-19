@@ -5,6 +5,7 @@ import phoneIcon from "../assets/icons/mobile.svg";
 import xIcon from "../assets/icons/x.svg";
 import facebookIcon from "../assets/icons/facebook.svg";
 import linkedInIcon from "../assets/icons/linkedIn.svg";
+import { useGameStatus } from "../context/GameContext";
 
 const footerMenus = [
   {
@@ -37,7 +38,9 @@ const footerMenus = [
 ];
 
 export const Footer = () => {
-  return (
+    const { isInGame } = useGameStatus();
+  
+  return !isInGame && (
     <footer className="footer">
       <div className="left-part">
         <nav>

@@ -12,9 +12,9 @@
 @import "../games/minesweeper/StartMenu";
 @import "../games/connectFour/StartMenu";
 @import "../games/connectFour/Loby";
-
-
+@import "../components/FirstPlayerSelector/FirstPlayerSelector";
 @import "../pages/Games";
+@import "../games/chess/Game";
 
 
 body {
