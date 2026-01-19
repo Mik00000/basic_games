@@ -19,10 +19,11 @@ import MinesweeperStartMenu from "./games/minesweeper/StartMenu";
 import Games from "./pages/Games";
 import { ConnectFour } from "./games/connectFour/Game";
 import { Minesweeper } from "./games/minesweeper/Game";
-import OnlineGameTester from "./components/TestGame";
 import ConnectFourLobby from "./games/connectFour/Lobby";
 import GameLayout from "./sections/GameLayout";
 import { GameProvider } from "./context/GameContext";
+import ChessStartMenu from "./games/chess/StartMenu";
+import Chess from "./games/chess/Game";
 function App() {
   return (
     <GameProvider>
@@ -52,6 +53,10 @@ function App() {
                   path="/games/connect4/:onlineGameId?"
                   element={<ConnectFour />}
                 />
+                <Route
+                  path="/games/chess"
+                  element={<Chess />}
+                />
               </Route>
 
               <Route
@@ -66,7 +71,10 @@ function App() {
                 path="/games/minesweeper-menu"
                 element={<MinesweeperStartMenu />}
               />
-              <Route path="/games/tester" element={<OnlineGameTester />} />
+              <Route
+                path="/games/chess-menu"
+                element={<ChessStartMenu />}
+              />
             </Routes>
           </div>
           <Footer />

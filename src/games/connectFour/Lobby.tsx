@@ -5,6 +5,7 @@ import CopyIcon from "../../assets/icons/copy.svg?react";
 import EditIcon from "../../assets/icons/pencil.svg?react";
 import CrownIcon from "../../assets/icons/crown.svg?react";
 import { Modal } from "../../components/Modal";
+import { areColorsTooSimilar } from "../../components/utils";
 
 const ColorPicker = ({
   color,
@@ -81,7 +82,9 @@ export const ConnectFourLobby: React.FC = () => {
   const [conflictRoom, setConflictRoom] = useState<{ roomId: string } | null>(
     null
   );
-
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [playerOneError, setPlayerOneError] = useState<string | null>(null);
+  const [playerTwoError, setPlayerTwoError] = useState<string | null>(null);
   // Inactivity Warning Effect
 
   const handleNameSave = () => {
@@ -174,7 +177,10 @@ export const ConnectFourLobby: React.FC = () => {
     }
   }, [currentRoom?.status, currentRoom?.id, navigate]);
 
+
   const handleStartGame = async () => {
+    const isValid = validateInputs();
+    if (!isValid) return;
     await startGame();
   };
 
@@ -230,6 +236,71 @@ export const ConnectFourLobby: React.FC = () => {
   const handleHeartbeat = async () => {
     await sendHeartbeat();
   };
+
+  const validateInputs = (): boolean => {
+    let isValid = true;
+    setPlayerOneError(null);
+    setPlayerTwoError(null);
+    setGeneralError(null);
+
+    if (!currentRoom?.players || currentRoom.players.length < 2) return true; // Can't validate if not enough players
+
+    const p1 = currentRoom.players[0] as any;
+    const p2 = currentRoom.players[1] as any;
+    const p1Name = p1.username;
+    const p2Name = p2.username;
+    const p1Color = p1.gameData?.color || "#ffffff";
+    const p2Color = p2.gameData?.color || "#ffffff";
+
+    if (!p1Name.trim()) {
+      setPlayerOneError("Player 1 name cannot be empty.");
+      isValid = false;
+    }
+    if (!p2Name.trim()) {
+      setPlayerTwoError("Player 2 name cannot be empty.");
+      isValid = false;
+    }
+    if (p1Name === p2Name) {
+      setGeneralError("Players cannot have the same name.");
+      isValid = false;
+    }
+    if (p1Color === p2Color || areColorsTooSimilar(p1Color, p2Color, 75)) {
+      setGeneralError("Players cannot have the same or too similar colors.");
+      isValid = false;
+    }
+    if (
+      areColorsTooSimilar(p1Color, "#232930", 90) ||
+      areColorsTooSimilar(p1Color, "#181818", 90)
+    ) {
+      setPlayerOneError(
+        "Player 1 cannot have the same color as the field or colors that are too similar to it"
+      );
+      isValid = false;
+    }
+    if (
+      areColorsTooSimilar(p2Color, "#232930", 90) ||
+      areColorsTooSimilar(p2Color, "#181818", 90)
+    ) {
+      setPlayerTwoError(
+        "Player 2 cannot have the same color as the field or colors that are too similar to it"
+      );
+      isValid = false;
+    }
+    if (areColorsTooSimilar(p1Color, "#FFFFFF", 80)) {
+      setPlayerOneError("Player 1 cannot have too light color");
+      isValid = false;
+    }
+    if (areColorsTooSimilar(p2Color, "#FFFFFF", 80)) {
+      setPlayerTwoError("Player 2 cannot have too light color");
+      isValid = false;
+    }
+    return isValid;
+  };
+
+
+  useEffect(() => {
+    validateInputs();
+  }, [currentRoom?.players]);
 
   if (conflictRoom) {
     return (
@@ -295,10 +366,19 @@ export const ConnectFourLobby: React.FC = () => {
         </h2>
       </div>
 
+      {generalError && (
+        <div
+          className="error-message general-error"
+          style={{ color: "red", textAlign: "center", marginBottom: "1rem" }}
+        >
+          {generalError}
+        </div>
+      )}
+
       <div className="menu-section">
         <h2>Players ({players.length}/2)</h2>
         <div className="player-settings">
-          {players.map((p: any) => {
+          {players.map((p: any, index: number) => {
             const isMe = p.id === currentPlayer?.id;
             const pColor = p.gameData?.color || "#ffffff";
 
@@ -347,7 +427,30 @@ export const ConnectFourLobby: React.FC = () => {
                     </div>
                   )}
                 </div>
-
+                {index === 0 && playerOneError && (
+                  <div
+                    className="error-message"
+                    style={{
+                      color: "red",
+                      fontSize: "0.8em",
+                      marginTop: "5px",
+                    }}
+                  >
+                    {playerOneError}
+                  </div>
+                )}
+                {index === 1 && playerTwoError && (
+                  <div
+                    className="error-message"
+                    style={{
+                      color: "red",
+                      fontSize: "0.8em",
+                      marginTop: "5px",
+                    }}
+                  >
+                    {playerTwoError}
+                  </div>
+                )}
                 {isMe && (
                   <div className="player-controls">
                     <label>Change Color:</label>

@@ -1,4 +1,5 @@
 import React, { useReducer, useState, useEffect, useMemo, useRef } from "react";
+import { FirstPlayerSelector } from "../../components/FirstPlayerSelector/FirstPlayerSelector";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   generateRandomNumber,
@@ -352,9 +353,6 @@ export const ConnectFour: React.FC = () => {
   // Local Effects
   useEffect(() => {
     if (isOnline) return;
-    let timer1: NodeJS.Timeout;
-    let timer2: NodeJS.Timeout;
-
     if (
       localState.isNewGame &&
       localState.showCoinToss &&
@@ -362,26 +360,20 @@ export const ConnectFour: React.FC = () => {
     ) {
       setIsPause(true);
       setIsGameBlocked(true);
-      const flipResult = Math.random();
-      timer1 = setTimeout(() => {
-        dispatch({ type: "SET_PLAYER", player: flipResult <= 0.5 ? 1 : 2 });
-        timer2 = setTimeout(() => {
-          dispatch({ type: "HIDE_COIN_TOSS" });
-          setIsGameBlocked(false);
-          setIsPause(false);
-        }, 5000);
-      }, 100);
     }
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
   }, [
     localState.isNewGame,
     localState.showCoinToss,
     localState.field,
     isOnline,
   ]);
+
+  const handleFirstPlayerSelected = (winnerIndex: number) => {
+    dispatch({ type: "SET_PLAYER", player: winnerIndex + 1 });
+    dispatch({ type: "HIDE_COIN_TOSS" });
+    setIsGameBlocked(false);
+    setIsPause(false);
+  };
 
   useEffect(() => {
     if (isOnline) return;
@@ -817,37 +809,21 @@ export const ConnectFour: React.FC = () => {
       </div>
 
       {state.showCoinToss && isBoardEmpty(state.field) && (
-        <div className="pop-up">
-          <div className="pick-first-player">
-            <h1 className="heading">
-              {state.currentPlayer !== null && (
-                <ShowTextAfterTime
-                  text={
-                    state.currentPlayer === 1
-                      ? p1Name
-                      : isOnline
-                      ? p2NameRaw
-                      : effectivePlayerTwoName
-                  }
-                  time={2500}
-                />
-              )}
-            </h1>
-            <div
-              id="coin"
-              className={
-                state.currentPlayer === 1
-                  ? "heads"
-                  : state.currentPlayer === 2
-                  ? "tails"
-                  : ""
-              }
-            >
-              <div className="side-a"></div>
-              <div className="side-b"></div>
-            </div>
-          </div>
-        </div>
+        <FirstPlayerSelector
+          players={[
+            { name: p1Name, color: p1Color },
+            {
+              name:
+                !isOnline && gameMode === "bot"
+                  ? "Bot"
+                  : isOnline
+                  ? p2NameRaw
+                  : effectivePlayerTwoName,
+              color: p2Color,
+            },
+          ]}
+          onComplete={handleFirstPlayerSelected}
+        />
       )}
 
       {state.winner !== null && (

@@ -1819,89 +1819,6 @@ footer.footer .right-part .social a {
   }
 }
 
-.pick-first-player {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 30px;
-  align-items: center;
-  padding: 8% 20px 20px 20px;
-}
-.pick-first-player .heading {
-  padding: 10px;
-  font-size: 52px;
-  line-height: 62px;
-  letter-spacing: 0.2px;
-  font-family: "Graphik";
-  font-weight: 400;
-}
-
-body {
-  perspective: 800px;
-}
-
-h1 {
-  text-align: center;
-}
-
-#coin {
-  position: relative;
-  margin: 50px auto;
-  width: 100px;
-  height: 100px;
-  cursor: pointer;
-  perspective: 1000px;
-}
-#coin div {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  box-shadow: inset 0 0 45px rgba(255, 255, 255, 0.3), 0 12px 20px -10px rgba(0, 0, 0, 0.4);
-  position: absolute;
-  backface-visibility: hidden;
-}
-
-.side-a {
-  background-color: rgb(var(--player-color-1));
-  z-index: 100;
-}
-
-.side-b {
-  background-color: rgb(var(--player-color-2));
-  transform: rotateY(-180deg);
-}
-
-#coin {
-  transform-style: preserve-3d;
-  transition: transform 1s ease-in;
-}
-
-#coin.heads {
-  animation: flipHeads 3s ease-out forwards;
-}
-
-#coin.tails {
-  animation: flipTails 3s ease-out forwards;
-}
-
-@keyframes flipHeads {
-  from {
-    transform: rotateY(0);
-  }
-  to {
-    transform: rotateY(1800deg);
-  }
-}
-@keyframes flipTails {
-  from {
-    transform: rotateY(0);
-  }
-  to {
-    transform: rotateY(1980deg);
-  }
-}
 @media (max-width: 600px) {
   .connect-four .field-main .field .row .cell {
     width: calc((100vw - 20px) / var(--row-length));
@@ -2037,7 +1954,7 @@ h1 {
   margin-bottom: 10px;
 }
 
-.connect-four-start-menu {
+.connect-four-start-menu, .chess-start-menu {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
@@ -2046,10 +1963,10 @@ h1 {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   color: #fff;
 }
-.connect-four-start-menu .menu-header {
+.connect-four-start-menu .menu-header, .chess-start-menu .menu-header {
   margin-bottom: 20px;
 }
-.connect-four-start-menu .menu-header h1 {
+.connect-four-start-menu .menu-header h1, .chess-start-menu .menu-header h1 {
   text-align: center;
   padding: 10px;
   font-size: 52px;
@@ -2060,10 +1977,10 @@ h1 {
   font-size: 36px;
   color: rgb(1.170212766, 17.5531914894, 218.829787234);
 }
-.connect-four-start-menu .menu-section {
+.connect-four-start-menu .menu-section, .chess-start-menu .menu-section {
   margin-bottom: 20px;
 }
-.connect-four-start-menu .menu-section h2 {
+.connect-four-start-menu .menu-section h2, .chess-start-menu .menu-section h2 {
   text-align: center;
   padding: 10px;
   font-size: 20px;
@@ -2075,7 +1992,8 @@ h1 {
   margin-bottom: 10px;
 }
 .connect-four-start-menu .menu-section .game-modes button,
-.connect-four-start-menu .menu-section .menu-actions button {
+.connect-four-start-menu .menu-section .menu-actions button, .chess-start-menu .menu-section .game-modes button,
+.chess-start-menu .menu-section .menu-actions button {
   display: inline-block;
   margin: 5px 10px;
   padding: 10px;
@@ -2101,31 +2019,32 @@ h1 {
   border-radius: 5px;
 }
 .connect-four-start-menu .menu-section .game-modes button:hover,
-.connect-four-start-menu .menu-section .menu-actions button:hover {
+.connect-four-start-menu .menu-section .menu-actions button:hover, .chess-start-menu .menu-section .game-modes button:hover,
+.chess-start-menu .menu-section .menu-actions button:hover {
   background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
-.connect-four-start-menu .menu-section .game-modes {
+.connect-four-start-menu .menu-section .game-modes, .chess-start-menu .menu-section .game-modes {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
 }
-.connect-four-start-menu .menu-section .game-modes button:hover {
+.connect-four-start-menu .menu-section .game-modes button:hover, .chess-start-menu .menu-section .game-modes button:hover {
   background: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
-.connect-four-start-menu .menu-section .game-modes button.active {
+.connect-four-start-menu .menu-section .game-modes button.active, .chess-start-menu .menu-section .game-modes button.active {
   background: #28a745;
 }
-.connect-four-start-menu .menu-section .join-or-create {
+.connect-four-start-menu .menu-section .join-or-create, .chess-start-menu .menu-section .join-or-create {
   display: flex;
   align-items: center;
   flex-direction: column;
 }
-.connect-four-start-menu .menu-section .join-or-create .buttons {
+.connect-four-start-menu .menu-section .join-or-create .buttons, .chess-start-menu .menu-section .join-or-create .buttons {
   border-radius: 10px;
   overflow: hidden;
   width: 80%;
 }
-.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn {
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn, .chess-start-menu .menu-section .join-or-create .buttons .choose-room-btn {
   padding: 10px;
   font-size: 17px;
   line-height: 25px;
@@ -2142,27 +2061,27 @@ h1 {
   border-radius: 0;
   width: 50%;
 }
-.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn:hover {
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn:hover, .chess-start-menu .menu-section .join-or-create .buttons .choose-room-btn:hover {
   background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
-.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn.active {
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn.active, .chess-start-menu .menu-section .join-or-create .buttons .choose-room-btn.active {
   background: #28a745;
 }
-.connect-four-start-menu .bot-settings {
+.connect-four-start-menu .bot-settings, .chess-start-menu .bot-settings {
   display: flex;
   flex-direction: column;
 }
-.connect-four-start-menu .player-settings {
+.connect-four-start-menu .player-settings, .chess-start-menu .player-settings {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
-.connect-four-start-menu .player-settings .player-wrapper {
+.connect-four-start-menu .player-settings .player-wrapper, .chess-start-menu .player-settings .player-wrapper {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.connect-four-start-menu .player-settings .player-wrapper .option-heading {
+.connect-four-start-menu .player-settings .player-wrapper .option-heading, .chess-start-menu .player-settings .player-wrapper .option-heading {
   text-align: center;
   padding: 10px;
   font-size: 20px;
@@ -2172,7 +2091,8 @@ h1 {
   font-weight: 400;
 }
 .connect-four-start-menu .player-settings .player-wrapper .player,
-.connect-four-start-menu .player-settings .player-wrapper .online-settings {
+.connect-four-start-menu .player-settings .player-wrapper .online-settings, .chess-start-menu .player-settings .player-wrapper .player,
+.chess-start-menu .player-settings .player-wrapper .online-settings {
   background: #fff;
   border: 1px solid rgb(229.5, 229.5, 229.5);
   border-radius: 5px;
@@ -2180,20 +2100,23 @@ h1 {
   height: 100%;
 }
 .connect-four-start-menu .player-settings .player-wrapper .player label,
-.connect-four-start-menu .player-settings .player-wrapper .online-settings label {
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label, .chess-start-menu .player-settings .player-wrapper .player label,
+.chess-start-menu .player-settings .player-wrapper .online-settings label {
   display: block;
   margin-bottom: 10px;
   color: #000;
 }
 .connect-four-start-menu .player-settings .player-wrapper .player label:has(input[type=color]),
-.connect-four-start-menu .player-settings .player-wrapper .online-settings label:has(input[type=color]) {
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label:has(input[type=color]), .chess-start-menu .player-settings .player-wrapper .player label:has(input[type=color]),
+.chess-start-menu .player-settings .player-wrapper .online-settings label:has(input[type=color]) {
   display: flex;
   align-items: center;
   gap: 5px;
   margin: 0;
 }
 .connect-four-start-menu .player-settings .player-wrapper .player label input[type=text],
-.connect-four-start-menu .player-settings .player-wrapper .online-settings label input[type=text] {
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label input[type=text], .chess-start-menu .player-settings .player-wrapper .player label input[type=text],
+.chess-start-menu .player-settings .player-wrapper .online-settings label input[type=text] {
   width: 100%;
   padding: 8px;
   padding: 10px;
@@ -2206,13 +2129,14 @@ h1 {
   border-radius: 5px;
 }
 .connect-four-start-menu .player-settings .player-wrapper .player label input[type=color],
-.connect-four-start-menu .player-settings .player-wrapper .online-settings label input[type=color] {
+.connect-four-start-menu .player-settings .player-wrapper .online-settings label input[type=color], .chess-start-menu .player-settings .player-wrapper .player label input[type=color],
+.chess-start-menu .player-settings .player-wrapper .online-settings label input[type=color] {
   width: 50px;
   height: 30px;
   border: none;
   cursor: pointer;
 }
-.connect-four-start-menu .player-settings .player-wrapper .start-button {
+.connect-four-start-menu .player-settings .player-wrapper .start-button, .chess-start-menu .player-settings .player-wrapper .start-button {
   padding: 10px;
   font-size: 17px;
   line-height: 25px;
@@ -2229,23 +2153,23 @@ h1 {
   border-radius: 4px;
   margin-top: 8px;
 }
-.connect-four-start-menu .player-settings .player-wrapper .start-button:hover {
+.connect-four-start-menu .player-settings .player-wrapper .start-button:hover, .chess-start-menu .player-settings .player-wrapper .start-button:hover {
   background-color: rgb(72.268115942, 211.231884058, 104);
 }
-.connect-four-start-menu .player-settings .player-wrapper .online-settings {
+.connect-four-start-menu .player-settings .player-wrapper .online-settings, .chess-start-menu .player-settings .player-wrapper .online-settings {
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.connect-four-start-menu .player-settings:has(.player-wrapper:first-child:last-child) {
+.connect-four-start-menu .player-settings:has(.player-wrapper:first-child:last-child), .chess-start-menu .player-settings:has(.player-wrapper:first-child:last-child) {
   display: flex;
   justify-content: center;
 }
-.connect-four-start-menu .menu-actions {
+.connect-four-start-menu .menu-actions, .chess-start-menu .menu-actions {
   display: flex;
   justify-content: space-around;
 }
-.connect-four-start-menu .menu-actions .start-button {
+.connect-four-start-menu .menu-actions .start-button, .chess-start-menu .menu-actions .start-button {
   padding: 10px;
   font-size: 17px;
   line-height: 25px;
@@ -2260,10 +2184,10 @@ h1 {
   transition: all 0.3s ease;
   cursor: pointer;
 }
-.connect-four-start-menu .menu-actions .start-button:hover {
+.connect-four-start-menu .menu-actions .start-button:hover, .chess-start-menu .menu-actions .start-button:hover {
   background-color: rgb(72.268115942, 211.231884058, 104);
 }
-.connect-four-start-menu .menu-actions .exit-button {
+.connect-four-start-menu .menu-actions .exit-button, .chess-start-menu .menu-actions .exit-button {
   padding: 10px;
   font-size: 17px;
   line-height: 25px;
@@ -2278,17 +2202,17 @@ h1 {
   transition: all 0.3s ease;
   cursor: pointer;
 }
-.connect-four-start-menu .menu-actions .exit-button:hover {
+.connect-four-start-menu .menu-actions .exit-button:hover, .chess-start-menu .menu-actions .exit-button:hover {
   background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
 }
-.connect-four-start-menu .menu-actions .exit-button.wider {
+.connect-four-start-menu .menu-actions .exit-button.wider, .chess-start-menu .menu-actions .exit-button.wider {
   padding: 10px 64px;
   border-radius: 4px;
 }
-.connect-four-start-menu .menu-actions button {
+.connect-four-start-menu .menu-actions button, .chess-start-menu .menu-actions button {
   padding: 10px 20px;
 }
-.connect-four-start-menu .menu-actions button:hover {
+.connect-four-start-menu .menu-actions button:hover, .chess-start-menu .menu-actions button:hover {
   opacity: 0.9;
 }
 
@@ -2536,6 +2460,98 @@ h1 {
   font-size: 2rem;
 }
 
+.first-player-selector-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+.first-player-selector-overlay .pop-up {
+  pointer-events: auto;
+  background-color: #181818;
+  border-radius: 5%;
+  border: 1px solid rgb(49.5, 49.5, 49.5);
+  padding: 20px;
+  box-shadow: 0 0 75px 30px rgba(0, 0, 0, 0.7);
+  min-width: 300px;
+  max-width: 90vw;
+}
+.first-player-selector-overlay .pick-first-player {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 30px;
+  align-items: center;
+  padding: 20px;
+}
+.first-player-selector-overlay .pick-first-player .heading {
+  padding: 10px;
+  font-size: 52px;
+  line-height: 62px;
+  letter-spacing: 0.2px;
+  font-family: "Graphik";
+  font-weight: 400;
+  font-size: 2rem;
+  text-align: center;
+  min-height: 3rem;
+}
+.first-player-selector-overlay .coin-container {
+  perspective: 1000px;
+  margin: 20px auto;
+}
+.first-player-selector-overlay .coin {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  cursor: default;
+  transform-style: preserve-3d;
+  transition: transform 1s ease-in;
+}
+.first-player-selector-overlay .coin div {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 45px rgba(255, 255, 255, 0.3), 0 12px 20px -10px rgba(0, 0, 0, 0.4);
+  position: absolute;
+  backface-visibility: hidden;
+}
+.first-player-selector-overlay .side-a {
+  background-color: var(--fps-player-color-0, #ff0000);
+  z-index: 2;
+}
+.first-player-selector-overlay .side-b {
+  background-color: var(--fps-player-color-1, #0000ff);
+  transform: rotateY(-180deg);
+}
+.first-player-selector-overlay .coin.heads {
+  animation: flipHeads 3s ease-out forwards;
+}
+.first-player-selector-overlay .coin.tails {
+  animation: flipTails 3s ease-out forwards;
+}
+
+@keyframes flipHeads {
+  from {
+    transform: rotateY(0);
+  }
+  to {
+    transform: rotateY(1800deg);
+  }
+}
+@keyframes flipTails {
+  from {
+    transform: rotateY(0);
+  }
+  to {
+    transform: rotateY(1980deg);
+  }
+}
 .games {
   margin-bottom: 40px;
 }
@@ -2607,6 +2623,131 @@ h1 {
   font-family: "Graphik";
   font-weight: 400;
   opacity: 0.8;
+}
+
+.chess {
+  --cell-size: 96px;
+  display: flex;
+  justify-content: center;
+}
+.chess .board {
+  display: flex;
+  flex-direction: column;
+}
+.chess .board .row {
+  display: flex;
+}
+.chess .board .row .cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.chess .board .row .cell.white {
+  background-color: #eeeed2;
+}
+.chess .board .row .cell.black {
+  background-color: #769656;
+}
+.chess .board .row .cell .piece {
+  width: 85%;
+  height: 85%;
+  transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
+  position: relative;
+  z-index: 1;
+}
+.chess .board .row .cell .piece.white path {
+  fill: #f8f8f8;
+  stroke: #303030;
+  stroke-width: calc(var(--cell-size) * 0.025);
+}
+.chess .board .row .cell .piece.black path {
+  fill: #363636;
+  stroke: #000000;
+  stroke-width: calc(var(--cell-size) * 0.025);
+}
+.chess .board .row .cell.selected::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(247, 247, 105, 0.65);
+}
+.chess .board .row .cell.selected .piece {
+  z-index: 2;
+  filter: drop-shadow(0 calc(var(--cell-size) * 0.15) calc(var(--cell-size) * 0.1) rgba(0, 0, 0, 0.4));
+}
+.chess .board .row .cell.last-move::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(247, 247, 105, 0.65);
+}
+.chess .board .row .cell.in-check::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(212, 43, 43, 0.65);
+}
+.chess .board .row .cell .available-move {
+  width: calc(var(--cell-size) * 0.31);
+  height: calc(var(--cell-size) * 0.31);
+  background-color: rgba(94, 104, 97, 0.8);
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+}
+.chess .board .row .cell:has(.piece) .available-move {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  height: 90%;
+  background-color: unset;
+  border: calc(var(--cell-size) * 0.1) solid rgba(94, 104, 97, 0.8);
+}
+.chess .board .row .cell .piece.dragging-hidden {
+  opacity: 0;
+}
+
+.dragged-piece {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0s;
+}
+.dragged-piece.returning {
+  transition: top 0.2s ease-out, left 0.2s ease-out;
+}
+.dragged-piece .piece {
+  width: 85%;
+  height: 85%;
+}
+.dragged-piece .piece.white path {
+  fill: #f8f8f8;
+  stroke: #303030;
+  stroke-width: calc(var(--cell-size) * 0.025);
+}
+.dragged-piece .piece.black path {
+  fill: #363636;
+  stroke: #000000;
+  stroke-width: calc(var(--cell-size) * 0.025);
 }
 
 body {

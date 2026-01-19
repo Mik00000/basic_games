@@ -1,0 +1,159 @@
+.chess {
+  // Зміни цю змінну, щоб змінити розмір усієї дошки.
+  // Можна також змінювати її через inline-style у HTML або JS.
+  --cell-size: 96px;
+  display: flex;
+  justify-content: center;
+  .board {
+    display: flex;
+    flex-direction: column;
+
+    .row {
+      display: flex;
+
+      .cell {
+        // Розміри клітинки тепер динамічні
+        width: var(--cell-size);
+        height: var(--cell-size);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+
+        &.white {
+          background-color: #eeeed2;
+        }
+        &.black {
+          background-color: #769656;
+        }
+
+        .piece {
+          width: 85%;
+          height: 85%;
+          transition:
+            transform 0.2s ease-in-out,
+            filter 0.2s ease-in-out;
+          position: relative;
+          z-index: 1;
+
+          &.white {
+            path {
+              fill: #f8f8f8;
+              stroke: #303030;
+              // 1.5px при 32px клітинці — це приблизно 0.025 від розміру
+              stroke-width: calc(var(--cell-size) * 0.025);
+            }
+          }
+          &.black {
+            path {
+              fill: #363636;
+              stroke: #000000;
+              // Аналогічно масштабуємо обведення
+              stroke-width: calc(var(--cell-size) * 0.025);
+            }
+          }
+        }
+
+        &.selected {
+          &::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(247, 247, 105, 0.65);
+          }
+          .piece {
+            // -10px при 32px клітинці — це ~31% від висоти
+            // transform: translateY(calc(var(--cell-size) * -0.31));
+            z-index: 2;
+            // Тінь теж масштабується: Y-зсув та розмиття
+            filter: drop-shadow(
+              0 calc(var(--cell-size) * 0.15) calc(var(--cell-size) * 0.1)
+                rgba(0, 0, 0, 0.4)
+            );
+          }
+        }
+
+        &.last-move::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(247, 247, 105, 0.65);
+        }
+        &.in-check::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(212, 43, 43, 0.65);
+        }
+        .available-move {
+          // 10px при 32px клітинці — це ~31%
+          width: calc(var(--cell-size) * 0.31);
+          height: calc(var(--cell-size) * 0.31);
+          background-color: rgba(94, 104, 97, 0.8);
+          border-radius: 50%;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        &:has(.piece) .available-move {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 90%;
+          height: 90%;
+          background-color: unset;
+          border: calc(var(--cell-size) * 0.1) solid rgba(94, 104, 97, 0.8);
+        }
+
+        .piece.dragging-hidden {
+          opacity: 0;
+        }
+      }
+    }
+  }
+}
+
+.dragged-piece {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0s; // Instant movement during drag
+
+  &.returning {
+    transition:
+      top 0.2s ease-out,
+      left 0.2s ease-out;
+  }
+
+  .piece {
+    width: 85%;
+    height: 85%;
+
+    &.white path {
+      fill: #f8f8f8;
+      stroke: #303030;
+      stroke-width: calc(var(--cell-size) * 0.025);
+    }
+
+    &.black path {
+      fill: #363636;
+      stroke: #000000;
+      stroke-width: calc(var(--cell-size) * 0.025);
+    }
+  }
+}
