@@ -24,6 +24,7 @@ import GameLayout from "./sections/GameLayout";
 import { GameProvider } from "./context/GameContext";
 import ChessStartMenu from "./games/chess/StartMenu";
 import Chess from "./games/chess/Game";
+import ChessLobby from "./games/chess/Lobby";
 function App() {
   return (
     <GameProvider>
@@ -54,7 +55,7 @@ function App() {
                   element={<ConnectFour />}
                 />
                 <Route
-                  path="/games/chess"
+                  path="/games/chess/:gameMode/:onlineGameId?"
                   element={<Chess />}
                 />
               </Route>
@@ -74,6 +75,10 @@ function App() {
               <Route
                 path="/games/chess-menu"
                 element={<ChessStartMenu />}
+              />
+              <Route
+                path="/games/chess/lobby/:roomId"
+                element={<ChessLobby />}
               />
             </Routes>
           </div>

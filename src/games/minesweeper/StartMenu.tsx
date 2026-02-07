@@ -12,7 +12,7 @@ const MinesweeperStartMenu: React.FC = () => {
   const difficultyLevels: DifficultyLevel[] = [
     { name: "Easy", rows: 9, columns: 9, bombCount: 10 },
     { name: "Middle", rows: 16, columns: 16, bombCount: 40 },
-    { name: "Expert", rows: 3000, columns: 3000, bombCount: 99 }
+    { name: "Expert", rows: 30, columns: 16, bombCount: 99 }
   ];
 
   const [difficulty, setDifficulty] = useState<number>(0);
@@ -27,8 +27,8 @@ const MinesweeperStartMenu: React.FC = () => {
 
     if (selectedDifficulty.name === "Expert") {
       if (window.innerWidth >= 768) {
-        rows = 3000;
-        columns = 3000;
+        rows = 16;
+        columns = 30;
       }
     }
 

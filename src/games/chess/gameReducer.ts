@@ -1,16 +1,14 @@
 import {
-  // GameAction, TODO: Потім розкоменти
   GameState,
   getAvailableMoves,
   handleCastling,
   handleRegularMove,
-  initialGameState,
-  isCastlingAvailable,
-  isCheck,
-  isValidMove,
-  wouldBeInCheck,
   handleTimeUpdate,
   handleTimeout,
+  Difficulty,
+  handlePromotion,
+  Piece,
+  getInitialGameState,
 } from "./gameLogic";
 type GameAction =
   | { type: "MAKE_MOVE"; from: [number, number]; to: [number, number] }
@@ -20,7 +18,10 @@ type GameAction =
   | { type: "HIDE_COIN_TOSS" }
   | { type: "RESET" }
   | { type: "UPDATE_TIME"; player: "white" | "black"; time: number }
-  | { type: "TIMEOUT"; player: "white" | "black" };
+  | { type: "TIMEOUT"; player: "white" | "black" }
+  | { type: "SET_DIFFICULTY"; difficulty: Difficulty }
+  | { type: "SET_GAME_MODE"; gameMode: "lobby" | "local" | "bot" }
+  | { type: "PROMOTE_PAWN"; pieceType: Piece["type"] };
 // | { type: "SET_STATE"; newState: Partial<GameState> };
 
 export const gameReducer = (
@@ -29,6 +30,7 @@ export const gameReducer = (
 ): GameState => {
   switch (action.type) {
     case "MAKE_MOVE": {
+      if (state.winner) return state;
       const { from, to } = action;
       const selectedPiece = state.board[from[0]]?.[from[1]];
       const targetCell = state.board[to[0]]?.[to[1]];
@@ -49,7 +51,7 @@ export const gameReducer = (
         return {
           ...state,
           selectedCell: to,
-          availableMoves: getAvailableMoves(state.board, to),
+          availableMoves: getAvailableMoves(state, to),
         };
       }
 
@@ -64,18 +66,27 @@ export const gameReducer = (
       return {
         ...state,
         selectedCell: action.cell,
-        availableMoves: getAvailableMoves(state.board, action.cell),
+        availableMoves: getAvailableMoves(state, action.cell),
       };
     }
 
     case "RESET":
-      return initialGameState;
+      return getInitialGameState();
 
     case "UPDATE_TIME":
       return handleTimeUpdate(state, action.player, action.time);
 
     case "TIMEOUT":
       return handleTimeout(state, action.player);
+
+    case "SET_DIFFICULTY":
+      return { ...state, difficulty: action.difficulty };
+
+    case "SET_GAME_MODE":
+      return { ...state, gameMode: action.gameMode };
+
+    case "PROMOTE_PAWN":
+      return handlePromotion(state, action.pieceType);
 
     default:
       return state;

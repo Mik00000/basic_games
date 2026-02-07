@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  areColorsTooSimilar,
-  generateRandomGameId,
-} from "../../components/utils";
+import { areColorsTooSimilar } from "../../components/common/utils";
+import { GameModeSelector } from "../../components/menus/GameModeSelector";
+import { OnlineRoomSetup } from "../../components/menus/OnlineRoomSetup";
+import { PlayerSetup } from "../../components/menus/PlayerSetup";
 
 interface DifficultyLevel {
   name: string;
@@ -21,7 +21,7 @@ const ConnectFourStartMenu: React.FC = () => {
   const [generalError, setGeneralError] = useState<string>("");
   const [joinGameId, setJoinGameId] = useState<string>("");
   const [joinOrCreateRoom, setJoinOrCreateRoom] = useState<"create" | "join">(
-    "create"
+    "create",
   );
   const navigate = useNavigate();
   const [difficulty, setDifficulty] = useState<number>(0);
@@ -41,9 +41,15 @@ const ConnectFourStartMenu: React.FC = () => {
     if (!playerOneName.trim()) {
       setPlayerOneError("Player 1 name cannot be empty.");
       isValid = false;
+    } else if (playerOneName.length > 12) {
+      setPlayerOneError("Player 1 name cannot be longer than 12 characters.");
+      isValid = false;
     }
     if (!playerTwoName.trim()) {
       setPlayerTwoError("Player 2 name cannot be empty.");
+      isValid = false;
+    } else if (playerTwoName.length > 12) {
+      setPlayerTwoError("Player 2 name cannot be longer than 12 characters.");
       isValid = false;
     }
     if (playerOneName === playerTwoName) {
@@ -62,7 +68,7 @@ const ConnectFourStartMenu: React.FC = () => {
       areColorsTooSimilar(playerOneColor, "#181818", 90)
     ) {
       setPlayerOneError(
-        "Player 1 cannot have the same color as the field or colors that are too similar to it"
+        "Player 1 cannot have the same color as the field or colors that are too similar to it",
       );
       isValid = false;
     }
@@ -71,7 +77,7 @@ const ConnectFourStartMenu: React.FC = () => {
       areColorsTooSimilar(playerTwoColor, "#181818", 90)
     ) {
       setPlayerTwoError(
-        "Player 2 cannot have the same color as the field or colors that are too similar to it"
+        "Player 2 cannot have the same color as the field or colors that are too similar to it",
       );
       isValid = false;
     }
@@ -124,6 +130,20 @@ const ConnectFourStartMenu: React.FC = () => {
       // Редірект на ЛОБІ
     } else {
       // Локальна гра або бот
+      // Генеруємо унікальний ID для цієї сесії гри
+      const localGameId = crypto.randomUUID();
+
+      // Скидаємо попередній стан (для цієї нової гри вже не треба очищати старі ключі,
+      // бо ми створимо нові унікальні, але старі дефолтні можна почистити про всяк випадок)
+      const keys = [
+        "connectFourGameState",
+        "circleTimer1RemainingTime",
+        "circleTimer2RemainingTime",
+        "connectFourTimerTime1",
+        "connectFourTimerTime2",
+      ];
+      keys.forEach((key) => localStorage.removeItem(key));
+
       navigate(`/games/connect4/host/`, {
         state: {
           gameMode,
@@ -132,6 +152,7 @@ const ConnectFourStartMenu: React.FC = () => {
           playerOneColor,
           playerTwoColor,
           difficulty,
+          localGameId, // Passing unique ID
         },
       });
     }
@@ -152,29 +173,11 @@ const ConnectFourStartMenu: React.FC = () => {
         <div className="error-message general-error">{generalError}</div>
       )}
 
-      <div className="menu-section">
-        <h2>Game Mode</h2>
-        <div className="game-modes">
-          <button
-            className={gameMode === "bot" ? "active" : ""}
-            onClick={() => setGameMode("bot")}
-          >
-            Play with Bot
-          </button>
-          <button
-            className={gameMode === "local" ? "active" : ""}
-            onClick={() => setGameMode("local")}
-          >
-            Two Players (Same Device)
-          </button>
-          <button
-            className={gameMode === "online" ? "active" : ""}
-            onClick={() => setGameMode("online")}
-          >
-            Two Players (Different Devices)
-          </button>
-        </div>
-      </div>
+      <GameModeSelector
+        currentMode={gameMode}
+        onModeChange={setGameMode}
+        className="menu-section"
+      />
       {gameMode === "bot" && (
         <div className="menu-section">
           <div className="bot-settings">
@@ -198,7 +201,7 @@ const ConnectFourStartMenu: React.FC = () => {
                 <span
                   key={index}
                   style={{
-                    fontWeight: difficulty === index ? "bold" : "normal",
+                    fontWeight: difficulty === index + 1 ? "bold" : "normal",
                   }}
                 >
                   {level.name}
@@ -209,64 +212,35 @@ const ConnectFourStartMenu: React.FC = () => {
         </div>
       )}
       {gameMode === "online" && (
-        <div className="menu-section">
-          <div className="join-or-create">
-            <h2>Online Settings</h2>
-            <div className="buttons">
-              <button
-                className={`choose-room-btn ${
-                  joinOrCreateRoom === "create" ? "active" : ""
-                }`}
-                onClick={() => setJoinOrCreateRoom("create")}
-              >
-                Create Room
-              </button>
-              <button
-                className={`choose-room-btn ${
-                  joinOrCreateRoom === "join" ? "active" : ""
-                }`}
-                onClick={() => setJoinOrCreateRoom("join")}
-              >
-                Join Room
-              </button>
-            </div>
-            <div className="content"></div>
-          </div>
-        </div>
+        <OnlineRoomSetup
+          mode={joinOrCreateRoom}
+          onModeChange={setJoinOrCreateRoom}
+          className="menu-section"
+        />
       )}
       <div className="menu-section">
         {gameMode !== "online" && <h2>Player Settings</h2>}
         <div className="player-settings">
-          {(gameMode == "online" && joinOrCreateRoom == "join") || (
+          {/* Player 1 or Create Room Setup */}
+          {!(gameMode === "online" && joinOrCreateRoom === "join") && (
             <div className="player-wrapper">
-              {gameMode == "online" && joinOrCreateRoom == "create" && (
+              {gameMode === "online" && joinOrCreateRoom === "create" && (
                 <span className="option-heading">Create Room</span>
               )}
-              <div className="player">
-                <label>
-                  {gameMode !== "bot" && gameMode !== "online"
-                    ? "Player 1 Name:"
-                    : "Name:"}
-                  <input
-                    type="text"
-                    value={playerOneName}
-                    onChange={(e) => setPlayerOneName(e.target.value)}
-                  />
-                </label>
-                {playerOneError && (
-                  <div className="error-message">{playerOneError}</div>
-                )}
-                <label>
-                  {gameMode !== "bot" && gameMode !== "online"
-                    ? "Player 1 Color:"
-                    : "Color:"}
-                  <input
-                    type="color"
-                    value={playerOneColor}
-                    onChange={(e) => setPlayerOneColor(e.target.value)}
-                  />
-                </label>
-              </div>
+              <PlayerSetup
+                label={
+                  gameMode !== "bot" && gameMode !== "online"
+                    ? "Player 1 Settings"
+                    : "Settings"
+                }
+                name={playerOneName}
+                onNameChange={setPlayerOneName}
+                color={playerOneColor}
+                onColorChange={setPlayerOneColor}
+                error={playerOneError}
+                showName={true}
+                showColor={true}
+              />
               {gameMode === "online" && (
                 <button onClick={startGame} className="start-button">
                   Create
@@ -274,54 +248,38 @@ const ConnectFourStartMenu: React.FC = () => {
               )}
             </div>
           )}
-          {gameMode == "bot" || gameMode == "online" || (
+
+          {/* Player 2 Setup (Bot or Local) */}
+          {!(gameMode === "bot" || gameMode === "online") && (
             <div className="player-wrapper">
-              <div className="player">
-                <label>
-                  Player 2 Name:
-                  <input
-                    type="text"
-                    value={playerTwoName}
-                    onChange={(e) => setPlayerTwoName(e.target.value)}
-                  />
-                </label>
-                {playerTwoError && (
-                  <div className="error-message">{playerTwoError}</div>
-                )}
-                <label>
-                  Player 2 Color:
-                  <input
-                    type="color"
-                    value={playerTwoColor}
-                    onChange={(e) => setPlayerTwoColor(e.target.value)}
-                  />
-                </label>
-              </div>
+              <PlayerSetup
+                label="Player 2 Settings"
+                name={playerTwoName}
+                onNameChange={setPlayerTwoName}
+                color={playerTwoColor}
+                onColorChange={setPlayerTwoColor}
+                error={playerTwoError}
+                showName={true}
+                showColor={true}
+              />
             </div>
           )}
+
+          {/* Join Online Room Setup */}
           {gameMode === "online" && joinOrCreateRoom === "join" && (
             <div className="player-wrapper">
               <span className="option-heading">Join Room</span>
               <div className="online-settings">
-                <label>
-                  Name
-                  <input
-                    type="text"
-                    value={playerOneName}
-                    onChange={(e) => setPlayerOneName(e.target.value)}
-                  />
-                </label>
-                {playerOneError && (
-                  <div className="error-message">{playerOneError}</div>
-                )}
-                <label>
-                  Color
-                  <input
-                    type="color"
-                    value={playerOneColor}
-                    onChange={(e) => setPlayerOneColor(e.target.value)}
-                  />
-                </label>
+                <PlayerSetup
+                  name={playerOneName}
+                  onNameChange={setPlayerOneName}
+                  color={playerOneColor}
+                  onColorChange={setPlayerOneColor}
+                  error={playerOneError}
+                  showName={true}
+                  showColor={true}
+                  className="mb-2"
+                />
                 <label>
                   Room ID:
                   <input

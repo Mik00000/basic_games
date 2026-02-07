@@ -3,7 +3,7 @@ export const MAX_COLS = 7;
 export const MAX_ROWS = 7;
 export const TIME_TO_FORGOT_GAME = 0.5 * 60 * 60 * 1000;
 export const PLAYER_MAX_GAME_TIME = 4 * 60 * 1000;
-export const CIRCLE_TIMER_DURATION = 22;
+export const CIRCLE_TIMER_DURATION = 25;
 
 export type GameState = {
   field: number[][];

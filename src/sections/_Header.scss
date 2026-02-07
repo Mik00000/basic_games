@@ -35,7 +35,7 @@ header.header {
       list-style: none;
       a {
         @include for-text(link);
-        padding: 5px;
+        padding: 10px;
       }
     }
     @include for-size(tablet) {

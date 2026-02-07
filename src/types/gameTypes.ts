@@ -106,16 +106,16 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   createRoom: (
     data: CreateRoomData,
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   joinRoom: (
     data: JoinRoomData,
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   leaveRoom: (callback: (response: CallbackResponse) => void) => void;
   rejoinRoom: (
     data: { roomId: string; playerId: string; username: string },
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   // --- БУЛО: updateGameState ---
   // --- СТАЛО: makeMove ---
@@ -124,35 +124,39 @@ export interface ClientToServerEvents {
     payload: {
       gameData: { username?: string; color?: string; [key: string]: any };
     },
-    callback: (res: CallbackResponse) => void
+    callback: (res: CallbackResponse) => void,
   ) => void;
   sendChatMessage: (
     data: { text: string },
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   sendVote: (
     data: { type: VoteType },
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   undoMove: (callback: (response: CallbackResponse) => void) => void;
   redoMove: (callback: (response: CallbackResponse) => void) => void;
   updateRoomSettings: (
     data: Partial<RoomSettings>,
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   updateRolePermissions: (
     data: { role: string; permissions: Partial<RolePermissions> },
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   kickPlayer: (
     data: { playerId: string },
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   transferAdmin: (
     data: { playerId: string },
-    callback: (response: CallbackResponse) => void
+    callback: (response: CallbackResponse) => void,
   ) => void;
   heartbeat: (callback: (response: CallbackResponse) => void) => void;
+  checkActiveSession: (
+    data: { userId: string },
+    callback: (response: CallbackResponse) => void,
+  ) => void;
   startGame: (callback: (response: CallbackResponse) => void) => void;
 }
 
@@ -167,6 +171,7 @@ export interface CreateRoomData {
   settings?: Partial<RoomSettings>;
   rolePermissions?: Record<string, Partial<RolePermissions>>;
   username: string;
+  userId?: string;
 }
 
 export interface JoinRoomData {
@@ -174,6 +179,7 @@ export interface JoinRoomData {
   username: string;
   password?: string;
   asSpectator?: boolean;
+  userId?: string;
 }
 
 export interface CallbackResponse {

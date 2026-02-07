@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { useStickyStateWithExpiry } from "./utils";
+import { useStickyStateWithExpiry } from "../common/utils";
 
 interface TimerProps {
   startTime: number;
@@ -18,7 +18,6 @@ interface TimerProps {
   // НОВІ ПРОПСИ ДЛЯ ОНЛАЙНУ
   syncTime?: number; // Якщо передано, таймер форсується до цього часу
   isServerControlled?: boolean; // Прапорець режиму
-  onTimeUpdate?: (time: number) => void;
 }
 
 export interface TimerHandle {
@@ -37,7 +36,6 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
       className,
       syncTime,
       isServerControlled = false,
-      onTimeUpdate,
     },
     ref,
   ) => {
@@ -63,25 +61,14 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
     useImperativeHandle(ref, () => ({ reset }));
 
     // 1. СИНХРОНІЗАЦІЯ З СЕРВЕРОМ
-    useEffect(() => {
-      if (isServerControlled && syncTime !== undefined) {
-        setMilliseconds(syncTime);
-      }
-    }, [syncTime, isServerControlled]);
-
-    // Use refs for callbacks to avoid restarting intervals on re-renders (important for performance during drag)
-    const onTimeUpdateRef = useRef(onTimeUpdate);
-    const onCompleteRef = useRef(onComplete);
-
-    useEffect(() => {
-      onTimeUpdateRef.current = onTimeUpdate;
-      onCompleteRef.current = onComplete;
-    }, [onTimeUpdate, onComplete]);
+    // Ми прибрали useEffect, що викликав setMilliseconds(syncTime),
+    // щоб уникнути помилки "setState synchronously within an effect".
+    // Тепер ми просто використовуємо syncTime безпосередньо при рендері (див. displayTime нижче).
 
     // 2. ІНТЕРВАЛ (Тікання)
     useEffect(() => {
-      // Якщо на паузі або час вийшов - стоп
-      if (pause || (!isGrowing && milliseconds <= 0)) {
+      // Якщо на паузі, час вийшов АБО керує сервер - стоп локальний інтервал
+      if (pause || (!isGrowing && milliseconds <= 0) || isServerControlled) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         return;
       }
@@ -96,9 +83,6 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
             // але залишаємо як було у тебе для сумісності
             setStoredMilliseconds(nextVal);
           }
-          if (onTimeUpdateRef.current && nextVal % 1000 === 0) {
-            onTimeUpdateRef.current(nextVal);
-          }
           return nextVal;
         });
       }, 10);
@@ -108,35 +92,21 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
       };
     }, [pause, isGrowing, isServerControlled, setStoredMilliseconds]); // Прибрав milliseconds з deps щоб не було re-create інтервалу
 
-    // 3. ЗАВЕРШЕННЯ ТА ОНОВЛЕННЯ
+    // 3. ЗАВЕРШЕННЯ
     useEffect(() => {
       // В онлайні ми не викликаємо onComplete, бо сервер вирішує кінець
-      if (!isServerControlled && milliseconds === 0 && onCompleteRef.current) {
-        onCompleteRef.current();
+      if (!isServerControlled && milliseconds === 0 && onComplete) {
+        onComplete();
       }
+    }, [milliseconds, onComplete, isServerControlled]);
 
-      // Синхронізуємо час при паузі (вихідний сигнал)
-      // ВАЖЛИВО: Ми НЕ викликаємо onTimeUpdate тут, щоб не перезаписати TIME_REWARD
-      // Останній тік інтервалу вже оновив час.
-    }, [milliseconds, isServerControlled, pause]);
-
-    // 4. СИНХРОНІЗАЦІЯ ВХІДНОГО ЧАСУ (REWARD)
-    useEffect(() => {
-      if (pause && Math.abs(milliseconds - startTime) > 500) {
-        setMilliseconds(startTime);
-        if (!isServerControlled) setStoredMilliseconds(startTime);
-      }
-    }, [
-      pause,
-      startTime,
-      milliseconds,
-      isServerControlled,
-      setStoredMilliseconds,
-    ]);
+    // Визначаємо час для відображення: якщо керує сервер - беремо syncTime, інакше - локальний стейт
+    const displayTime =
+      isServerControlled && syncTime !== undefined ? syncTime : milliseconds;
 
     return (
-      <div className={`number-timer ${className}`}>
-        <h1>{Math.floor(milliseconds / 1000)}s</h1>
+      <div className={`number-timer ${className ? className : ""}`}>
+        <h1>{Math.floor(displayTime / 1000)}s</h1>
       </div>
     );
   },

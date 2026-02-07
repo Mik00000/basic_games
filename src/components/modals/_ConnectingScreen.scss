@@ -1,0 +1,55 @@
+.connection-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  // Dark background with some transparency and blur
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 2000; // Above most things
+  color: $light-text; // Assuming $light-text is defined globally or we use white
+  text-align: center;
+  padding: 20px;
+
+  h1 {
+    @include for-text(second-headline);
+    margin-bottom: 20px;
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  p {
+    @include for-text(subtitle);
+    color: darken($light-text, 20%);
+    max-width: 600px;
+    margin-bottom: 30px;
+  }
+
+  .exit-btn {
+    @include for-button($bg-color: $deny-text, $padding: 12px 30px);
+    border-radius: 8px;
+    font-size: 1.1rem;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.6;
+    }
+  }
+}

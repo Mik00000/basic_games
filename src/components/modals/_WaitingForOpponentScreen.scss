@@ -1,0 +1,37 @@
+.pop-up.waiting-screen {
+  .content {
+    h2 {
+      @include for-text(title);
+      color: $light-text;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #ccc;
+      font-size: 1rem;
+    }
+
+    h1.heading {
+      user-select: all;
+      cursor: pointer;
+      font-size: 3rem;
+      margin: 10px 0;
+      transition: color 0.3s;
+
+      // We handle dynamic color via inline style or could use a class modifier
+      // But preserving specific styling for this ID display:
+      letter-spacing: 2px;
+      font-family: monospace;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    .exit-btn {
+      // Inherits global button styles, just adding margin
+      // Margin top is handled dynamically in JSX, but we can set default here
+      margin-top: 20px;
+    }
+  }
+}

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Difficulty } from "./gameLogic";
 
 interface DifficultyLevel {
   name: string;
-  difficulty: 1 | 2 | 3 | 4;
+  difficulty: Difficulty;
 }
 
 const ChessStartMenu: React.FC = () => {
@@ -15,15 +16,15 @@ const ChessStartMenu: React.FC = () => {
   const [generalError, setGeneralError] = useState<string>("");
   const [joinGameId, setJoinGameId] = useState<string>("");
   const [joinOrCreateRoom, setJoinOrCreateRoom] = useState<"create" | "join">(
-    "create"
+    "create",
   );
   const navigate = useNavigate();
-  const [difficulty, setDifficulty] = useState<number>(0);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const difficultyLevels: DifficultyLevel[] = [
-    { name: "Easy", difficulty: 1 },
-    { name: "Middle", difficulty: 2 },
-    { name: "Hard", difficulty: 3 },
-    { name: "Expert", difficulty: 4 },
+    { name: "Monkey", difficulty: "monkey" },
+    { name: "Easy", difficulty: "easy" },
+    { name: "Middle", difficulty: "medium" },
+    { name: "Hard", difficulty: "hard" },
   ];
 
   const validateInputs = (): boolean => {
@@ -136,11 +137,23 @@ const ChessStartMenu: React.FC = () => {
             <h2>Bot Settings</h2>
             <input
               type="range"
-              min="1"
-              max="4"
+              min="0"
+              max="3"
               step="1"
-              value={difficulty}
-              onChange={(e) => setDifficulty(Number(e.target.value))}
+              value={
+                difficultyLevels.findIndex(
+                  (l) => l.difficulty === difficulty,
+                ) !== -1
+                  ? difficultyLevels.findIndex(
+                      (l) => l.difficulty === difficulty,
+                    )
+                  : 2
+              }
+              onChange={(e) =>
+                setDifficulty(
+                  difficultyLevels[Number(e.target.value)].difficulty,
+                )
+              }
             />
             <div
               style={{
@@ -153,7 +166,8 @@ const ChessStartMenu: React.FC = () => {
                 <span
                   key={index}
                   style={{
-                    fontWeight: difficulty === index ? "bold" : "normal",
+                    fontWeight:
+                      difficulty === level.difficulty ? "bold" : "normal",
                   }}
                 >
                   {level.name}

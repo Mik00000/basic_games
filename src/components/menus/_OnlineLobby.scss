@@ -1,7 +1,19 @@
-.connect-four-lobby {
+.online-lobby {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+
+  .error-message {
+    color: $deny-text;
+    font-size: 0.8em;
+    margin-top: 5px;
+
+    &.general-error {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+  }
 
   .menu-header {
     h1 {
@@ -107,9 +119,9 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        .role{
+        .role {
           display: flex;
-          svg{
+          svg {
             width: 20px;
             height: 20px;
           }
@@ -118,27 +130,6 @@
           font-size: 1.2rem;
           font-weight: bold;
           position: relative;
-
-          // &::after {
-          //   content: "";
-          //   position: absolute;
-          //   top: 0;
-          //   right: 0;
-          //   width: 17px;
-          //   height: 17px;
-          //   background-color: lighten($secondary,15);
-          //   -webkit-mask-image: url("../assets/icons/pencil.svg");
-          //   mask-image: url("../assets/icons/pencil.svg");
-
-          //   -webkit-mask-repeat: no-repeat;
-          //   mask-repeat: no-repeat;
-
-          //   -webkit-mask-position: center;
-          //   mask-position: center;
-
-          //   -webkit-mask-size: contain;
-          //   mask-size: contain;
-          // }
         }
         .edit {
           display: flex;

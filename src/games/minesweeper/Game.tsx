@@ -1,7 +1,7 @@
 import React, { useReducer, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useStickyStateWithExpiry } from "../../components/utils";
-import Timer, { TimerHandle } from "../../components/Timer";
+import { useStickyStateWithExpiry } from "../../components/common/utils";
+import Timer, { TimerHandle } from "../../components/game/Timer";
 import clockIcon from "../../assets/icons/clock.svg";
 import shovelIcon from "../../assets/icons/shovel.svg";
 import bombIcon from "../../assets/icons/bomb.svg";
@@ -25,36 +25,34 @@ export const Minesweeper: React.FC = () => {
 
   useEffect(() => {
     if (localStorage.getItem("minesweeperState") === null) handleRestart();
-    if (Object.keys(settings).length === 0)
-      navigate("/games/minesweeper-menu");
+    if (Object.keys(settings).length === 0) navigate("/games/minesweeper-menu");
   }, [settings, navigate]);
 
   useEffect(() => {
-    if (Object.keys(settings).length === 0)
-      navigate("/games/minesweeper-menu");
+    if (Object.keys(settings).length === 0) navigate("/games/minesweeper-menu");
   }, []);
 
   const initialGameState: GameState = createInitialGameState(
     gameRows,
     gameCols,
-    bombNumber
+    bombNumber,
   );
 
   const [persistedGameState, setPersistedGameState] =
     useStickyStateWithExpiry<GameState>(
       initialGameState,
       "minesweeperState",
-      TimeToForgotGame
+      TimeToForgotGame,
     );
 
   const [state, dispatch] = useReducer(
     gameReducer,
-    persistedGameState || initialGameState
+    persistedGameState || initialGameState,
   );
 
   const [showPopup, setShowPopup] = useState(false);
   const [pickedTool, setPickedTool] = useState<null | "shovel" | "flag">(
-    window.innerWidth <= 768 ? "shovel" : null
+    window.innerWidth <= 768 ? "shovel" : null,
   );
 
   useEffect(() => {
@@ -173,11 +171,11 @@ export const Minesweeper: React.FC = () => {
                     ? cell.bomb
                       ? "bomb revealed"
                       : cell.bombsAround
-                      ? `bombs-around bombs-around-${cell.bombsAround} revealed`
-                      : "revealed"
+                        ? `bombs-around bombs-around-${cell.bombsAround} revealed`
+                        : "revealed"
                     : cell.flag
-                    ? "flag"
-                    : ""
+                      ? "flag"
+                      : ""
                 }`}
                 key={`cell-${rowIndex}-${cellIndex}`}
                 onClick={() => {

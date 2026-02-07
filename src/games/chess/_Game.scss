@@ -1,18 +1,125 @@
 .chess {
-  // Зміни цю змінну, щоб змінити розмір усієї дошки.
-  // Можна також змінювати її через inline-style у HTML або JS.
   --cell-size: 96px;
   display: flex;
   justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
+  @include for-size(mobile) {
+    height: 100%;
+    justify-content: space-between;
+    padding: 40px 0;
+    --cell-size: calc((100vw - 30px) / 8);
+  }
+  @media screen and (max-width: 450px) {
+    --cell-size: calc((100vw - 20px) / 8);
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    // height: 55px;1
+    padding: 0 20px;
+    position: relative;
+    // @include for-size(mobile) {
+    //   padding: 0 20px;
+    // }
+    .left-part {
+      position: absolute;
+      left: 20px;
+    }
+
+    .mid-part {
+      display: flex;
+      gap: 35px;
+      align-items: center;
+    }
+
+    .right-part {
+      position: absolute;
+      right: 20px;
+      gap: 20px;
+      display: flex;
+    }
+    @include for-size(not-mobile) {
+      &.mobile {
+        display: none;
+      }
+      .picker {
+        display: none;
+      }
+    }
+    @include for-size(mobile) {
+      &.mobile {
+        display: flex;
+        justify-content: space-between;
+        gap: 2px;
+      }
+
+      .mid-part {
+        gap: 0;
+        justify-content: space-between;
+        width: 100%;
+
+        @media screen and (max-width: 410px) {
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+
+          .nickname-display {
+            order: -1;
+            width: 100%;
+            margin-bottom: 5px;
+          }
+
+          .player-1-timers,
+          .player-2-timers {
+            width: 45%;
+            justify-content: center;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 1280px) {
+      .mid-part h1 {
+        font-size: 2rem;
+      }
+      .mid-part .number-timer h1 {
+        font-size: 1.5rem;
+      }
+      @include for-size(mobile) {
+        &:not(.mobile) .exit-btn,
+        &:not(.mobile) .restart-btn,
+        &:not(.mobile) .pause-btn {
+          display: none;
+        }
+      }
+
+      .left-part,
+      .right-part {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
   .board {
+    padding: 20px 0;
     display: flex;
     flex-direction: column;
+    user-select: none;
+    @include for-size(mobile) {
+      justify-content: space-around;
+      // height: 100%;
+    }
 
     .row {
       display: flex;
 
       .cell {
-        // Розміри клітинки тепер динамічні
         width: var(--cell-size);
         height: var(--cell-size);
         display: flex;
@@ -40,16 +147,20 @@
             path {
               fill: #f8f8f8;
               stroke: #303030;
-              // 1.5px при 32px клітинці — це приблизно 0.025 від розміру
               stroke-width: calc(var(--cell-size) * 0.025);
+              @media screen and (max-width: 450px) {
+                stroke-width: calc(var(--cell-size) * 0.06);
+              }
             }
           }
           &.black {
             path {
               fill: #363636;
               stroke: #000000;
-              // Аналогічно масштабуємо обведення
               stroke-width: calc(var(--cell-size) * 0.025);
+              @media screen and (max-width: 450px) {
+                stroke-width: calc(var(--cell-size) * 0.06);
+              }
             }
           }
         }
@@ -65,10 +176,7 @@
             background-color: rgba(247, 247, 105, 0.65);
           }
           .piece {
-            // -10px при 32px клітинці — це ~31% від висоти
-            // transform: translateY(calc(var(--cell-size) * -0.31));
             z-index: 2;
-            // Тінь теж масштабується: Y-зсув та розмиття
             filter: drop-shadow(
               0 calc(var(--cell-size) * 0.15) calc(var(--cell-size) * 0.1)
                 rgba(0, 0, 0, 0.4)
@@ -94,8 +202,84 @@
           height: 100%;
           background-color: rgba(212, 43, 43, 0.65);
         }
+
+        .coordinate-label {
+          position: absolute;
+          font-size: calc(var(--cell-size) * 0.2);
+          font-weight: 600;
+          pointer-events: none;
+          z-index: 5;
+
+          &.rank-label {
+            top: calc(var(--cell-size) / 16);
+            left: calc(var(--cell-size) / 16);
+          }
+
+          &.file-label {
+            bottom: calc(var(--cell-size) / 16);
+            right: calc(var(--cell-size) / 16);
+          }
+          @include for-size(mobile) {
+            font-size: calc(var(--cell-size) * 0.3);
+          }
+        }
+
+        &.white .coordinate-label {
+          color: #769656;
+        }
+
+        &.black .coordinate-label {
+          color: #eeeed2;
+        }
+        .pawn-promotion-dialog {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: fit-content;
+          height: fit-content;
+          background: darken($light-background, 10%);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+          z-index: 10;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+          animation: promotionPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+          button {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            border: none;
+            background-color: transparent;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.2);
+              .piece {
+                transform: scale(1.1);
+              }
+            }
+
+            .piece {
+              width: 80%;
+              height: 80%;
+              transition: transform 0.2s ease;
+            }
+          }
+        }
+        &.black .pawn-promotion-dialog {
+          bottom: 0;
+          top: unset;
+        }
         .available-move {
-          // 10px при 32px клітинці — це ~31%
           width: calc(var(--cell-size) * 0.31);
           height: calc(var(--cell-size) * 0.31);
           background-color: rgba(94, 104, 97, 0.8);
@@ -121,39 +305,71 @@
       }
     }
   }
+  .pop-up.winner {
+    .winner-piece svg {
+      width: calc(var(--cell-size) * 1.35);
+      height: calc(var(--cell-size) * 1.35);
+      path {
+        fill: var(--winner-color);
+        stroke-width: calc(var(--cell-size) * 0.035);
+        stroke: #303030;
+      }
+      @include for-size(mobile) {
+        width: calc(var(--cell-size) * 1.75);
+        height: calc(var(--cell-size) * 1.75);
+        path {
+          stroke-width: calc(var(--cell-size) * 0.06);
+        }
+      }
+    }
+  }
+  .dragged-piece {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0s;
+
+    @media screen and (max-width: 450px) {
+      --cell-size: calc((100vw - 30px) / 8);
+    }
+
+    &.returning {
+      transition:
+        top 0.2s ease-out,
+        left 0.2s ease-out;
+    }
+
+    .piece {
+      width: 85%;
+      height: 85%;
+
+      &.white path {
+        fill: #f8f8f8;
+        stroke: #303030;
+        stroke-width: calc(var(--cell-size) * 0.025);
+      }
+
+      &.black path {
+        fill: #363636;
+        stroke: #000000;
+        stroke-width: calc(var(--cell-size) * 0.025);
+      }
+    }
+  }
 }
 
-.dragged-piece {
-  position: fixed;
-  z-index: 1000;
-  pointer-events: none;
-  width: var(--cell-size);
-  height: var(--cell-size);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0s; // Instant movement during drag
-
-  &.returning {
-    transition:
-      top 0.2s ease-out,
-      left 0.2s ease-out;
+@keyframes promotionPop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
   }
-
-  .piece {
-    width: 85%;
-    height: 85%;
-
-    &.white path {
-      fill: #f8f8f8;
-      stroke: #303030;
-      stroke-width: calc(var(--cell-size) * 0.025);
-    }
-
-    &.black path {
-      fill: #363636;
-      stroke: #000000;
-      stroke-width: calc(var(--cell-size) * 0.025);
-    }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
   }
 }

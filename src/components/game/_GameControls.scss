@@ -1,0 +1,85 @@
+@import "../../styles/Base";
+
+// Common styles for the icon within these buttons
+.exit-btn,
+.pause-btn,
+.restart-btn {
+  display: flex; // Ensure flex
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  // Ensure default heights to prevent blowing up
+  height: fit-content;
+  max-height: 45px; // Approximate standard button height
+
+  .icon {
+    display: none;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    filter: brightness(0) invert(1);
+    object-fit: contain;
+  }
+}
+
+.exit-btn {
+  @include for-button(
+    $bg-color: $deny-text,
+    $text-color: $light-text,
+    $padding: 10px 20px
+  );
+}
+
+.pause-btn {
+  cursor: pointer;
+  @include for-button(
+    $bg-color: darken($confirm-text, 10),
+    $padding: 10px 46px
+  );
+  &.paused {
+    background-color: $deny-text;
+  }
+}
+
+.restart-btn {
+  @include for-button($bg-color: $secondary, $padding: 10px 46px);
+}
+
+// Small screen adjustments (icon only mode)
+@media (max-width: 1280px) {
+  .exit-btn:not(.force-text),
+  .pause-btn:not(.force-text),
+  .restart-btn:not(.force-text) {
+    padding: 10px !important;
+    min-width: 44px;
+    height: 44px; // Square-ish
+    justify-content: center;
+    align-items: center;
+    border-radius: 10%;
+    span {
+      display: none;
+    }
+    .icon {
+      display: block; // Show icon
+    }
+  }
+  .pause-btn:not(.force-text),
+  .restart-btn:not(.force-text) {
+    position: relative;
+
+    &:after {
+      content: var(--vote-count);
+      position: absolute;
+      top: 0;
+      right: 10%;
+      color: $light-text;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+  }
+}
