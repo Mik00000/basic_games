@@ -38,7 +38,7 @@ interface UseOnlineGameReturn<T extends GameState> {
   isRateLimited: boolean;
   inactivityWarning: { message: string; timeLeft: number } | null;
   createRoom: (
-    data: Omit<CreateRoomData, "initialState"> & { initialState: T }
+    data: Omit<CreateRoomData, "initialState"> & { initialState: T },
   ) => Promise<CallbackResponse>;
   joinRoom: (data: JoinRoomData) => Promise<CallbackResponse>;
   leaveRoom: () => Promise<CallbackResponse>;
@@ -50,7 +50,7 @@ interface UseOnlineGameReturn<T extends GameState> {
   redoMove: () => Promise<CallbackResponse>;
   updateRolePermissions: (
     role: string,
-    permissions: Partial<RolePermissions>
+    permissions: Partial<RolePermissions>,
   ) => Promise<CallbackResponse>;
   updatePlayerData: (data: {
     username?: string;
@@ -68,7 +68,7 @@ let globalSocket: Socket<ServerToClientEvents, ClientToServerEvents> | null =
   null;
 
 export function useOnlineGame<T extends GameState = GameState>(
-  options: UseOnlineGameOptions = {}
+  options: UseOnlineGameOptions = {},
 ): UseOnlineGameReturn<T> {
   const {
     serverUrl = import.meta.env.REACT_APP_SOCKET_SERVER_URL ||
@@ -82,7 +82,7 @@ export function useOnlineGame<T extends GameState = GameState>(
   const [isConnecting, setIsConnecting] = useState(false);
   const [socketId, setSocketId] = useState<string | null>(null);
   const [currentRoom, setCurrentRoom] = useState<Partial<GameRoom> | null>(
-    null
+    null,
   );
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [gameState, setGameState] = useState<T | null>(null);
@@ -116,6 +116,10 @@ export function useOnlineGame<T extends GameState = GameState>(
         reconnectionDelay,
         timeout: 20000,
       });
+    } else if (!globalSocket.connected) {
+      // Якщо сокет є, але від'єднаний (наприклад, після виходу в меню) - під'єднуємось
+      setIsConnecting(true);
+      globalSocket.connect();
     }
 
     const socket = globalSocket;
@@ -251,10 +255,10 @@ export function useOnlineGame<T extends GameState = GameState>(
     // Додаткові події (логи)
     // Примітка: "gameStarted" має бути в ServerToClientEvents, інакше TS тут підкреслить
     socket.on("gameStarted", () =>
-      console.log("Game started logic handled by routing")
+      console.log("Game started logic handled by routing"),
     );
     socket.on("playerJoined", (p: Player) =>
-      console.log("Joined:", p.username)
+      console.log("Joined:", p.username),
     );
 
     // 3. CLEANUP
@@ -286,7 +290,7 @@ export function useOnlineGame<T extends GameState = GameState>(
             { roomId, playerId, username },
             (res) => {
               if (!res.success) localStorage.removeItem("game_session");
-            }
+            },
           );
         } catch (e) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -306,7 +310,7 @@ export function useOnlineGame<T extends GameState = GameState>(
           roomId: currentRoom.id,
           playerId: currentPlayer.id,
           username: currentPlayer.username,
-        })
+        }),
       );
     }
   }, [currentRoom?.id, currentPlayer?.id, currentPlayer?.username]);
@@ -315,27 +319,67 @@ export function useOnlineGame<T extends GameState = GameState>(
 
   const createRoom = useCallback(
     async (
-      data: Omit<CreateRoomData, "initialState"> & { initialState: T }
+      data: Omit<CreateRoomData, "initialState"> & {
+        initialState: T;
+        force?: boolean;
+      },
     ) => {
       if (!globalSocket || !globalSocket.connected)
         return {
           success: false,
           error: { code: "OFFLINE", message: "Offline" },
         };
-      return new Promise<CallbackResponse>((resolve) =>
-        globalSocket!.emit("createRoom", data, resolve)
-      );
+      return new Promise<CallbackResponse>((resolve) => {
+        const timeout = setTimeout(() => {
+          resolve({
+            success: false,
+            error: { code: "TIMEOUT", message: "Server request timed out" },
+          });
+        }, 5000); // 5s timeout
+
+        globalSocket!.emit("createRoom", data, (res: CallbackResponse) => {
+          clearTimeout(timeout);
+          resolve(res);
+        });
+      });
     },
-    []
+    [],
   );
 
-  const joinRoom = useCallback(async (data: JoinRoomData) => {
-    if (!globalSocket || !globalSocket.connected)
-      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
-    return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("joinRoom", data, resolve)
-    );
-  }, []);
+  const joinRoom = useCallback(
+    async (data: JoinRoomData & { force?: boolean }) => {
+      if (!globalSocket || !globalSocket.connected)
+        return {
+          success: false,
+          error: { code: "OFFLINE", message: "Offline" },
+        };
+
+      // [FIX] If forcing a join, assume we are leaving the old room.
+      // Clear local state immediately to prevents "zombie" UI state.
+      if (data.force) {
+        setCurrentRoom(null);
+        setCurrentPlayer(null);
+        setGameState(null);
+        setChatMessages([]);
+        localStorage.removeItem("game_session");
+      }
+
+      return new Promise<CallbackResponse>((resolve) => {
+        const timeout = setTimeout(() => {
+          resolve({
+            success: false,
+            error: { code: "TIMEOUT", message: "Server request timed out" },
+          });
+        }, 5000); // 5s timeout
+
+        globalSocket!.emit("joinRoom", data, (res: CallbackResponse) => {
+          clearTimeout(timeout);
+          resolve(res);
+        });
+      });
+    },
+    [],
+  );
 
   const leaveRoom = useCallback(async () => {
     if (!globalSocket || !globalSocket.connected)
@@ -355,7 +399,7 @@ export function useOnlineGame<T extends GameState = GameState>(
     if (!globalSocket || !globalSocket.connected)
       return { success: false, error: { code: "OFFLINE", message: "Offline" } };
     return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("startGame", resolve)
+      globalSocket!.emit("startGame", resolve),
     );
   }, []);
 
@@ -375,7 +419,7 @@ export function useOnlineGame<T extends GameState = GameState>(
     if (!globalSocket || !globalSocket.connected)
       return { success: false, error: { code: "OFFLINE", message: "Offline" } };
     return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("sendChatMessage", { text }, resolve)
+      globalSocket!.emit("sendChatMessage", { text }, resolve),
     );
   }, []);
 
@@ -383,21 +427,21 @@ export function useOnlineGame<T extends GameState = GameState>(
     if (!globalSocket || !globalSocket.connected)
       return { success: false, error: { code: "OFFLINE", message: "Offline" } };
     return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("sendVote", { type }, resolve)
+      globalSocket!.emit("sendVote", { type }, resolve),
     );
   }, []);
 
   const undoMove = useCallback(async () => {
     if (!globalSocket) return { success: false };
     return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("undoMove", resolve)
+      globalSocket!.emit("undoMove", resolve),
     );
   }, []);
 
   const redoMove = useCallback(async () => {
     if (!globalSocket) return { success: false };
     return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("redoMove", resolve)
+      globalSocket!.emit("redoMove", resolve),
     );
   }, []);
 
@@ -408,11 +452,11 @@ export function useOnlineGame<T extends GameState = GameState>(
         globalSocket!.emit(
           "updateRolePermissions",
           { role, permissions },
-          resolve
-        )
+          resolve,
+        ),
       );
     },
-    []
+    [],
   );
 
   const updatePlayerData = useCallback(
@@ -424,10 +468,10 @@ export function useOnlineGame<T extends GameState = GameState>(
       if (!globalSocket) return { success: false };
       // Оновлення передаємо як { gameData: data }
       return new Promise<CallbackResponse>((resolve) =>
-        globalSocket!.emit("updatePlayerData", { gameData: data }, resolve)
+        globalSocket!.emit("updatePlayerData", { gameData: data }, resolve),
       );
     },
-    []
+    [],
   );
 
   const clearError = useCallback(() => {
@@ -446,7 +490,7 @@ export function useOnlineGame<T extends GameState = GameState>(
     if (!globalSocket || !globalSocket.connected) return { success: false };
     setInactivityWarning(null); // Clear local warning instantly on action
     return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("heartbeat", resolve)
+      globalSocket!.emit("heartbeat", resolve),
     );
   }, []);
 

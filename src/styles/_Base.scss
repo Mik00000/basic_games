@@ -113,12 +113,12 @@
   // @include for-button($bg-color: $dark-background, $padding: 14px 46px);
 
   @include for-text(button);
-
+  user-select: none;
   background-color: $bg-color;
   color: $text-color;
   @if $bg-color == transparent or $bg-color == $dark-background {
     border: 1px solid $border-color;
-  }@else{
+  } @else {
     border: none;
   }
   padding: $padding;
@@ -134,16 +134,15 @@
   }
 }
 
-$primary:  darken(#4452fe,20);
+$primary: darken(#4452fe, 20);
 $secondary: #112d57;
 $first-text: #000;
 $light-text: #fff;
-$confirm-text:#28a745;
-$deny-text:#dc3545;
+$confirm-text: #28a745;
+$deny-text: #dc3545;
 $second-text: #5c5c5c;
 $dark-background: #181818;
 $light-background: #fff;
-
 
 *,
 *::before,
@@ -231,19 +230,17 @@ div {
 
 @font-face {
   font-family: "Graphik";
-  src: url("/public/fonts/Graphik/GraphikRegular.otf") format("opentype");
+  src: url("../assets/fonts/Graphik/GraphikRegular.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Graphik-Medium";
-  src: url("/public/fonts/Graphik/GraphikMedium.otf") format("opentype");
+  src: url("../assets/fonts/Graphik/GraphikMedium.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
 }
-
-
 
 .connection-status {
   position: fixed;
@@ -256,11 +253,124 @@ div {
 }
 
 .connection-status.connected {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
 }
 
 .connection-status.connecting {
-  background: #FFC107;
+  background: #ffc107;
   color: black;
+}
+
+// --- GLOBAL MODAL STYLES ---
+
+.pause-overlay {
+  position: fixed; // Fixed to cover entire screen regardless of scroll
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.6); // Slightly darker
+  z-index: 999; // High z-index
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 40px;
+
+  .pop-up {
+    position: relative; // Reset position since overlay handles centering
+    transform: none;
+    top: auto;
+    left: auto;
+    box-shadow: 0 0 75px 30px rgba(0, 0, 0, 0.7);
+  }
+}
+
+.pop-up {
+  position: absolute; // Default for non-overlay usage
+  width: 500px;
+  max-width: 90vw; // Responsive width
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: $dark-background;
+  border-radius: 15px; // Slightly more rounded
+  border: 1px solid lighten($dark-background, 10);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  z-index: 1000;
+
+  .content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    padding: 40px 30px;
+
+    .heading {
+      @include for-text(second-headline);
+      text-align: center;
+      line-height: 1.2;
+
+      @include for-size(mobile) {
+        font-size: 32px; // Smaller on mobile
+      }
+    }
+
+    .control-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      width: 100%;
+
+      .leave-btn,
+      .restart-btn,
+      .back-btn,
+      .exit-button,
+      .primary,
+      .secondary {
+        // Added exit-button, primary, secondary aliases
+        @include for-button($bg-color: $secondary, $padding: 14px 46px);
+        width: 100%;
+        max-width: 200px;
+        text-wrap: nowrap; 
+
+      }
+
+      .secondary {
+        background-color: transparent;
+        border: 1px solid $light-text;
+      }
+    }
+
+    .winner-checker {
+      // Kept here as it is often used in popup
+      position: relative;
+      width: 100px; // Default fallback
+      height: 100px;
+    }
+
+    .timer {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+// Mobile Responsive Adjustments
+@media (max-width: 600px) {
+  .pop-up {
+    width: 95%;
+
+    .content {
+      padding: 30px 20px;
+      gap: 20px;
+    }
+  }
 }

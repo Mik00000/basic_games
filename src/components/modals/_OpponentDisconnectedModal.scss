@@ -1,0 +1,37 @@
+.pause-overlay.opponent-disconnected {
+  // .opponent-disconnected class is on the content, wait.
+  // In TSX I put it on the content div inside pop-up, or did I put it on overlay?
+  // I put it on the overlay: <div className="pause-overlay opponent-disconnected" ...>
+  // Actually checking my previous tool call:
+  // Step 73: <div className="content opponent-disconnected"> inside OpponentDisconnectedModal.tsx
+  // No, Step 74: <div className="content opponent-disconnected"> inside OpponentDisconnectedModal.tsx
+  // So it's on the content div.
+
+  .pop-up {
+    .content.opponent-disconnected {
+      .heading {
+        color: $light-text;
+      }
+
+      p {
+        text-align: center;
+        font-size: 1.2rem;
+        color: darken($light-text, 10%);
+      }
+
+      .timer {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 10px 0;
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .control-buttons {
+        .leave-btn {
+          // Inherits
+        }
+      }
+    }
+  }
+}

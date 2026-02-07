@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import connectFourImg from "../assets/game-examles/connect-four.png";
 import minesweeperImg from "../assets/game-examles/minesweeper.png";
+import chessImg from "../assets/game-examles/chess.png";
 
 const games = [
   {
@@ -18,6 +19,13 @@ const games = [
     description:
       "Two-player strategy game where you align four pieces in a row to win.",
     img:connectFourImg
+  },
+    {
+    name: "Chess",
+    url: "chess-menu",
+    description:
+      "Classic strategy game where you try to checkmate your opponent's king.",
+    img:chessImg
   },
 ];
 

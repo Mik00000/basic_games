@@ -1,4 +1,4 @@
-import { generateRandomNumber } from "../../components/utils";
+import { generateRandomNumber } from "../../components/common/utils";
 import {
   MAX_ROWS,
   MAX_COLS,
@@ -35,19 +35,19 @@ type Dispatch = (action: GameAction) => void;
 function getBotSettings(difficulty: number): {
   randomProbability: number;
   searchDepth: number;
-  timeModifier: number
+  timeModifier: number;
 } {
   switch (difficulty) {
     case 1:
-      return { randomProbability: 0.85, searchDepth: 2, timeModifier:1.2 }; // випадковий хід завжди (minimax тут не використовується)
+      return { randomProbability: 0.85, searchDepth: 2, timeModifier: 1.2 }; // випадковий хід завжди (minimax тут не використовується)
     case 2:
-      return { randomProbability: 0.5, searchDepth: 3, timeModifier:1  };
+      return { randomProbability: 0.5, searchDepth: 3, timeModifier: 1 };
     case 3:
-      return { randomProbability: 0, searchDepth: 5, timeModifier:0.9  };
+      return { randomProbability: 0, searchDepth: 5, timeModifier: 0.9 };
     case 4:
-      return { randomProbability: 0, searchDepth: 7, timeModifier:0.7  };
+      return { randomProbability: 0, searchDepth: 7, timeModifier: 0.7 };
     default:
-      return { randomProbability: 0.85, searchDepth: 2, timeModifier:1.2  }; // за замовчуванням дуже легкий
+      return { randomProbability: 0.85, searchDepth: 2, timeModifier: 1.2 }; // за замовчуванням дуже легкий
   }
 }
 
@@ -62,22 +62,29 @@ function getBotSettings(difficulty: number): {
 export const botMove = (
   state: GameState,
   dispatch: Dispatch,
-  difficulty: number
+  difficulty: number,
 ): void => {
   const validMoves = getValidMoves(state.field);
   if (validMoves.length === 0) return;
 
   // 1. Перевірка миттєвих виграшних ходів або блокування суперника.
-  const { randomProbability, searchDepth, timeModifier } = getBotSettings(difficulty);
+  const { randomProbability, searchDepth, timeModifier } =
+    getBotSettings(difficulty);
 
   const immediateMove =
     Math.random() >= randomProbability * 0.85 //Перевірка на тупість, що б він міг не помітити виграшний хід при низькій складності
       ? checkImmediateMoves(state.field, validMoves, Player.Bot, Player.Human)
       : null;
   if (immediateMove !== null) {
-    setTimeout(() => {
-      dispatch({ type: "DROP_CHECKER", column: immediateMove });
-    }, generateRandomNumber(BOT_DELAY_MIN*timeModifier, BOT_DELAY_MAX*timeModifier));
+    setTimeout(
+      () => {
+        dispatch({ type: "DROP_CHECKER", column: immediateMove });
+      },
+      generateRandomNumber(
+        BOT_DELAY_MIN * timeModifier,
+        BOT_DELAY_MAX * timeModifier,
+      ),
+    );
     return;
   }
 
@@ -85,9 +92,15 @@ export const botMove = (
   if (Math.random() < randomProbability) {
     const randomMove =
       validMoves[Math.floor(Math.random() * validMoves.length)];
-    setTimeout(() => {
-      dispatch({ type: "DROP_CHECKER", column: randomMove });
-    }, generateRandomNumber(BOT_DELAY_MIN*timeModifier, BOT_DELAY_MAX*timeModifier));
+    setTimeout(
+      () => {
+        dispatch({ type: "DROP_CHECKER", column: randomMove });
+      },
+      generateRandomNumber(
+        BOT_DELAY_MIN * timeModifier,
+        BOT_DELAY_MAX * timeModifier,
+      ),
+    );
     return;
   }
 
@@ -97,11 +110,17 @@ export const botMove = (
     validMoves,
     Player.Bot,
     Player.Human,
-    searchDepth
+    searchDepth,
   );
-  setTimeout(() => {
-    dispatch({ type: "DROP_CHECKER", column: bestMove });
-  }, generateRandomNumber(BOT_DELAY_MIN*timeModifier, BOT_DELAY_MAX*timeModifier));
+  setTimeout(
+    () => {
+      dispatch({ type: "DROP_CHECKER", column: bestMove });
+    },
+    generateRandomNumber(
+      BOT_DELAY_MIN * timeModifier,
+      BOT_DELAY_MAX * timeModifier,
+    ),
+  );
 };
 
 /**
@@ -137,7 +156,7 @@ function checkImmediateMoves(
   field: number[][],
   validMoves: number[],
   botPlayer: Player,
-  humanPlayer: Player
+  humanPlayer: Player,
 ): number | null {
   // Перевірка на переможний хід для бота.
   for (const col of validMoves) {
@@ -175,7 +194,7 @@ const transpositionTable = new Map<string, number>();
 function getFieldKey(
   field: number[][],
   depth: number,
-  isMaximizing: boolean
+  isMaximizing: boolean,
 ): string {
   return JSON.stringify({ field, depth, isMaximizing });
 }
@@ -186,7 +205,7 @@ function getFieldKey(
  * @param field Поточний стан поля.
  * @param botPlayer Гравець-бот.
  * @param humanPlayer Гравець-суперник.
- * @param depth Глибина пошуку. 
+ * @param depth Глибина пошуку.
  * @returns Найкращий хід (номер колонки).
  */
 function getBestMove(
@@ -194,7 +213,7 @@ function getBestMove(
   validMoves: number[],
   botPlayer: Player,
   humanPlayer: Player,
-  depth: number
+  depth: number,
 ): number {
   let bestScore = -Infinity;
   let bestMove: number | null = null;
@@ -209,7 +228,7 @@ function getBestMove(
       Infinity,
       false,
       botPlayer,
-      humanPlayer
+      humanPlayer,
     );
     if (score > bestScore) {
       bestScore = score;
@@ -239,7 +258,7 @@ function minimax(
   beta: number,
   isMaximizing: boolean,
   botPlayer: Player,
-  humanPlayer: Player
+  humanPlayer: Player,
 ): number {
   const key = getFieldKey(field, depth, isMaximizing);
   if (transpositionTable.has(key)) {
@@ -266,7 +285,7 @@ function minimax(
         beta,
         false,
         botPlayer,
-        humanPlayer
+        humanPlayer,
       );
       bestEval = Math.max(bestEval, evalScore);
       alpha = Math.max(alpha, evalScore);
@@ -284,7 +303,7 @@ function minimax(
         beta,
         true,
         botPlayer,
-        humanPlayer
+        humanPlayer,
       );
       bestEval = Math.min(bestEval, evalScore);
       beta = Math.min(beta, evalScore);
@@ -304,7 +323,7 @@ function minimax(
 function evaluateBoard(
   field: number[][],
   botPlayer: Player,
-  humanPlayer: Player
+  humanPlayer: Player,
 ): number {
   let score = 0;
 

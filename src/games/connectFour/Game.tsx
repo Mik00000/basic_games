@@ -1,14 +1,12 @@
-import React, { useReducer, useState, useEffect, useMemo, useRef } from "react";
-import { FirstPlayerSelector } from "../../components/FirstPlayerSelector/FirstPlayerSelector";
+import React, { useReducer, useState, useEffect, useMemo } from "react";
+import { FirstPlayerSelector } from "../../components/game/FirstPlayerSelector/FirstPlayerSelector";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  generateRandomNumber,
   hexToRgb,
   useStickyStateWithExpiry,
-} from "../../components/utils";
+} from "../../components/common/utils";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
-import Timer from "../../components/Timer";
-import ShowTextAfterTime from "../../components/ShowTextAfterTime";
+import Timer from "../../components/game/Timer";
 import {
   MAX_ROWS,
   CIRCLE_TIMER_DURATION,
@@ -21,9 +19,14 @@ import {
 import { initialGameState } from "./gameLogic";
 import { gameReducer } from "./gameReducer";
 import { botMove } from "./botBrains";
+// Icons are now used in GameControls
 
 // --- ONLINE IMPORTS ---
 import { useOnlineGame } from "../../hooks/useOnlineGame";
+import { ConnectingScreen } from "../../components/modals/ConnectingScreen";
+import { WaitingForOpponentScreen } from "../../components/modals/WaitingForOpponentScreen";
+import { OpponentDisconnectedModal } from "../../components/modals/OpponentDisconnectedModal";
+import { useOpponentDisconnect } from "../../hooks/useOpponentDisconnect";
 
 interface C4OnlineState {
   field: number[][];
@@ -36,6 +39,13 @@ interface C4OnlineState {
   gameStartTime?: number;
 }
 
+import {
+  ExitButton,
+  MobileExitButton,
+  PauseButton,
+  RestartButton,
+} from "../../components/game/GameControls";
+
 export const ConnectFour: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,18 +56,22 @@ export const ConnectFour: React.FC = () => {
   const gameMode = locState.gameMode || (onlineGameId ? "online" : "local");
   const isOnline = gameMode === "online";
   const difficulty = locState.difficulty || 1;
-  // const CIRCLE_TIMER_DURATION = 22; // ВЖЕ Є В ІМПОРТАХ, ВИДАЛИ ЦЕЙ РЯДОК
 
   // --- LOCAL LOGIC HOOKS ---
+  const localGameId = locState.localGameId || "";
+  const gameStateKey = localGameId
+    ? `connectFourGameState_${localGameId}`
+    : "connectFourGameState";
+
   const [stickyGameState, setStickyGameState] = useStickyStateWithExpiry(
     initialGameState,
-    "connectFourGameState",
-    TIME_TO_FORGOT_GAME
+    gameStateKey,
+    TIME_TO_FORGOT_GAME,
   );
 
   const [localState, dispatch] = useReducer(
     gameReducer,
-    isOnline ? initialGameState : stickyGameState
+    isOnline ? initialGameState : stickyGameState,
   );
 
   useEffect(() => {
@@ -72,8 +86,6 @@ export const ConnectFour: React.FC = () => {
     currentRoom,
     currentPlayer: onlineMe,
     gameState: onlineState,
-    createRoom,
-    joinRoom,
     leaveRoom,
     makeMove,
     sendVote,
@@ -83,14 +95,50 @@ export const ConnectFour: React.FC = () => {
   useEffect(() => {
     if (!isOnline) return;
 
+    // Remove the aggressive timeout redirect.
+    // Instead, trust the hook state.
+    // If we are disconnected but reconnecting, let it spin.
+
+    // Only log if connection takes a while
     const timeout = setTimeout(() => {
-      if (!isConnected && !currentRoom && !locState.reconnecting) {
-        console.log("Session lost or failed to connect");
+      if (!isConnected && !currentRoom) {
+        console.log("Still connecting to online game...");
       }
     }, 5000);
 
+    // [FIX] Redirect to lobby if no session found after connection
+    if (
+      isConnected &&
+      !currentRoom &&
+      onlineGameId &&
+      !localStorage.getItem("game_session")
+    ) {
+      // If we are connected (socket active) but have no room and no session token,
+      // we definitely can't play here. Redirect to lobby to join properly.
+      navigate(`/games/connect4/lobby/${onlineGameId}`, { replace: true });
+    }
+
     return () => clearTimeout(timeout);
-  }, [isOnline, isConnected, currentRoom, navigate, locState]);
+  }, [isOnline, isConnected, currentRoom, onlineGameId, navigate]);
+
+  // --- HANDLE BROWSER BACK BUTTON ---
+  // --- HANDLE COMPONENT UNMOUNT (Navigation/Back Button) ---
+  const connectionRef = React.useRef({ isConnected, currentRoom });
+
+  useEffect(() => {
+    connectionRef.current = { isConnected, currentRoom };
+  }, [isConnected, currentRoom]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount (navigation away)
+      const { isConnected, currentRoom } = connectionRef.current;
+      if (isOnline && isConnected && currentRoom) {
+        console.log("Leaving room on unmount");
+        leaveRoom();
+      }
+    };
+  }, [isOnline, leaveRoom]); // leaveRoom is stable, isOnline is config
 
   // --- DATA MAPPING ---
 
@@ -99,11 +147,12 @@ export const ConnectFour: React.FC = () => {
 
   useEffect(() => {
     if (isOnline) {
+      setNow(Date.now()); // Update immediately on any online change (e.g. state update)
       // Оновлюємо стейт "теперішнього часу" кожні 200мс
       const interval = setInterval(() => setNow(Date.now()), 200);
       return () => clearInterval(interval);
     }
-  }, [isOnline]);
+  }, [isOnline, onlineState]); // Sync when state updates as well
 
   // --- FIX 1: Додано tick в залежності ---
   // Тепер useMemo перераховується кожні 200мс, перевіряючи Date.now()
@@ -146,19 +195,19 @@ export const ConnectFour: React.FC = () => {
   const p2Id = isOnline ? onlineState?.players?.[1] : undefined;
 
   const onlinePlayer1Obj = currentRoom?.players?.find(
-    (p: any) => p.id === p1Id
+    (p: any) => p.id === p1Id,
   );
   const onlinePlayer2Obj = currentRoom?.players?.find(
-    (p: any) => p.id === p2Id
+    (p: any) => p.id === p2Id,
   );
 
   const p1Name = isOnline
-    ? onlinePlayer1Obj?.username ?? "Player 1"
-    : locState.playerOneName ?? "Player 1";
+    ? (onlinePlayer1Obj?.username ?? "Player 1")
+    : (locState.playerOneName ?? "Player 1");
 
   const p2NameRaw = isOnline
-    ? onlinePlayer2Obj?.username ?? "Waiting..."
-    : locState.playerTwoName ?? "Player 2";
+    ? (onlinePlayer2Obj?.username ?? "Waiting...")
+    : (locState.playerTwoName ?? "Player 2");
 
   const effectivePlayerTwoName =
     !isOnline && gameMode === "bot" ? "Bot" : p2NameRaw;
@@ -207,31 +256,64 @@ export const ConnectFour: React.FC = () => {
 
   const [player1TimerKey, setPlayer1TimerKey] = useState(0);
   const [player2TimerKey, setPlayer2TimerKey] = useState(0);
+  const [timerSyncKey, setTimerSyncKey] = useState(0); // For forcing sync on drift
+
+  // --- OFFLINE MODAL LOGIC ---
+
+  // --- OFFLINE MODAL LOGIC (Extracted Hook) ---
+  const { showOfflineModal, offlineTimer, opponentName } =
+    useOpponentDisconnect({
+      isOnline,
+      currentRoom: currentRoom as any,
+      currentUser: onlineMe || null,
+    });
+
+  const timer1Key = localGameId
+    ? `circleTimer1RemainingTime_${localGameId}`
+    : "circleTimer1RemainingTime";
+  const timer2Key = localGameId
+    ? `circleTimer2RemainingTime_${localGameId}`
+    : "circleTimer2RemainingTime";
 
   const [timer1RemainingTime, setTimer1RemainingTime] =
     useStickyStateWithExpiry<number>(
       CIRCLE_TIMER_DURATION,
-      "circleTimer1RemainingTime",
-      TIME_TO_FORGOT_GAME
+      timer1Key,
+      TIME_TO_FORGOT_GAME,
     );
   const [timer2RemainingTime, setTimer2RemainingTime] =
     useStickyStateWithExpiry<number>(
       CIRCLE_TIMER_DURATION,
-      "circleTimer2RemainingTime",
-      TIME_TO_FORGOT_GAME
+      timer2Key,
+      TIME_TO_FORGOT_GAME,
     );
 
   const [circleTimer1Key, setCircleTimer1Key] = useState(1);
   const [circleTimer2Key, setCircleTimer2Key] = useState(1);
 
   const cleanLocalStorage = () => {
+    // If we have a specific localGameId, clear its specific keys.
+    // If not, clear the default legacy keys (or both for safety, but focus on current context).
+    const suffix = localGameId ? `_${localGameId}` : "";
+
     const keys = [
-      "connectFourGameState",
-      "circleTimer1RemainingTime",
-      "circleTimer2RemainingTime",
-      "connectFourTimerTime1",
-      "connectFourTimerTime2",
+      `connectFourGameState${suffix}`,
+      `circleTimer1RemainingTime${suffix}`,
+      `circleTimer2RemainingTime${suffix}`,
+      `connectFourTimerTime1${suffix}`,
+      `connectFourTimerTime2${suffix}`,
     ];
+    // Also clear default keys just in case mixed usage (user request: "cleanliness")
+    if (localGameId) {
+      keys.push(
+        "connectFourGameState",
+        "circleTimer1RemainingTime",
+        "circleTimer2RemainingTime",
+        "connectFourTimerTime1",
+        "connectFourTimerTime2",
+      );
+    }
+
     keys.forEach((key) => localStorage.removeItem(key));
     setPlayer1TimerKey((p) => p + 1);
     setPlayer2TimerKey((p) => p + 1);
@@ -242,7 +324,10 @@ export const ConnectFour: React.FC = () => {
   };
 
   const handleExit = async () => {
-    if (isOnline) await leaveRoom();
+    if (isOnline) {
+      // Manual leave -> Forfeit if playing
+      await leaveRoom();
+    }
     cleanLocalStorage();
     navigate("/games/connect4-menu");
   };
@@ -280,6 +365,12 @@ export const ConnectFour: React.FC = () => {
     return votesCount > 0
       ? `Restart (${votesCount}/${playersCount})`
       : "Restart";
+  };
+  const getActiveVoteCount = (voteType: string) => {
+    if (!isOnline) return 0;
+    const activeVote = currentRoom?.activeVote;
+    const isRestartVoting = activeVote?.type === voteType;
+    return isRestartVoting ? activeVote.voters.length : 0;
   };
 
   // --- TIME CALCULATION ---
@@ -448,6 +539,14 @@ export const ConnectFour: React.FC = () => {
     currentRoom &&
     (currentRoom.players?.length || 0) < 2;
 
+  if (isOnline) {
+    if (!isConnected || !currentRoom || !onlineMe) {
+      return (
+        <ConnectingScreen onCancel={() => navigate("/games/connect4-menu")} />
+      );
+    }
+  }
+
   return (
     <section
       className="connect-four"
@@ -459,81 +558,32 @@ export const ConnectFour: React.FC = () => {
         } as React.CSSProperties
       }
     >
-      {isOnline && !isConnected && (
-        <div className="pop-up">
-          <h1 className="heading">Connecting...</h1>
-        </div>
-      )}
+      {isOnline && !isConnected && <ConnectingScreen onCancel={handleExit} />}
 
       {isOnline && isWaitingForOpponent && (
-        <div className="pop-up">
-          <div className="content">
-            <h2 style={{ color: "white", marginBottom: "20px" }}>
-              Waiting for opponent...
-            </h2>
-            <p style={{ color: "#ccc" }}>Share this Room ID:</p>
-            <h1
-              className="heading"
-              style={{
-                userSelect: "all",
-                cursor: "pointer",
-                fontSize: "3rem",
-                margin: "10px 0",
-              }}
-              onClick={() => {
-                if (currentRoom?.id)
-                  navigator.clipboard.writeText(currentRoom.id);
-              }}
-            >
-              {currentRoom?.id}
-            </h1>
-            <button className="exit-btn" onClick={handleExit}>
-              Cancel
-            </button>
-          </div>
-        </div>
+        <WaitingForOpponentScreen
+          roomId={currentRoom?.id}
+          onCancel={handleExit}
+        />
       )}
-
-      <div className="top-bar mobile">
-        <button onClick={handleExit} className="exit-btn">
-          Exit
-        </button>
-        <button
-          onClick={handlePauseToggle}
-          className={`pause-btn ${
-            currentRoom?.status === "paused" || isPause ? "paused" : ""
-          }`}
-          style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-          disabled={
-            (isOnline && currentRoom?.activeVote?.type === "restart") ||
-            isStartAnimation
-          }
-        >
-          {getPauseButtonText()}
-        </button>
-        <button
-          onClick={handleRestart}
-          className="restart-btn"
-          style={{ opacity: isStartAnimation ? 0.5 : 1 }} // Візуальний фідбек
-        >
-          {getRestartButtonText()}
-        </button>
-      </div>
 
       <div className="top-bar">
         <div className="left-part">
-          <button onClick={handleExit} className="exit-btn">
-            Exit to Menu
-          </button>
+          <ExitButton onClick={handleExit} />
         </div>
         <div className="mid-part">
           <div className="player-1-timers">
             {!isOnline ? (
               <Timer
                 startTime={PLAYER_MAX_GAME_TIME}
-                timerName={"connectFourTimerTime1"}
+                timerName={
+                  localGameId
+                    ? `connectFourTimerTime1_${localGameId}`
+                    : "connectFourTimerTime1"
+                }
                 timeToForgotTimer={TIME_TO_FORGOT_GAME}
                 pause={
+                  state.currentPlayer !== 1 ||
                   state.currentPlayer !== 1 ||
                   Boolean(state.winner) ||
                   isPause ||
@@ -551,7 +601,11 @@ export const ConnectFour: React.FC = () => {
                 pause={
                   onlineState?.currentTurn !== p1Id ||
                   !!onlineState?.winner ||
-                  isStartAnimation
+                  isStartAnimation ||
+                  // Fix: Pause timer if opponent is offline to avoid confusion (optional, but good UX)
+                  (isOnline &&
+                    currentRoom?.players?.length === 2 &&
+                    !currentRoom.players[1].isOnline)
                 }
                 className="online-timer"
               />
@@ -561,7 +615,7 @@ export const ConnectFour: React.FC = () => {
                 isOnline
                   ? `p1-turn-${
                       onlineState?.timers?.[p1Id || ""]?.lastMoveTimestamp
-                    }-${state.currentPlayer}`
+                    }-${state.currentPlayer}-${timerSyncKey}`
                   : circleTimer1Key
               }
               isPlaying={
@@ -580,19 +634,36 @@ export const ConnectFour: React.FC = () => {
               trailColor={`rgb(${rgbPlayer1})`}
               size={40}
               strokeWidth={3}
-              onUpdate={(t) => !isOnline && setTimer1RemainingTime(t)}
+              onUpdate={(t) => {
+                if (!isOnline) {
+                  setTimer1RemainingTime(t);
+                } else {
+                  // Drift Check
+                  if (
+                    state.currentPlayer === 1 &&
+                    onlineState?.currentTurn === p1Id
+                  ) {
+                    const realTime = calculateTurnTime(p1Id);
+                    if (Math.abs(realTime - t) > 1) {
+                      setTimerSyncKey((prev) => prev + 1);
+                    }
+                  }
+                }
+              }}
               onComplete={() => {
-                if (!isOnline) dispatch({ type: "SET_PLAYER", player: 2 });
+                dispatch({ type: "SET_PLAYER", player: 2 });
               }}
             >
               {({ remainingTime }) => Math.ceil(remainingTime)}
             </CountdownCircleTimer>
           </div>
           <div
+            className="nickname-display"
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
+              textAlign: "center",
             }}
           >
             <h1>
@@ -601,13 +672,13 @@ export const ConnectFour: React.FC = () => {
                   ? state.winner === 1
                     ? `${p1Name} wins`
                     : state.winner === 2
-                    ? `${effectivePlayerTwoName} wins`
-                    : "Draw"
+                      ? `${effectivePlayerTwoName} wins`
+                      : "Draw"
                   : state.currentPlayer === 1
-                  ? p1Name
-                  : state.currentPlayer === 2
-                  ? effectivePlayerTwoName
-                  : "Waiting...")}
+                    ? p1Name
+                    : state.currentPlayer === 2
+                      ? effectivePlayerTwoName
+                      : "Waiting...")}
             </h1>
             {isOnline && currentRoom && (
               <span
@@ -623,7 +694,7 @@ export const ConnectFour: React.FC = () => {
                 isOnline
                   ? `p2-turn-${
                       onlineState?.timers?.[p2Id || ""]?.lastMoveTimestamp
-                    }-${state.currentPlayer}`
+                    }-${state.currentPlayer}-${timerSyncKey}`
                   : circleTimer2Key
               }
               isPlaying={
@@ -642,7 +713,22 @@ export const ConnectFour: React.FC = () => {
               trailColor={`rgb(${rgbPlayer2})`}
               size={40}
               strokeWidth={3}
-              onUpdate={(t) => !isOnline && setTimer2RemainingTime(t)}
+              onUpdate={(t) => {
+                if (!isOnline) {
+                  setTimer2RemainingTime(t);
+                } else {
+                  // Drift Check
+                  if (
+                    state.currentPlayer === 2 &&
+                    onlineState?.currentTurn === p2Id
+                  ) {
+                    const realTime = calculateTurnTime(p2Id);
+                    if (Math.abs(realTime - t) > 1) {
+                      setTimerSyncKey((prev) => prev + 1);
+                    }
+                  }
+                }
+              }}
               onComplete={() => {
                 if (!isOnline) dispatch({ type: "SET_PLAYER", player: 1 });
               }}
@@ -652,7 +738,11 @@ export const ConnectFour: React.FC = () => {
             {!isOnline ? (
               <Timer
                 startTime={PLAYER_MAX_GAME_TIME}
-                timerName={"connectFourTimerTime2"}
+                timerName={
+                  localGameId
+                    ? `connectFourTimerTime2_${localGameId}`
+                    : "connectFourTimerTime2"
+                }
                 timeToForgotTimer={TIME_TO_FORGOT_GAME}
                 pause={
                   state.currentPlayer !== 2 ||
@@ -672,7 +762,10 @@ export const ConnectFour: React.FC = () => {
                 pause={
                   onlineState?.currentTurn !== p2Id ||
                   !!onlineState?.winner ||
-                  isStartAnimation
+                  isStartAnimation ||
+                  (isOnline &&
+                    currentRoom?.players?.length === 2 &&
+                    !currentRoom.players[0].isOnline)
                 }
                 className="online-timer"
               />
@@ -680,29 +773,43 @@ export const ConnectFour: React.FC = () => {
           </div>
         </div>
         <div className="right-part">
-          <button
+          <PauseButton
             onClick={handlePauseToggle}
-            className={`pause-btn ${
-              currentRoom?.status === "paused" || isPause ? "paused" : ""
-            }`}
+            isPaused={
+              (isOnline && currentRoom?.status === "paused") ||
+              (!isOnline && isPause)
+            }
             disabled={
               (isOnline && currentRoom?.activeVote?.type === "restart") ||
               isStartAnimation
             }
             style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-          >
-            {getPauseButtonText()}
-          </button>
+            text={getPauseButtonText()}
+          />
 
-          <button
+          <RestartButton
             onClick={handleRestart}
-            className="restart-btn"
-            style={{ opacity: isStartAnimation ? 0.5 : 1 }} // Візуальний фідбек
-          >
-            {getRestartButtonText()}
-          </button>
+            disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
+            title={
+              isOnline && (currentRoom?.players?.length || 0) < 2
+                ? "Waiting for second player..."
+                : "Restart Game"
+            }
+            isStartAnimation={isStartAnimation}
+            text={getRestartButtonText()}
+            voteCount={getActiveVoteCount("restart")}
+          />
         </div>
       </div>
+
+      {/* OPPONENT DISCONNECTED MODAL */}
+      <OpponentDisconnectedModal
+        isOpen={showOfflineModal}
+        opponentName={opponentName}
+        timer={offlineTimer}
+        onExit={handleExit}
+      />
+
       <div className="field-wrapper">
         <div className="field-main">
           <div className="field">
@@ -790,18 +897,19 @@ export const ConnectFour: React.FC = () => {
               <div className="pop-up">
                 <div className="content">
                   <h1 className="pause-heading">Game Paused</h1>
-                  <button
+                  <PauseButton
                     onClick={handlePauseToggle}
-                    className="pause-btn paused"
+                    isPaused={true} // Always paused in this overlay
                     disabled={
                       (isOnline &&
                         currentRoom?.activeVote?.type === "restart") ||
                       isStartAnimation
                     }
                     style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-                  >
-                    {getPauseButtonText()}
-                  </button>
+                    text={getPauseButtonText()}
+                    className="paused"
+                    voteCount={getActiveVoteCount("pause")}
+                  />
                 </div>
               </div>
             </div>
@@ -817,12 +925,22 @@ export const ConnectFour: React.FC = () => {
                 !isOnline && gameMode === "bot"
                   ? "Bot"
                   : isOnline
-                  ? p2NameRaw
-                  : effectivePlayerTwoName,
+                    ? p2NameRaw
+                    : effectivePlayerTwoName,
               color: p2Color,
             },
           ]}
           onComplete={handleFirstPlayerSelected}
+          duration={3500}
+          targetWinnerIndex={
+            isOnline
+              ? onlineState?.currentTurn === p1Id
+                ? 0
+                : onlineState?.currentTurn === p2Id
+                  ? 1
+                  : undefined
+              : undefined
+          }
         />
       )}
 
@@ -835,8 +953,8 @@ export const ConnectFour: React.FC = () => {
                 state.winner === 1
                   ? rgbPlayer1
                   : state.winner === 2
-                  ? rgbPlayer2
-                  : undefined,
+                    ? rgbPlayer2
+                    : undefined,
             } as React.CSSProperties
           }
         >
@@ -847,9 +965,18 @@ export const ConnectFour: React.FC = () => {
               {state.winner === 0 && "Draw"}
             </h1>
             <div className="control-buttons">
-              <button className="restart-btn" onClick={handleRestart}>
-                {getRestartButtonText()}
-              </button>
+              <RestartButton
+                onClick={handleRestart}
+                disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
+                title={
+                  isOnline && (currentRoom?.players?.length || 0) < 2
+                    ? "Waiting for second player..."
+                    : "Restart Game"
+                }
+                text={getRestartButtonText()}
+                forceText={true}
+                voteCount={getActiveVoteCount("restart")}
+              />
               <button className="leave-btn" onClick={handleExit}>
                 Leave
               </button>
@@ -861,6 +988,30 @@ export const ConnectFour: React.FC = () => {
           </div>
         </div>
       )}
+      <div className="top-bar mobile">
+        <MobileExitButton onClick={handleExit} />
+        <PauseButton
+          onClick={handlePauseToggle}
+          isPaused={
+            (isOnline && currentRoom?.status === "paused") ||
+            (!isOnline && isPause)
+          }
+          style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+          disabled={
+            (isOnline && currentRoom?.activeVote?.type === "restart") ||
+            isStartAnimation
+          }
+          text={getPauseButtonText()}
+          voteCount={getActiveVoteCount("pause")}
+        />
+        <RestartButton
+          onClick={handleRestart}
+          disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
+          isStartAnimation={isStartAnimation}
+          text={getRestartButtonText()}
+          voteCount={getActiveVoteCount("restart")}
+        />
+      </div>
     </section>
   );
 };

@@ -23,7 +23,7 @@ export const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  return !isInGame ? (
+  return !isInGame && (
     <header className={`header ${isGameSubPage ? "relative" : ""}`}>
       <Link to="/">
         <img src={logo} alt="logo" className="logo" draggable="false" />
@@ -54,7 +54,7 @@ export const Header = () => {
           <nav>
             <ul>
               {navData.map((nav) => (
-                <Link to={nav.url} key={nav.name}>
+                <Link to={nav.url} key={nav.name} onClick={() => setIsMenuOpen(false)}>
                   <li>{nav.name}</li>
                 </Link>
               ))}
@@ -63,7 +63,5 @@ export const Header = () => {
         </div>
       </div>
     </header>
-  ) : (
-    <div style={{ marginTop: "10px" }}></div>
   );
 };

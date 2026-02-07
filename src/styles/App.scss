@@ -8,14 +8,17 @@
 @import "../sections/Testimonials";
 @import "../sections/Footer";
 @import "../games/minesweeper/Game";
-@import "../games/connectFour//Game";
+@import "../games/connectFour/Game";
 @import "../games/minesweeper/StartMenu";
 @import "../games/connectFour/StartMenu";
-@import "../games/connectFour/Loby";
-@import "../components/FirstPlayerSelector/FirstPlayerSelector";
+@import "../components/menus/OnlineLobby";
+@import "../components/game/FirstPlayerSelector/FirstPlayerSelector";
 @import "../pages/Games";
 @import "../games/chess/Game";
-
+@import "../components/modals/ConnectingScreen";
+@import "../components/modals/WaitingForOpponentScreen";
+@import "../components/modals/OpponentDisconnectedModal";
+@import "../components/game/GameControls.scss";
 
 body {
   background-color: $dark-background;
@@ -25,5 +28,10 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  &:not(:has(header)) {
+    margin-top: 10px;
+  }
 }
-
+.game-wrapper {
+  height: 100vh;
+}

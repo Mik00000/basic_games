@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useGame } from "./useGame";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Pawn from "../../assets/icons/chess/pawn.svg?react";
@@ -8,8 +8,18 @@ import Bishop from "../../assets/icons/chess/bishop.svg?react";
 import Queen from "../../assets/icons/chess/queen.svg?react";
 import King from "../../assets/icons/chess/king.svg?react";
 
-import { Piece } from "./gameLogic";
-import Timer from "../../components/Timer";
+import { Piece, cleanLocalStorage, getAvailableMoves } from "./gameLogic";
+import Timer from "../../components/game/Timer";
+import { ConnectingScreen } from "../../components/modals/ConnectingScreen";
+import { WaitingForOpponentScreen } from "../../components/modals/WaitingForOpponentScreen";
+import { OpponentDisconnectedModal } from "../../components/modals/OpponentDisconnectedModal";
+import { useOpponentDisconnect } from "../../hooks/useOpponentDisconnect";
+import {
+  ExitButton,
+  MobileExitButton,
+  PauseButton,
+  RestartButton,
+} from "../../components/game/GameControls";
 
 const pieceComponents: Record<
   string,
@@ -24,7 +34,21 @@ const pieceComponents: Record<
   queen: Queen,
   king: King,
 };
-// ... rest of the file ... in next chunk or handled carefully
+
+const PieceDisplay = ({
+  type,
+  color,
+  className = "",
+}: {
+  type: Piece["type"];
+  color: Piece["color"];
+  className?: string;
+}) => {
+  const SvgComponent = pieceComponents[type];
+  return SvgComponent ? (
+    <SvgComponent className={`piece ${color} ${className}`} />
+  ) : null;
+};
 
 const Game = () => {
   const navigate = useNavigate();
@@ -33,17 +57,65 @@ const Game = () => {
 
   const locState = (location.state || {}) as any;
 
-  const gameMode = locState.gameMode || (onlineGameId ? "online" : "local");
+  const gameMode = locState.gameMode;
+  //  || (onlineGameId ? "lobby" : "local");
   // const isOnline = gameMode === "online";
-  const difficulty = locState.difficulty || 1;
+  // const difficulty = locState.difficulty || 1;
 
-  const { state, onCellClick, onTimeUpdate, onTimeout } = useGame(
-    gameMode,
-    onlineGameId,
-  );
+  const {
+    state,
+    onCellClick,
+    onTimeout,
+    onRestart: originalRestart,
+    isConnected,
+    currentRoom,
+    currentPlayer,
+    leaveRoom,
+    dispatch,
+  } = useGame(gameMode, onlineGameId);
+
+  useEffect(() => {
+    if (locState.difficulty) {
+      dispatch({ type: "SET_DIFFICULTY", difficulty: locState.difficulty });
+    }
+    if (locState.gameMode) {
+      dispatch({ type: "SET_GAME_MODE", gameMode: locState.gameMode });
+    }
+  }, [locState.difficulty, locState.gameMode, dispatch]);
+
+  const [resetKey, setResetKey] = useState(0);
+
+  const onRestart = () => {
+    setResetKey((prev) => prev + 1);
+    originalRestart();
+  };
+
+  const handleExit = () => {
+    if (leaveRoom) leaveRoom();
+    cleanLocalStorage();
+    navigate("/games/chess-menu");
+  };
+
+  const handlePromotion = (type: Piece["type"]) => {
+    dispatch({ type: "PROMOTE_PAWN", pieceType: type });
+  };
+
+  const isOnline = gameMode === "online";
+  const isWaitingForOpponent =
+    isOnline &&
+    isConnected &&
+    currentRoom &&
+    (currentRoom.players?.length || 0) < 2;
+
+  const { showOfflineModal, offlineTimer, opponentName } =
+    useOpponentDisconnect({
+      isOnline,
+      currentRoom,
+      currentUser: currentPlayer,
+    });
 
   // Drag and Drop State
-  const [dragState, setDragState] = React.useState<{
+  const [dragState, setDragState] = useState<{
     isDragging: boolean;
     piece: Piece;
     origin: { r: number; c: number };
@@ -59,10 +131,10 @@ const Game = () => {
     c: number,
     cell: any,
   ) => {
-    if (!cell) return;
-
     // Prevent default to avoid native drag behavior
     e.preventDefault();
+
+    if (!cell) return;
 
     // Check if this is a click on a Valid Move target (Capture)
     const isTarget = state.availableMoves.some(
@@ -95,7 +167,7 @@ const Game = () => {
     onCellClick(r, c);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!dragState || dragState.isReturning) return;
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -124,9 +196,6 @@ const Game = () => {
         const targetC = parseInt(cellElement.getAttribute("data-col") || "-1");
 
         // Check if it's a valid move
-        const isAvailable = state.availableMoves.some(
-          ([mR, mC]) => mR === targetR && mC === targetC,
-        );
 
         if (targetR !== -1 && targetC !== -1) {
           if (
@@ -136,11 +205,32 @@ const Game = () => {
             // Dropped on same cell - just reset (already selected logic handled by mousedown)
             setDragState(null);
             validMoveFound = true;
-          } else if (isAvailable) {
-            // Execute move
-            onCellClick(targetR, targetC);
-            setDragState(null);
-            validMoveFound = true;
+          }
+
+          if (!validMoveFound && state.currentTurn === dragState.piece.color) {
+            // Check if it's a valid move dynamically using current board state
+            // This allows for "pre-moves" (holding piece until turn starts)
+            const dynamicAvailableMoves = getAvailableMoves(state, [
+              dragState.origin.r,
+              dragState.origin.c,
+            ]);
+
+            const isDynamicAvailable = dynamicAvailableMoves.some(
+              ([mR, mC]) => mR === targetR && mC === targetC,
+            );
+
+            if (isDynamicAvailable) {
+              // Must dispatch MAKE_MOVE directly because onCellClick might rely on selection state
+              // which might be stale or cleared if we just rely on "click" logic.
+              // Actually using dispatch directly is safer here to bypass "selection" requirement if it was skipped.
+              dispatch({
+                type: "MAKE_MOVE",
+                from: [dragState.origin.r, dragState.origin.c],
+                to: [targetR, targetC],
+              });
+              setDragState(null);
+              validMoveFound = true;
+            }
           }
         }
       }
@@ -170,10 +260,18 @@ const Game = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragState, onCellClick, state.availableMoves]);
+  }, [
+    dragState,
+    onCellClick,
+    state,
+    state.availableMoves,
+    state.board,
+    state.currentTurn,
+    dispatch,
+  ]);
 
   // Disable context menu
-  React.useEffect(() => {
+  useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     document.addEventListener("contextmenu", handleContextMenu);
     return () => document.removeEventListener("contextmenu", handleContextMenu);
@@ -182,35 +280,63 @@ const Game = () => {
   console.log(state);
   return (
     <section className="chess">
-      <div className="top-part">
-        <div className="timer">
+      {isOnline && !isConnected && <ConnectingScreen onCancel={handleExit} />}
+
+      {isOnline && isWaitingForOpponent && (
+        <WaitingForOpponentScreen
+          roomId={currentRoom?.id}
+          onCancel={handleExit}
+        />
+      )}
+
+      <OpponentDisconnectedModal
+        isOpen={showOfflineModal}
+        opponentName={opponentName}
+        timer={offlineTimer}
+        onExit={handleExit}
+      />
+      <div className="top-bar">
+        <div className="left-part">
+          <ExitButton onClick={handleExit} />
+          {/* Difficulty selector removed */}
+        </div>
+        <div className="mid-part">
           <Timer
             startTime={state.playerInfo.white.remainingTime}
             timerName={`chess_white_${onlineGameId || "local"}`}
-            onTimeUpdate={(t) => onTimeUpdate("white", t)}
             pause={state.currentTurn !== "white" || !!state.winner}
             onComplete={() => onTimeout("white")}
-            key={`white_${onlineGameId || "local"}`}
+            key={`white_${onlineGameId || "local"}_${resetKey}`}
             isServerControlled={!!onlineGameId}
             syncTime={
               onlineGameId ? state.playerInfo.white.remainingTime : undefined
             }
           />
-          <span className="current-player">
-            {state.winner ? `Winner: ${state.winner}` : state.currentTurn}
-          </span>
+          <h1 className="current-player">
+            {state.currentTurn.charAt(0).toUpperCase() +
+              state.currentTurn.slice(1)}
+          </h1>
           <Timer
             startTime={state.playerInfo.black.remainingTime}
             timerName={`chess_black_${onlineGameId || "local"}`}
-            onTimeUpdate={(t) => onTimeUpdate("black", t)}
             pause={state.currentTurn !== "black" || !!state.winner}
             onComplete={() => onTimeout("black")}
-            key={`black_${onlineGameId || "local"}`}
+            key={`black_${onlineGameId || "local"}_${resetKey}`}
             isServerControlled={!!onlineGameId}
             syncTime={
               onlineGameId ? state.playerInfo.black.remainingTime : undefined
             }
           />
+        </div>
+        <div className="right-part">
+          <PauseButton
+            onClick={() => {}}
+            isPaused={state.isPaused}
+            text="Pause"
+            disabled={true} // Logic not implemented yet
+          />
+
+          <RestartButton onClick={onRestart} text="Restart" />
         </div>
       </div>
       <div className="board">
@@ -254,19 +380,57 @@ const Game = () => {
                     }
                       ${cell?.type === "king" && state.sideInCheck == cell?.color ? "in-check" : ""}`}
                   >
+                    {state.pendingPromotion &&
+                      state.pendingPromotion.to[0] === r &&
+                      state.pendingPromotion.to[1] === c &&
+                      (gameMode !== "bot" || state.currentTurn === "white") && (
+                        <span className="pawn-promotion-dialog">
+                          <button
+                            title="Queen"
+                            onClick={() => handlePromotion("queen")}
+                          >
+                            <PieceDisplay type="queen" color={cell!.color} />
+                          </button>
+                          <button
+                            title="Rook"
+                            onClick={() => handlePromotion("rook")}
+                          >
+                            <PieceDisplay type="rook" color={cell!.color} />
+                          </button>
+                          <button
+                            title="Bishop"
+                            onClick={() => handlePromotion("bishop")}
+                          >
+                            <PieceDisplay type="bishop" color={cell!.color} />
+                          </button>
+                          <button
+                            title="Knight"
+                            onClick={() => handlePromotion("knight")}
+                          >
+                            <PieceDisplay type="knight" color={cell!.color} />
+                          </button>
+                        </span>
+                      )}
+                    {c === 0 && (
+                      <span className="coordinate-label rank-label">
+                        {8 - r}
+                      </span>
+                    )}
+                    {r === 7 && (
+                      <span className="coordinate-label file-label">
+                        {String.fromCharCode(97 + c)}
+                      </span>
+                    )}
                     {state.availableMoves.some(
                       ([moveR, moveC]) => moveR === r && moveC === c,
                     ) && <div className="available-move" />}
-                    {(() => {
-                      if (!cell) return null;
-                      const PieceComponent =
-                        pieceComponents[cell.type as Piece["type"]];
-                      return PieceComponent ? (
-                        <PieceComponent
-                          className={`piece ${cell.color} ${isDraggingSource ? "dragging-hidden" : ""}`}
-                        />
-                      ) : null;
-                    })()}
+                    {cell && (
+                      <PieceDisplay
+                        type={cell.type}
+                        color={cell.color}
+                        className={isDraggingSource ? "dragging-hidden" : ""}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -274,7 +438,22 @@ const Game = () => {
           );
         })}
       </div>
-
+      <div className="top-bar mobile">
+        <MobileExitButton onClick={handleExit} />
+        <PauseButton
+          onClick={() => {}}
+          isPaused={false}
+          style={{ opacity: 1 }}
+          disabled={true}
+          text="Pause"
+        />
+        <RestartButton
+          onClick={() => {}}
+          disabled={true}
+          isStartAnimation={false}
+          text="Restart"
+        />
+      </div>
       {dragState && (
         <div
           className={`dragged-piece ${dragState.isReturning ? "returning" : ""}`}
@@ -283,13 +462,50 @@ const Game = () => {
             left: dragState.currentPos.x,
           }}
         >
-          {(() => {
-            const PieceComponent =
-              pieceComponents[dragState.piece.type as Piece["type"]];
-            return PieceComponent ? (
-              <PieceComponent className={`piece ${dragState.piece.color}`} />
-            ) : null;
-          })()}
+          <PieceDisplay
+            type={dragState.piece.type}
+            color={dragState.piece.color}
+          />
+        </div>
+      )}
+
+      {state.winner !== null && (
+        <div
+          className="pop-up winner"
+          style={
+            {
+              "--winner-color":
+                state.winner === "white"
+                  ? "#fff"
+                  : state.winner === "black"
+                    ? "#000"
+                    : undefined,
+            } as React.CSSProperties
+          }
+        >
+          <div className="content">
+            <h1 className="heading">
+              {state.winner === "draw"
+                ? "Draw"
+                : `${state.winner.charAt(0).toUpperCase() + state.winner.slice(1)} wins!`}
+            </h1>
+            <div className="control-buttons">
+              <button className="restart-btn force-text" onClick={onRestart}>
+                Play Again
+              </button>
+              <button className="leave-btn" onClick={handleExit}>
+                Leave
+              </button>
+              <button className="back-btn" onClick={handleExit}>
+                Back to menu
+              </button>
+            </div>
+            <div className="winner-piece">
+              {state.winner !== "draw" && (
+                <PieceDisplay type="pawn" color={state.winner} />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </section>

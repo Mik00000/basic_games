@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ShowTextAfterTime from "../ShowTextAfterTime";
+import ShowTextAfterTime from "../../common/ShowTextAfterTime";
 
 interface Player {
   name: string;
@@ -11,6 +11,7 @@ interface FirstPlayerSelectorProps {
   onComplete: (winnerIndex: number) => void;
   className?: string;
   duration?: number;
+  targetWinnerIndex?: number;
 }
 
 export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
@@ -18,6 +19,7 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
   onComplete,
   className = "",
   duration = 5000,
+  targetWinnerIndex,
 }) => {
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
 
@@ -29,10 +31,12 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
     }
 
     const t1 = setTimeout(() => {
-      const idx = Math.floor(Math.random() * 2); // Force 2 players choice for now implicitly by coin logic or ensure players has 2.
-      // Actually, if we want to be "modular", we should pick from all players,
-      // but the animation is specific to 2.
-      // Let's assume the first 2 players are the ones flipping for now.
+      let idx;
+      if (typeof targetWinnerIndex === "number") {
+        idx = targetWinnerIndex;
+      } else {
+        idx = Math.floor(Math.random() * 2);
+      }
       setWinnerIndex(idx);
     }, 100);
 
@@ -66,7 +70,7 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
         <div className="pick-first-player">
           <h1 className="heading">
             {winnerIndex !== null && (
-              <ShowTextAfterTime text={winnerName} time={duration / 2} />
+              <ShowTextAfterTime text={winnerName} time={duration * 0.8} />
             )}
           </h1>
           <div className="coin-container">
