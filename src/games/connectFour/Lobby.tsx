@@ -45,8 +45,8 @@ export const ConnectFourLobby: React.FC = () => {
     }
 
     if (
-      areColorsTooSimilar(p1Color, "#232930", 90) ||
-      areColorsTooSimilar(p1Color, "#181818", 90)
+      areColorsTooSimilar(p1Color, "#232930", 50) ||
+      areColorsTooSimilar(p1Color, "#181818", 50)
     ) {
       p1Error =
         "Player 1 cannot have the same color as the field or colors that are too similar to it";
@@ -54,20 +54,20 @@ export const ConnectFourLobby: React.FC = () => {
     }
 
     if (
-      areColorsTooSimilar(p2Color, "#232930", 90) ||
-      areColorsTooSimilar(p2Color, "#181818", 90)
+      areColorsTooSimilar(p2Color, "#232930", 50) ||
+      areColorsTooSimilar(p2Color, "#181818", 50)
     ) {
       p2Error =
         "Player 2 cannot have the same color as the field or colors that are too similar to it";
       isValid = false;
     }
 
-    if (areColorsTooSimilar(p1Color, "#FFFFFF", 80)) {
+    if (areColorsTooSimilar(p1Color, "#FFFFFF", 70)) {
       p1Error = "Player 1 cannot have too light color";
       isValid = false;
     }
 
-    if (areColorsTooSimilar(p2Color, "#FFFFFF", 80)) {
+    if (areColorsTooSimilar(p2Color, "#FFFFFF", 70)) {
       p2Error = "Player 2 cannot have too light color";
       isValid = false;
     }

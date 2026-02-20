@@ -65,7 +65,7 @@ export function areColorsTooSimilar(
     color2 = hexToRgb(hex2, "object") as { r: number; g: number; b: number };
   } catch (error) {
     console.error(error);
-    return false; // або тут можна повернути true/false за бажанням, якщо кольори некоректні
+    return false; 
   }
 
   const distance = colorDistance(color1, color2);

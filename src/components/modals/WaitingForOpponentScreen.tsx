@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useDelayedVisibility } from "../../hooks/useDelayedVisibility";
 
 interface WaitingForOpponentScreenProps {
   roomId?: string;
@@ -8,7 +9,10 @@ interface WaitingForOpponentScreenProps {
 export const WaitingForOpponentScreen: React.FC<
   WaitingForOpponentScreenProps
 > = ({ roomId, onCancel }) => {
+  const shouldRender = useDelayedVisibility(true, 500);
   const [isCopied, setIsCopied] = useState(false);
+
+  if (!shouldRender) return null;
 
   const handleCopy = () => {
     if (roomId) {

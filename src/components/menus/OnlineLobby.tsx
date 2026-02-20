@@ -24,6 +24,7 @@ interface OnlineLobbyProps {
   };
   defaultSettings?: any;
   accentColor?: string; // For styling (optional)
+  fixedPlayerColors?: string[]; // If provided, players get these colors based on index, and cannot change them
 }
 
 const ColorPicker = ({
@@ -78,6 +79,7 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
   maxPlayers = 2,
   validatePlayers,
   defaultSettings = {},
+  fixedPlayerColors,
 }) => {
   const navigate = useNavigate();
   const { roomId } = useParams();
@@ -108,9 +110,10 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState("");
 
-  const [conflictRoom, setConflictRoom] = useState<{ roomId: string } | null>(
-    null,
-  );
+  const [conflictRoom, setConflictRoom] = useState<{
+    roomId: string;
+    gameType?: string;
+  } | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [playerOneError, setPlayerOneError] = useState<string | null>(null);
   const [playerTwoError, setPlayerTwoError] = useState<string | null>(null);
@@ -123,30 +126,80 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
 
   const handleNameSave = () => {
     if (tempName.trim() && tempName !== currentPlayer?.username) {
-      updatePlayerData({ username: tempName.trim() });
+      const newName = tempName.trim();
+      updatePlayerData({ username: newName });
+
+      // Update local prefs
+      const savedPrefs = localStorage.getItem("user_preferences");
+      const prefs = savedPrefs ? JSON.parse(savedPrefs) : {};
+      localStorage.setItem(
+        "user_preferences",
+        JSON.stringify({
+          ...prefs,
+          username: newName,
+        }),
+      );
     }
     setIsEditingName(false);
   };
 
   useEffect(() => {
     // Reset initialization if connection or roomId changes meaningfully
-    // But we only want to run init ONCE per roomId per session unless connection drops
     if (!isConnected) return;
+
+    // Safety check: If we are already in the target room, stop initialization immediately
+    if (currentRoom?.id === roomId) {
+      initializedRoomId.current = roomId;
+      if (isInitializing) {
+        // Use setTimeout to avoid synchronous setState warning during render cycle
+        setTimeout(() => setIsInitializing(false), 0);
+      }
+      return;
+    }
+
     if (initializedRoomId.current === roomId) return;
 
     const init = async () => {
       setIsInitializing(true);
       initializedRoomId.current = roomId;
 
+      // [FIX] Persistence for reload: Check localStorage if navState is empty
+      const savedPrefs = localStorage.getItem("user_preferences");
+      const prefs = savedPrefs ? JSON.parse(savedPrefs) : {};
+
       const myName =
-        navState.playerOneName || `Guest ${Math.floor(Math.random() * 1000)}`;
-      const myColor = navState.playerOneColor || "#ff0000";
+        navState.playerOneName ||
+        prefs.username ||
+        `Guest ${Math.floor(Math.random() * 1000)}`;
+
+      // If fixed colors are used, we don't pick a random color or user color here,
+      // but we might not know our index yet. However, for "createRoom" we are P1 (index 0).
+      let myColor = navState.playerOneColor || prefs.color || "#ff0000";
+      if (fixedPlayerColors && fixedPlayerColors.length > 0) {
+        // Assume creator is P1
+        if (roomId === "new") {
+          myColor = fixedPlayerColors[0];
+        }
+        // If joining, we don't know index yet, so we will update it later or let the server decide?
+        // Actually, let's just let the loop below fix it if it's wrong.
+      }
 
       // Get or create persistent User ID
       let userId = localStorage.getItem(`${gameType}_user_id`);
       if (!userId) {
         userId = crypto.randomUUID();
         localStorage.setItem(`${gameType}_user_id`, userId);
+      }
+
+      // Save preferences immediately if we have them (e.g. from menu)
+      if (navState.playerOneName || navState.playerOneColor) {
+        localStorage.setItem(
+          "user_preferences",
+          JSON.stringify({
+            username: myName, // save the used name
+            color: myColor,
+          }),
+        );
       }
 
       const roomSettings = {
@@ -168,6 +221,14 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
 
         if (res.success && res.data?.roomId) {
           await updatePlayerData({ color: myColor });
+          // Update prefs with confirmed values
+          localStorage.setItem(
+            "user_preferences",
+            JSON.stringify({
+              username: myName,
+              color: myColor,
+            }),
+          );
           window.history.replaceState(
             null,
             "",
@@ -177,7 +238,10 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
           res.error?.code === "ALREADY_IN_ROOM" &&
           res.error.details?.roomId
         ) {
-          setConflictRoom({ roomId: res.error.details.roomId });
+          setConflictRoom({
+            roomId: res.error.details.roomId,
+            gameType: res.error.details.gameType,
+          });
         } else {
           alert("Failed to create room: " + res.error?.message);
           navigate(menuPath);
@@ -198,11 +262,22 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
           if (!res.data?.player?.gameData?.color) {
             await updatePlayerData({ color: myColor });
           }
+          // Save prefs on successful join
+          localStorage.setItem(
+            "user_preferences",
+            JSON.stringify({
+              username: myName, // This might be from prefs or guest
+              color: myColor,
+            }),
+          );
         } else if (
           res.error?.code === "ALREADY_IN_ROOM" &&
           res.error.details?.roomId
         ) {
-          setConflictRoom({ roomId: res.error.details.roomId });
+          setConflictRoom({
+            roomId: res.error.details.roomId,
+            gameType: res.error.details.gameType,
+          });
         } else {
           // [FIX] Use Modal instead of alert
           setErrorModal({
@@ -227,8 +302,12 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
     updatePlayerData,
     currentRoom?.id,
     gameType,
-    menuPath,
     gamePathPrefix,
+    fixedPlayerColors,
+    defaultSettings, // Added to deps
+    maxPlayers, // Added to deps
+    menuPath, // Added to deps
+    isInitializing, // Added to deps
   ]);
 
   // Handle critical errors like Room Closed
@@ -259,6 +338,16 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
 
   const handleColorChange = (newColor: string) => {
     updatePlayerData({ color: newColor });
+    // Update local prefs
+    const savedPrefs = localStorage.getItem("user_preferences");
+    const prefs = savedPrefs ? JSON.parse(savedPrefs) : {};
+    localStorage.setItem(
+      "user_preferences",
+      JSON.stringify({
+        ...prefs,
+        color: newColor,
+      }),
+    );
   };
 
   const copyLink = () => {
@@ -271,7 +360,10 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
     if (action === "stay") {
       if (conflictRoom?.roomId) {
         setConflictRoom(null);
-        navigate(`${gamePathPrefix}/lobby/${conflictRoom.roomId}`);
+        const targetPrefix = conflictRoom.gameType
+          ? `/games/${conflictRoom.gameType}`
+          : gamePathPrefix;
+        navigate(`${targetPrefix}/lobby/${conflictRoom.roomId}`);
       }
     } else {
       // "leave" means "Abandon old room and force join the new one"
@@ -377,7 +469,29 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
 
   useEffect(() => {
     validateInputs();
-  }, [currentRoom?.players]);
+
+    // Enforce fixed colors if defined
+    if (fixedPlayerColors && currentRoom?.players && currentPlayer) {
+      const myIndex = currentRoom.players.findIndex(
+        (p) => p.id === currentPlayer.id,
+      );
+      if (myIndex !== -1 && fixedPlayerColors[myIndex]) {
+        const requiredColor = fixedPlayerColors[myIndex];
+        const myCurrentColor = currentPlayer.gameData?.color;
+        if (myCurrentColor !== requiredColor) {
+          // Determine if we need to update
+          // to avoid infinite loop, only update if different
+          // Also prevent rapid updates
+          updatePlayerData({ color: requiredColor });
+        }
+      }
+    }
+  }, [
+    currentRoom?.players,
+    fixedPlayerColors,
+    currentPlayer?.id,
+    currentPlayer?.gameData?.color,
+  ]);
 
   if (conflictRoom) {
     return (
@@ -448,7 +562,14 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
         <div className="player-settings">
           {players.map((p: any, index: number) => {
             const isMe = p.id === currentPlayer?.id;
-            const pColor = p.gameData?.color || "#ffffff";
+            // If fixed colors are enabled, use them for display regardless of what's in p.gameData (visually)
+            // or trust p.gameData if we enforce it. Let's trust p.gameData but fallback to fixed if available?
+            // Actually, better to just use p.gameData as we are enforcing it via useEffect.
+            // BUT for immediate visual feedback before roundtrip, we could use fixed.
+            const pColor =
+              fixedPlayerColors && fixedPlayerColors[index]
+                ? fixedPlayerColors[index]
+                : p.gameData?.color || "#ffffff";
 
             return (
               <div
@@ -510,13 +631,18 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
                     {playerTwoError}
                   </div>
                 )}
-                {isMe && (
+                {isMe && !fixedPlayerColors && (
                   <div className="player-controls">
                     <label>Change Color:</label>
                     <ColorPicker color={pColor} onChange={handleColorChange} />
                   </div>
                 )}
-
+                {isMe && fixedPlayerColors && (
+                  <div
+                    className="opponent-color-indicator"
+                    style={{ background: fixedPlayerColors[index] }}
+                  ></div>
+                )}
                 {!isMe && (
                   <div
                     className="opponent-color-indicator"
@@ -567,7 +693,6 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
         </p>
       </Modal>
 
-      {/* Модальне вікно помилки */}
       <Modal
         isOpen={!!effectiveError}
         title={effectiveError?.title || "Error"}

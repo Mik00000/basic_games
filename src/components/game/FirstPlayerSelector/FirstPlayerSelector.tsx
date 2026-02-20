@@ -12,6 +12,7 @@ interface FirstPlayerSelectorProps {
   className?: string;
   duration?: number;
   targetWinnerIndex?: number;
+  showNames?: boolean;
 }
 
 export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
@@ -20,6 +21,7 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
   className = "",
   duration = 5000,
   targetWinnerIndex,
+  showNames = true,
 }) => {
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
 
@@ -41,7 +43,7 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
     }, 100);
 
     return () => clearTimeout(t1);
-  }, [players.length]); // Depend on length mainly to avoid re-run if object refs change
+  }, [players.length, targetWinnerIndex]); // Depend on length mainly to avoid re-run if object refs change
 
   useEffect(() => {
     if (winnerIndex === null) return;
@@ -69,7 +71,7 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
       <div className="pop-up">
         <div className="pick-first-player">
           <h1 className="heading">
-            {winnerIndex !== null && (
+            {winnerIndex !== null && showNames && (
               <ShowTextAfterTime text={winnerName} time={duration * 0.8} />
             )}
           </h1>

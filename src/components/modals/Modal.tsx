@@ -1,5 +1,7 @@
 import React from "react";
 
+import { useDelayedVisibility } from "../../hooks/useDelayedVisibility";
+
 interface ModalProps {
   isOpen: boolean;
   title: string;
@@ -15,7 +17,9 @@ export const Modal: React.FC<ModalProps> = ({
   actions,
   onClose,
 }) => {
-  if (!isOpen) return null;
+  const shouldRender = useDelayedVisibility(isOpen, 500);
+
+  if (!isOpen || !shouldRender) return null;
 
   return (
     <div className="pause-overlay" onClick={onClose}>

@@ -1,6 +1,7 @@
 import React, { useReducer, useState, useEffect, useMemo } from "react";
 import { FirstPlayerSelector } from "../../components/game/FirstPlayerSelector/FirstPlayerSelector";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import PauseIcon from "../../assets/icons/pause.svg?react";
 import {
   hexToRgb,
   useStickyStateWithExpiry,
@@ -24,7 +25,6 @@ import { botMove } from "./botBrains";
 // --- ONLINE IMPORTS ---
 import { useOnlineGame } from "../../hooks/useOnlineGame";
 import { ConnectingScreen } from "../../components/modals/ConnectingScreen";
-import { WaitingForOpponentScreen } from "../../components/modals/WaitingForOpponentScreen";
 import { OpponentDisconnectedModal } from "../../components/modals/OpponentDisconnectedModal";
 import { useOpponentDisconnect } from "../../hooks/useOpponentDisconnect";
 
@@ -45,6 +45,7 @@ import {
   PauseButton,
   RestartButton,
 } from "../../components/game/GameControls";
+import { PauseOverlay } from "../../components/game/PauseOverlay";
 
 export const ConnectFour: React.FC = () => {
   const navigate = useNavigate();
@@ -560,12 +561,12 @@ export const ConnectFour: React.FC = () => {
     >
       {isOnline && !isConnected && <ConnectingScreen onCancel={handleExit} />}
 
-      {isOnline && isWaitingForOpponent && (
+      {/* {isOnline && isWaitingForOpponent && (
         <WaitingForOpponentScreen
           roomId={currentRoom?.id}
           onCancel={handleExit}
         />
-      )}
+      )} */}
 
       <div className="top-bar">
         <div className="left-part">
@@ -597,12 +598,16 @@ export const ConnectFour: React.FC = () => {
                 startTime={PLAYER_MAX_GAME_TIME}
                 timerName="online_p1"
                 isServerControlled={true}
-                syncTime={p1Time}
+                syncTime={
+                  isOnline && currentRoom?.status === "paused"
+                    ? undefined
+                    : p1Time
+                }
                 pause={
                   onlineState?.currentTurn !== p1Id ||
                   !!onlineState?.winner ||
                   isStartAnimation ||
-                  // Fix: Pause timer if opponent is offline to avoid confusion (optional, but good UX)
+                  (isOnline && currentRoom?.status === "paused") ||
                   (isOnline &&
                     currentRoom?.players?.length === 2 &&
                     !currentRoom.players[1].isOnline)
@@ -758,11 +763,16 @@ export const ConnectFour: React.FC = () => {
                 startTime={PLAYER_MAX_GAME_TIME}
                 timerName="online_p2"
                 isServerControlled={true}
-                syncTime={p2Time}
+                syncTime={
+                  isOnline && currentRoom?.status === "paused"
+                    ? undefined
+                    : p2Time
+                }
                 pause={
                   onlineState?.currentTurn !== p2Id ||
                   !!onlineState?.winner ||
                   isStartAnimation ||
+                  (isOnline && currentRoom?.status === "paused") ||
                   (isOnline &&
                     currentRoom?.players?.length === 2 &&
                     !currentRoom.players[0].isOnline)
@@ -779,22 +789,17 @@ export const ConnectFour: React.FC = () => {
               (isOnline && currentRoom?.status === "paused") ||
               (!isOnline && isPause)
             }
+            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
             disabled={
               (isOnline && currentRoom?.activeVote?.type === "restart") ||
               isStartAnimation
             }
-            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
             text={getPauseButtonText()}
+            voteCount={getActiveVoteCount("pause")}
           />
-
           <RestartButton
             onClick={handleRestart}
             disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
-            title={
-              isOnline && (currentRoom?.players?.length || 0) < 2
-                ? "Waiting for second player..."
-                : "Restart Game"
-            }
             isStartAnimation={isStartAnimation}
             text={getRestartButtonText()}
             voteCount={getActiveVoteCount("restart")}
@@ -890,30 +895,21 @@ export const ConnectFour: React.FC = () => {
             ))}
           </div>
         </div>
-        {state.showCoinToss ||
-          (((!isOnline && isPause) ||
-            (isOnline && currentRoom?.status === "paused")) && (
-            <div className="pause-overlay">
-              <div className="pop-up">
-                <div className="content">
-                  <h1 className="pause-heading">Game Paused</h1>
-                  <PauseButton
-                    onClick={handlePauseToggle}
-                    isPaused={true} // Always paused in this overlay
-                    disabled={
-                      (isOnline &&
-                        currentRoom?.activeVote?.type === "restart") ||
-                      isStartAnimation
-                    }
-                    style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-                    text={getPauseButtonText()}
-                    className="paused"
-                    voteCount={getActiveVoteCount("pause")}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+        <PauseOverlay
+          isOnline={isOnline}
+          isPaused={
+            state.showCoinToss ||
+            (!isOnline && isPause) ||
+            (isOnline && currentRoom?.status === "paused")
+          }
+          onResume={handlePauseToggle}
+          resumeText={getPauseButtonText()}
+          isDisabled={
+            (isOnline && currentRoom?.activeVote?.type === "restart") ||
+            isStartAnimation
+          }
+          voteCount={getActiveVoteCount("pause")}
+        />
       </div>
 
       {state.showCoinToss && isBoardEmpty(state.field) && (

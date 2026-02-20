@@ -42,7 +42,9 @@ interface UseOnlineGameReturn<T extends GameState> {
   ) => Promise<CallbackResponse>;
   joinRoom: (data: JoinRoomData) => Promise<CallbackResponse>;
   leaveRoom: () => Promise<CallbackResponse>;
-  startGame: () => Promise<CallbackResponse>;
+  startGame: (
+    options?: { randomSeed?: number; whitePlayerId?: string } | null,
+  ) => Promise<CallbackResponse>;
   makeMove: (moveData: unknown) => Promise<CallbackResponse>;
   sendChatMessage: (text: string) => Promise<CallbackResponse>;
   sendVote: (type: VoteType) => Promise<CallbackResponse>;
@@ -395,13 +397,21 @@ export function useOnlineGame<T extends GameState = GameState>(
     });
   }, []);
 
-  const startGame = useCallback(async () => {
-    if (!globalSocket || !globalSocket.connected)
-      return { success: false, error: { code: "OFFLINE", message: "Offline" } };
-    return new Promise<CallbackResponse>((resolve) =>
-      globalSocket!.emit("startGame", resolve),
-    );
-  }, []);
+  const startGame = useCallback(
+    async (
+      options: { randomSeed?: number; whitePlayerId?: string } | null = null,
+    ) => {
+      if (!globalSocket || !globalSocket.connected)
+        return {
+          success: false,
+          error: { code: "OFFLINE", message: "Offline" },
+        };
+      return new Promise<CallbackResponse>((resolve) =>
+        globalSocket!.emit("startGame", options, resolve),
+      );
+    },
+    [],
+  );
 
   const makeMove = useCallback(async (moveData: unknown) => {
     if (!globalSocket || !globalSocket.connected)

@@ -9,6 +9,10 @@ export interface Player {
   role: string; // Змінено для гнучкості
   joinedAt: number;
   isOnline: boolean;
+  gameData?: {
+    color?: string;
+    [key: string]: any;
+  };
 }
 export interface PlayerTimer {
   totalTime: number; // Загальний час на гру (наприклад, 4 хв)
@@ -157,7 +161,10 @@ export interface ClientToServerEvents {
     data: { userId: string },
     callback: (response: CallbackResponse) => void,
   ) => void;
-  startGame: (callback: (response: CallbackResponse) => void) => void;
+  startGame: (
+    options: { randomSeed?: number; whitePlayerId?: string } | null,
+    callback: (response: CallbackResponse) => void,
+  ) => void;
 }
 
 export interface CreateRoomData {

@@ -11,7 +11,6 @@ import King from "../../assets/icons/chess/king.svg?react";
 import { Piece, cleanLocalStorage, getAvailableMoves } from "./gameLogic";
 import Timer from "../../components/game/Timer";
 import { ConnectingScreen } from "../../components/modals/ConnectingScreen";
-import { WaitingForOpponentScreen } from "../../components/modals/WaitingForOpponentScreen";
 import { OpponentDisconnectedModal } from "../../components/modals/OpponentDisconnectedModal";
 import { useOpponentDisconnect } from "../../hooks/useOpponentDisconnect";
 import {
@@ -20,6 +19,8 @@ import {
   PauseButton,
   RestartButton,
 } from "../../components/game/GameControls";
+import { PauseOverlay } from "../../components/game/PauseOverlay";
+import { FirstPlayerSelector } from "../../components/game/FirstPlayerSelector/FirstPlayerSelector";
 
 const pieceComponents: Record<
   string,
@@ -53,59 +54,204 @@ const PieceDisplay = ({
 const Game = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { onlineGameId } = useParams();
+  const { gameModeOrId } = useParams();
 
   const locState = (location.state || {}) as any;
 
-  const gameMode = locState.gameMode;
-  //  || (onlineGameId ? "lobby" : "local");
-  // const isOnline = gameMode === "online";
-  // const difficulty = locState.difficulty || 1;
+  // Determine Game Mode & ID
+  const param = gameModeOrId || "local";
+  const knownModes = ["local", "bot", "lobby"];
+  const isParamMode = knownModes.includes(param);
+
+  const onlineGameId = isParamMode ? undefined : param;
+  const gameModeTyped = isParamMode ? param : "online";
+
+  const gameMode = (locState.gameMode || gameModeTyped) as
+    | "lobby"
+    | "local"
+    | "bot"
+    | "online";
+  const isOnline = gameMode === "online";
 
   const {
     state,
     onCellClick,
     onTimeout,
     onRestart: originalRestart,
+    onOnlinePromote,
     isConnected,
     currentRoom,
     currentPlayer,
     leaveRoom,
     dispatch,
+    handleMove,
+    togglePause,
+    sendVote,
   } = useGame(gameMode, onlineGameId);
 
+  const [resetKey, setResetKey] = useState(0);
+  const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
-    if (locState.difficulty) {
+    if (isOnline) {
+      setNow(Date.now());
+      const interval = setInterval(() => setNow(Date.now()), 200);
+      return () => clearInterval(interval);
+    }
+  }, [isOnline]);
+
+  /* isWaitingForOpponent moved to comments as per request (archaic modal logic)
+  const isWaitingForOpponent = !!(
+    isOnline &&
+    isConnected &&
+    currentRoom &&
+    (currentRoom.players?.length || 0) < 2
+  );
+  */
+  const isWaitingForOpponent = false; // Always false now
+
+  // Derive "Blocked" state
+  // Block if:
+  // 1. Animation is visually playing (isStartAnimation)
+  // 2. Online game and server time says game hasn't started yet
+  // 3. Waiting for opponent (already checked in some places but good to be explicit)
+
+  const isStartAnimation = React.useMemo(() => {
+    if (!isOnline || !state.onlineParams?.gameStartTime) return false;
+    return now < state.onlineParams.gameStartTime;
+  }, [isOnline, state.onlineParams, now]);
+
+  const isGameStarted =
+    !isOnline ||
+    !state.onlineParams?.gameStartTime ||
+    Date.now() >= state.onlineParams.gameStartTime;
+
+  const isBlocked =
+    !isGameStarted ||
+    isWaitingForOpponent ||
+    state.isPaused ||
+    (isOnline && currentRoom?.status === "paused");
+
+  // Force re-render to check time (optional, but good for removing block exactly when time comes)
+  useEffect(() => {
+    if (!isGameStarted && state.onlineParams?.gameStartTime) {
+      const remaining = state.onlineParams.gameStartTime - Date.now();
+      if (remaining > 0) {
+        const t = setTimeout(() => {
+          // Trigger re-render
+          setResetKey((k) => k + 1); // Mock state update
+        }, remaining);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [isGameStarted, state.onlineParams?.gameStartTime]);
+
+  useEffect(() => {
+    // Sync difficulty/mode if provided in location state (e.g. from menu)
+    if (!isOnline && locState.difficulty) {
       dispatch({ type: "SET_DIFFICULTY", difficulty: locState.difficulty });
     }
-    if (locState.gameMode) {
-      dispatch({ type: "SET_GAME_MODE", gameMode: locState.gameMode });
+  }, [locState.difficulty, isOnline, dispatch]);
+
+  const handleRestart = async () => {
+    if (isStartAnimation) return;
+    if (isOnline) {
+      try {
+        await sendVote("restart");
+      } catch (e) {
+        console.error("Failed to vote", e);
+      }
+    } else {
+      setResetKey((prev) => prev + 1);
+      originalRestart();
     }
-  }, [locState.difficulty, locState.gameMode, dispatch]);
-
-  const [resetKey, setResetKey] = useState(0);
-
-  const onRestart = () => {
-    setResetKey((prev) => prev + 1);
-    originalRestart();
   };
 
-  const handleExit = () => {
-    if (leaveRoom) leaveRoom();
+  const handlePauseToggle = async () => {
+    if (!isOnline) {
+      togglePause();
+      return;
+    }
+    // Block pause during animation
+    if (isStartAnimation) return;
+
+    try {
+      await sendVote("pause");
+    } catch (e) {
+      console.error("Failed to vote pause", e);
+    }
+  };
+
+  const getActiveVoteCount = (voteType: string) => {
+    if (!isOnline) return 0;
+    const activeVote = currentRoom?.activeVote;
+    const isRestartVoting = activeVote?.type === voteType;
+    return isRestartVoting ? activeVote.voters.length : 0;
+  };
+
+  const getRestartButtonText = () => {
+    if (isStartAnimation) return "Starting...";
+
+    if (!isOnline) return "Restart";
+    const activeVote = currentRoom?.activeVote;
+    const isRestartVoting = activeVote?.type === "restart";
+
+    const votesCount = isRestartVoting ? activeVote.voters.length : 0;
+    const playersCount = currentRoom?.players?.length || 2;
+
+    // We can check if *I* voted to show "Waiting" text if we want,
+    // but the button handles disabled state+count usually.
+    // Let's mirror Connect Four logic:
+    const hasIVoted =
+      isRestartVoting &&
+      currentPlayer &&
+      activeVote?.voters.includes(currentPlayer.id);
+
+    if (hasIVoted) {
+      return `Waiting (${votesCount}/${playersCount})`;
+    }
+    return votesCount > 0
+      ? `Restart (${votesCount}/${playersCount})`
+      : "Restart";
+  };
+
+  const getPauseButtonText = () => {
+    if (isStartAnimation) return "Starting...";
+
+    if (!isOnline) return state.isPaused ? "Resume" : "Pause";
+
+    // In online, "paused" status is global.
+    // If game is paused, we vote to Resume.
+    // If game is playing, we vote to Pause.
+    const isPaused = currentRoom?.status === "paused"; // Or state.isPaused (synced)
+    const activeVote = currentRoom?.activeVote;
+    const isPauseVoting = activeVote?.type === "pause";
+    const baseAction = isPaused ? "Resume" : "Pause";
+
+    if (isPauseVoting) {
+      const hasVoted =
+        currentPlayer && activeVote?.voters.includes(currentPlayer.id);
+      const count = activeVote.voters.length;
+      const total = currentRoom?.players?.length || 2;
+      if (hasVoted) return `Waiting (${count}/${total})`;
+      return `${baseAction} (${count}/${total})`;
+    }
+    return baseAction;
+  };
+
+  const handleExit = async () => {
+    if (leaveRoom) await leaveRoom();
     cleanLocalStorage();
     navigate("/games/chess-menu");
   };
 
   const handlePromotion = (type: Piece["type"]) => {
-    dispatch({ type: "PROMOTE_PAWN", pieceType: type });
+    if (isOnline) {
+      if (onOnlinePromote) onOnlinePromote(type);
+    } else {
+      dispatch({ type: "PROMOTE_PAWN", pieceType: type });
+    }
   };
-
-  const isOnline = gameMode === "online";
-  const isWaitingForOpponent =
-    isOnline &&
-    isConnected &&
-    currentRoom &&
-    (currentRoom.players?.length || 0) < 2;
 
   const { showOfflineModal, offlineTimer, opponentName } =
     useOpponentDisconnect({
@@ -133,6 +279,8 @@ const Game = () => {
   ) => {
     // Prevent default to avoid native drag behavior
     e.preventDefault();
+
+    if (isBlocked) return; // BLOCK INTERACTION
 
     if (!cell) return;
 
@@ -220,14 +368,12 @@ const Game = () => {
             );
 
             if (isDynamicAvailable) {
-              // Must dispatch MAKE_MOVE directly because onCellClick might rely on selection state
-              // which might be stale or cleared if we just rely on "click" logic.
-              // Actually using dispatch directly is safer here to bypass "selection" requirement if it was skipped.
-              dispatch({
-                type: "MAKE_MOVE",
-                from: [dragState.origin.r, dragState.origin.c],
-                to: [targetR, targetC],
-              });
+              // Use handleMove to support both local and online
+              // This ensures 'makeMove' is called for online games
+              handleMove(
+                [dragState.origin.r, dragState.origin.c],
+                [targetR, targetC],
+              );
               setDragState(null);
               validMoveFound = true;
             }
@@ -268,6 +414,7 @@ const Game = () => {
     state.board,
     state.currentTurn,
     dispatch,
+    handleMove,
   ]);
 
   // Disable context menu
@@ -282,10 +429,51 @@ const Game = () => {
     <section className="chess">
       {isOnline && !isConnected && <ConnectingScreen onCancel={handleExit} />}
 
+      {/* 
       {isOnline && isWaitingForOpponent && (
         <WaitingForOpponentScreen
           roomId={currentRoom?.id}
           onCancel={handleExit}
+        />
+      )}
+      */}
+
+      {isStartAnimation && (
+        <FirstPlayerSelector
+          players={
+            (state.onlineParams?.myColor === "black"
+              ? [
+                  {
+                    name: state.playerInfo.black.name,
+                    color: "#000",
+                  },
+                  {
+                    name: state.playerInfo.white.name,
+                    color: "#fff",
+                  },
+                ]
+              : [
+                  {
+                    name: state.playerInfo.white.name,
+                    color: "#fff",
+                  },
+                  {
+                    name: state.playerInfo.black.name,
+                    color: "#000",
+                  },
+                ]) as any
+          }
+          showNames={false}
+          targetWinnerIndex={0} // Always 0 because we sort the "winner" (me) to first position in the array above
+          duration={3500}
+          onComplete={() => {
+            if (currentRoom?.id) {
+              sessionStorage.setItem(
+                `chess_anim_shown_${currentRoom.id}`,
+                "true",
+              );
+            }
+          }}
         />
       )}
 
@@ -295,6 +483,7 @@ const Game = () => {
         timer={offlineTimer}
         onExit={handleExit}
       />
+
       <div className="top-bar">
         <div className="left-part">
           <ExitButton onClick={handleExit} />
@@ -304,12 +493,16 @@ const Game = () => {
           <Timer
             startTime={state.playerInfo.white.remainingTime}
             timerName={`chess_white_${onlineGameId || "local"}`}
-            pause={state.currentTurn !== "white" || !!state.winner}
+            pause={
+              state.currentTurn !== "white" || !!state.winner || isBlocked // PAUSE IF BLOCKED
+            }
             onComplete={() => onTimeout("white")}
-            key={`white_${onlineGameId || "local"}_${resetKey}`}
-            isServerControlled={!!onlineGameId}
+            key={`white_${onlineGameId || "local"}_${resetKey}`} // Use resetKey
+            isServerControlled={isOnline}
             syncTime={
-              onlineGameId ? state.playerInfo.white.remainingTime : undefined
+              isOnline && !isBlocked
+                ? state.playerInfo.white.remainingTime
+                : undefined
             }
           />
           <h1 className="current-player">
@@ -319,24 +512,45 @@ const Game = () => {
           <Timer
             startTime={state.playerInfo.black.remainingTime}
             timerName={`chess_black_${onlineGameId || "local"}`}
-            pause={state.currentTurn !== "black" || !!state.winner}
+            pause={
+              state.currentTurn !== "black" || !!state.winner || isBlocked // PAUSE IF BLOCKED
+            }
             onComplete={() => onTimeout("black")}
             key={`black_${onlineGameId || "local"}_${resetKey}`}
-            isServerControlled={!!onlineGameId}
+            isServerControlled={isOnline}
             syncTime={
-              onlineGameId ? state.playerInfo.black.remainingTime : undefined
+              isOnline && !isBlocked
+                ? state.playerInfo.black.remainingTime
+                : undefined
             }
           />
         </div>
         <div className="right-part">
           <PauseButton
-            onClick={() => {}}
-            isPaused={state.isPaused}
-            text="Pause"
-            disabled={true} // Logic not implemented yet
+            onClick={handlePauseToggle}
+            isPaused={
+              (isOnline && currentRoom?.status === "paused") ||
+              (!isOnline && state.isPaused)
+            }
+            text={getPauseButtonText()}
+            voteCount={getActiveVoteCount("pause")}
+            disabled={
+              (isOnline && currentRoom?.activeVote?.type === "restart") ||
+              isStartAnimation
+            }
+            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
           />
 
-          <RestartButton onClick={onRestart} text="Restart" />
+          <RestartButton
+            onClick={handleRestart}
+            text={getRestartButtonText()}
+            voteCount={getActiveVoteCount("restart")}
+            disabled={
+              (isOnline && currentRoom?.activeVote?.type === "pause") ||
+              isStartAnimation
+            }
+            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+          />
         </div>
       </div>
       <div className="board">
@@ -354,13 +568,10 @@ const Game = () => {
                     data-col={c}
                     onMouseDown={(e) => handleMouseDown(e, r, c, cell)}
                     onClick={() => {
-                      // If we are just clicking (not dragging), the onMouseDown handles selection.
-                      // But if we want to move TO an empty square, onMouseDown won't trigger on empty square?
-                      // Wait, onMouseDown is on the DIV. logic above says `if (!cell) return`.
-                      // So for empty squares we still need onClick to move THERE.
-                      // But if we drag TO an empty square, mouseUp logic handles it.
-                      // If we click an empty square to move there (2-click method), we need this onClick.
-                      if (!dragState) {
+                      if (isBlocked) return; // BLOCK CLICK
+                      // If we are just clicking (not dragging), the onMouseDown handles selection for pieces.
+                      // We only need onClick for EMPTY squares (to move there if selected).
+                      if (!cell && !dragState) {
                         onCellClick(r, c);
                       }
                     }}
@@ -389,25 +600,37 @@ const Game = () => {
                             title="Queen"
                             onClick={() => handlePromotion("queen")}
                           >
-                            <PieceDisplay type="queen" color={cell!.color} />
+                            <PieceDisplay
+                              type="queen"
+                              color={state.currentTurn}
+                            />
                           </button>
                           <button
                             title="Rook"
                             onClick={() => handlePromotion("rook")}
                           >
-                            <PieceDisplay type="rook" color={cell!.color} />
+                            <PieceDisplay
+                              type="rook"
+                              color={state.currentTurn}
+                            />
                           </button>
                           <button
                             title="Bishop"
                             onClick={() => handlePromotion("bishop")}
                           >
-                            <PieceDisplay type="bishop" color={cell!.color} />
+                            <PieceDisplay
+                              type="bishop"
+                              color={state.currentTurn}
+                            />
                           </button>
                           <button
                             title="Knight"
                             onClick={() => handlePromotion("knight")}
                           >
-                            <PieceDisplay type="knight" color={cell!.color} />
+                            <PieceDisplay
+                              type="knight"
+                              color={state.currentTurn}
+                            />
                           </button>
                         </span>
                       )}
@@ -440,19 +663,30 @@ const Game = () => {
       </div>
       <div className="top-bar mobile">
         <MobileExitButton onClick={handleExit} />
-        <PauseButton
-          onClick={() => {}}
-          isPaused={false}
-          style={{ opacity: 1 }}
-          disabled={true}
-          text="Pause"
-        />
-        <RestartButton
-          onClick={() => {}}
-          disabled={true}
-          isStartAnimation={false}
-          text="Restart"
-        />
+         <PauseButton
+            onClick={handlePauseToggle}
+            isPaused={
+              (isOnline && currentRoom?.status === "paused") ||
+              (!isOnline && state.isPaused)
+            }
+            text={getPauseButtonText()}
+            voteCount={getActiveVoteCount("pause")}
+            disabled={
+              (isOnline && currentRoom?.activeVote?.type === "restart") ||
+              isStartAnimation
+            }
+            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+          />
+    <RestartButton
+            onClick={handleRestart}
+            text={getRestartButtonText()}
+            voteCount={getActiveVoteCount("restart")}
+            disabled={
+              (isOnline && currentRoom?.activeVote?.type === "pause") ||
+              isStartAnimation
+            }
+            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+          />
       </div>
       {dragState && (
         <div
@@ -490,9 +724,17 @@ const Game = () => {
                 : `${state.winner.charAt(0).toUpperCase() + state.winner.slice(1)} wins!`}
             </h1>
             <div className="control-buttons">
-              <button className="restart-btn force-text" onClick={onRestart}>
-                Play Again
-              </button>
+    <RestartButton
+            onClick={handleRestart}
+            text={getRestartButtonText()}
+            voteCount={getActiveVoteCount("restart")}
+            disabled={
+              (isOnline && currentRoom?.activeVote?.type === "pause") ||
+              isStartAnimation
+            }
+            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+            forceText={true}
+          />
               <button className="leave-btn" onClick={handleExit}>
                 Leave
               </button>
@@ -508,6 +750,16 @@ const Game = () => {
           </div>
         </div>
       )}
+      <PauseOverlay
+        isOnline={isOnline}
+        isPaused={
+          (isOnline && currentRoom?.status === "paused") ||
+          (!isOnline && state.isPaused)
+        }
+        onResume={handlePauseToggle}
+        resumeText={getPauseButtonText()}
+        isDisabled={isStartAnimation}
+      />
     </section>
   );
 };

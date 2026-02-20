@@ -29,9 +29,16 @@ body {
   flex-direction: column;
   justify-content: space-between;
   &:not(:has(header)) {
-    margin-top: 10px;
+    .game-wrapper {
+      padding-top: 10px;
+    }
+  }
+  .main {
+    min-height: 100vh;
   }
 }
 .game-wrapper {
-  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
