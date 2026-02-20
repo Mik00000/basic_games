@@ -1,17 +1,21 @@
 import React from "react";
 
+import { useDelayedVisibility } from "../../hooks/useDelayedVisibility";
+
 interface OpponentDisconnectedModalProps {
   isOpen: boolean;
   opponentName?: string;
   timer: number;
   onExit: () => void;
-  className?: string;
+  className?: string; // Optional custom class
 }
 
 export const OpponentDisconnectedModal: React.FC<
   OpponentDisconnectedModalProps
 > = ({ isOpen, opponentName = "Opponent", timer, onExit }) => {
-  if (!isOpen) return null;
+  const shouldRender = useDelayedVisibility(isOpen, 500);
+
+  if (!isOpen || !shouldRender) return null;
 
   return (
     <div className="pause-overlay" style={{ zIndex: 1000 }}>

@@ -46,6 +46,7 @@ export const ChessLobby: React.FC = () => {
       gamePathPrefix="/games/chess"
       validatePlayers={validatePlayers}
       maxPlayers={2}
+      fixedPlayerColors={["#ffffff", "#000000"]}
     />
   );
 };

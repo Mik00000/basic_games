@@ -1,5 +1,7 @@
 import React from "react";
 
+import { useDelayedVisibility } from "../../hooks/useDelayedVisibility";
+
 interface ConnectingScreenProps {
   onCancel: () => void;
   title?: string;
@@ -11,6 +13,10 @@ export const ConnectingScreen: React.FC<ConnectingScreenProps> = ({
   title = "Connecting to Game...",
   message = "Please wait while we restore your session.",
 }) => {
+  const shouldRender = useDelayedVisibility(true, 500); // 1-second delay
+
+  if (!shouldRender) return null;
+
   return (
     <div className="pause-overlay">
       <div className="pop-up">

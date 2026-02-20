@@ -121,17 +121,44 @@ div {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 999;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  gap: 40px;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.pause-overlay .pause-icon-btn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.pause-overlay .pause-icon-btn .icon {
+  width: 100px;
+  height: 100px;
+  filter: invert(1);
+  opacity: 0.8;
+  transition: transform 0.2s, opacity 0.2s;
+  display: block;
+}
+.pause-overlay .pause-icon-btn:hover .icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+.pause-overlay .pause-icon-btn:active .icon {
+  transform: scale(0.95);
+}
+.pause-overlay .pause-icon-btn span {
+  display: none;
 }
 .pause-overlay .pop-up {
   position: relative;
@@ -204,13 +231,10 @@ div {
   background-color: #112d57;
   color: #fff;
   border: none;
-  padding: 14px 46px;
+  padding: 10px;
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  width: 100%;
-  max-width: 200px;
-  text-wrap: nowrap;
 }
 .pop-up .content .control-buttons .leave-btn:hover,
 .pop-up .content .control-buttons .restart-btn:hover,
@@ -219,6 +243,16 @@ div {
 .pop-up .content .control-buttons .primary:hover,
 .pop-up .content .control-buttons .secondary:hover {
   background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
+}
+.pop-up .content .control-buttons .leave-btn,
+.pop-up .content .control-buttons .restart-btn,
+.pop-up .content .control-buttons .back-btn,
+.pop-up .content .control-buttons .exit-button,
+.pop-up .content .control-buttons .primary,
+.pop-up .content .control-buttons .secondary {
+  width: 100%;
+  max-width: 200px;
+  text-wrap: nowrap;
 }
 .pop-up .content .control-buttons .secondary {
   background-color: transparent;
@@ -426,17 +460,17 @@ body:has(.burger-menu.open) {
   align-items: center;
   flex-direction: column;
   padding: 60px 0;
-  gap: 27px;
 }
 @media screen and (max-width: 767.98px) {
   .hero .heading {
     padding: 60px 20px;
   }
 }
+.hero .heading {
+  gap: 27px;
+}
 .hero .heading h1 {
   padding: 10px;
-  max-width: 729px;
-  text-align: center;
 }
 @media screen and (min-width: 768px) {
   .hero .heading h1 {
@@ -456,6 +490,10 @@ body:has(.burger-menu.open) {
     font-family: "Graphik";
     font-weight: 400;
   }
+}
+.hero .heading h1 {
+  max-width: 729px;
+  text-align: center;
 }
 .hero .heading h2 {
   padding: 10px;
@@ -608,12 +646,14 @@ body:has(.burger-menu.open) {
 }
 .features .info-block .right-part {
   padding: 20px;
-  max-width: 270px;
 }
 @media screen and (min-width: 768px) {
   .features .info-block .right-part {
     padding-left: 25px;
   }
+}
+.features .info-block .right-part {
+  max-width: 270px;
 }
 .features .info-block .right-part li {
   margin-bottom: 35px;
@@ -830,10 +870,12 @@ body:has(.burger-menu.open) {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  margin-bottom: 30px;
 }
 .contents .content-cards .card .btn:hover {
   background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
+}
+.contents .content-cards .card .btn {
+  margin-bottom: 30px;
 }
 .contents .content-cards .card img {
   filter: drop-shadow(0 4px 31px rgba(0, 0, 0, 0.15));
@@ -982,7 +1024,6 @@ body:has(.burger-menu.open) {
   gap: 23px;
   align-items: center;
   justify-content: center;
-  margin: 0 15px;
 }
 @media screen and (min-width: 1600px) {
   .testimonials .content {
@@ -993,6 +1034,9 @@ body:has(.burger-menu.open) {
   .testimonials .content {
     margin: 0 200px;
   }
+}
+.testimonials .content {
+  margin: 0 15px;
 }
 .testimonials .content .block {
   border: 1px solid #dedede;
@@ -1289,12 +1333,14 @@ footer.footer .right-part .social a {
   padding: 10px;
   width: -moz-fit-content;
   width: fit-content;
-  overflow: hidden;
 }
 @media screen and (max-width: 767.98px) {
   .minesweeper #field {
     width: 100%;
   }
+}
+.minesweeper #field {
+  overflow: hidden;
 }
 .minesweeper #field .row {
   display: flex;
@@ -1318,6 +1364,13 @@ footer.footer .right-part .social a {
   border: 1px solid rgb(39.3012048193, 46.0385542169, 53.8987951807);
   background-color: #232930;
   font-size: 28px;
+}
+@media screen and (max-width: 767.98px) {
+  .minesweeper .cell {
+    font-size: 20px;
+  }
+}
+.minesweeper .cell {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1326,11 +1379,6 @@ footer.footer .right-part .social a {
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
-}
-@media screen and (max-width: 767.98px) {
-  .minesweeper .cell {
-    font-size: 20px;
-  }
 }
 .minesweeper .cell img {
   aspect-ratio: 1/1;
@@ -1448,6 +1496,13 @@ footer.footer .right-part .social a {
   border: 1px solid rgb(39.3012048193, 46.0385542169, 53.8987951807);
   background-color: #232930;
   font-size: 28px;
+}
+@media screen and (max-width: 767.98px) {
+  .minesweeper .pop-up .content .bomb-example > div {
+    font-size: 20px;
+  }
+}
+.minesweeper .pop-up .content .bomb-example > div {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1456,11 +1511,6 @@ footer.footer .right-part .social a {
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
-}
-@media screen and (max-width: 767.98px) {
-  .minesweeper .pop-up .content .bomb-example > div {
-    font-size: 20px;
-  }
 }
 
 @keyframes explode {
@@ -1993,6 +2043,15 @@ footer.footer .right-part .social a {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
+}
+.connect-four-start-menu .menu-section .game-modes button:hover,
+.connect-four-start-menu .menu-section .menu-actions button:hover, .chess-start-menu .menu-section .game-modes button:hover,
+.chess-start-menu .menu-section .menu-actions button:hover {
+  background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
+}
+.connect-four-start-menu .menu-section .game-modes button,
+.connect-four-start-menu .menu-section .menu-actions button, .chess-start-menu .menu-section .game-modes button,
+.chess-start-menu .menu-section .menu-actions button {
   padding: 10px;
   font-size: 16px;
   line-height: 24px;
@@ -2001,11 +2060,6 @@ footer.footer .right-part .social a {
   font-weight: 500;
   text-decoration: none;
   border-radius: 5px;
-}
-.connect-four-start-menu .menu-section .game-modes button:hover,
-.connect-four-start-menu .menu-section .menu-actions button:hover, .chess-start-menu .menu-section .game-modes button:hover,
-.chess-start-menu .menu-section .menu-actions button:hover {
-  background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
 }
 .connect-four-start-menu .menu-section .game-modes, .chess-start-menu .menu-section .game-modes {
   display: flex;
@@ -2045,11 +2099,13 @@ footer.footer .right-part .social a {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  border-radius: 0;
-  width: 50%;
 }
 .connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn:hover, .chess-start-menu .menu-section .join-or-create .buttons .choose-room-btn:hover {
   background-color: rgb(42.6356382979, 58.5345744681, 253.8643617021);
+}
+.connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn, .chess-start-menu .menu-section .join-or-create .buttons .choose-room-btn {
+  border-radius: 0;
+  width: 50%;
 }
 .connect-four-start-menu .menu-section .join-or-create .buttons .choose-room-btn.active, .chess-start-menu .menu-section .join-or-create .buttons .choose-room-btn.active {
   background: #28a745;
@@ -2140,11 +2196,13 @@ footer.footer .right-part .social a {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  border-radius: 4px;
-  margin-top: 8px;
 }
 .connect-four-start-menu .player-settings .player-wrapper .start-button:hover, .chess-start-menu .player-settings .player-wrapper .start-button:hover {
   background-color: rgb(72.268115942, 211.231884058, 104);
+}
+.connect-four-start-menu .player-settings .player-wrapper .start-button, .chess-start-menu .player-settings .player-wrapper .start-button {
+  border-radius: 4px;
+  margin-top: 8px;
 }
 .connect-four-start-menu .player-settings .player-wrapper .online-settings, .chess-start-menu .player-settings .player-wrapper .online-settings {
   display: flex;
@@ -2419,10 +2477,12 @@ footer.footer .right-part .social a {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  border-radius: 10px;
 }
 .online-lobby .menu-actions .start-button:hover {
   background-color: rgb(72.268115942, 211.231884058, 104);
+}
+.online-lobby .menu-actions .start-button {
+  border-radius: 10px;
 }
 .online-lobby .menu-actions .start-button:disabled {
   opacity: 0.5;
@@ -2445,10 +2505,12 @@ footer.footer .right-part .social a {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  border-radius: 10px;
 }
 .online-lobby .menu-actions .exit-button:hover {
   background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
+}
+.online-lobby .menu-actions .exit-button {
+  border-radius: 10px;
 }
 @keyframes pulse-fade {
   0% {
@@ -2478,7 +2540,7 @@ footer.footer .right-part .social a {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 100;
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2651,10 +2713,11 @@ footer.footer .right-part .social a {
   align-items: center;
   width: 100%;
   margin: 0 auto;
+  position: relative;
+  flex-grow: 1;
 }
 @media screen and (max-width: 767.98px) {
   .chess {
-    height: 100%;
     justify-content: space-between;
     padding: 40px 0;
     --cell-size: calc((100vw - 30px) / 8);
@@ -2663,6 +2726,8 @@ footer.footer .right-part .social a {
 @media screen and (max-width: 450px) {
   .chess {
     --cell-size: calc((100vw - 20px) / 8);
+    justify-content: flex-start;
+    padding: 8px 0;
   }
 }
 .chess .top-bar {
@@ -2681,6 +2746,12 @@ footer.footer .right-part .social a {
   display: flex;
   gap: 35px;
   align-items: center;
+}
+.chess .top-bar .mid-part .current-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 .chess .top-bar .right-part {
   position: absolute;
@@ -2702,6 +2773,14 @@ footer.footer .right-part .social a {
     justify-content: space-between;
     gap: 2px;
   }
+}
+@media screen and (max-width: 767.98px) and (max-width: 450px) {
+  .chess .top-bar.mobile {
+    bottom: 8px;
+    position: absolute;
+  }
+}
+@media screen and (max-width: 767.98px) {
   .chess .top-bar .mid-part {
     gap: 0;
     justify-content: space-between;
@@ -2711,10 +2790,9 @@ footer.footer .right-part .social a {
 @media screen and (max-width: 767.98px) and (max-width: 410px) {
   .chess .top-bar .mid-part {
     flex-wrap: wrap;
-    justify-content: center;
     gap: 10px;
   }
-  .chess .top-bar .mid-part .nickname-display {
+  .chess .top-bar .mid-part .current-player {
     order: -1;
     width: 100%;
     margin-bottom: 5px;
@@ -2996,8 +3074,7 @@ footer.footer .right-part .social a {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.85);
-  -webkit-backdrop-filter: blur(8px);
-          backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3045,11 +3122,13 @@ footer.footer .right-part .social a {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  border-radius: 8px;
-  font-size: 1.1rem;
 }
 .connection-screen .exit-btn:hover {
   background-color: rgb(231.2974683544, 118.2025316456, 129.0379746835);
+}
+.connection-screen .exit-btn {
+  border-radius: 8px;
+  font-size: 1.1rem;
 }
 .connection-screen .exit-btn:hover {
   transform: scale(1.05);
@@ -3235,17 +3314,44 @@ div {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 999;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  gap: 40px;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.pause-overlay .pause-icon-btn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.pause-overlay .pause-icon-btn .icon {
+  width: 100px;
+  height: 100px;
+  filter: invert(1);
+  opacity: 0.8;
+  transition: transform 0.2s, opacity 0.2s;
+  display: block;
+}
+.pause-overlay .pause-icon-btn:hover .icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+.pause-overlay .pause-icon-btn:active .icon {
+  transform: scale(0.95);
+}
+.pause-overlay .pause-icon-btn span {
+  display: none;
 }
 .pause-overlay .pop-up {
   position: relative;
@@ -3318,13 +3424,10 @@ div {
   background-color: #112d57;
   color: #fff;
   border: none;
-  padding: 14px 46px;
+  padding: 10px;
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  width: 100%;
-  max-width: 200px;
-  text-wrap: nowrap;
 }
 .pop-up .content .control-buttons .leave-btn:hover,
 .pop-up .content .control-buttons .restart-btn:hover,
@@ -3333,6 +3436,16 @@ div {
 .pop-up .content .control-buttons .primary:hover,
 .pop-up .content .control-buttons .secondary:hover {
   background-color: rgb(29.5048076923, 78.1009615385, 150.9951923077);
+}
+.pop-up .content .control-buttons .leave-btn,
+.pop-up .content .control-buttons .restart-btn,
+.pop-up .content .control-buttons .back-btn,
+.pop-up .content .control-buttons .exit-button,
+.pop-up .content .control-buttons .primary,
+.pop-up .content .control-buttons .secondary {
+  width: 100%;
+  max-width: 200px;
+  text-wrap: nowrap;
 }
 .pop-up .content .control-buttons .secondary {
   background-color: transparent;
@@ -3499,10 +3612,15 @@ body {
   flex-direction: column;
   justify-content: space-between;
 }
-.App:not(:has(header)) {
-  margin-top: 10px;
+.App:not(:has(header)) .game-wrapper {
+  padding-top: 10px;
+}
+.App .main {
+  min-height: 100vh;
 }
 
 .game-wrapper {
-  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }/*# sourceMappingURL=App.css.map */

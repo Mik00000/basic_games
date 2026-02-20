@@ -36,13 +36,21 @@ export type GameState = {
   history: Move[];
   playerInfo: { white: PlayerInfo; black: PlayerInfo };
   isPaused: boolean;
-  gameMode: "lobby" | "local" | "bot";
+  gameMode: "lobby" | "local" | "bot" | "online";
   difficulty: Difficulty;
   pendingPromotion: {
     from: [number, number];
     to: [number, number];
     captured?: Piece["type"];
   } | null;
+  onlineParams?: {
+    roomId: string; // filled by hook
+    playerId: string; // filled by hook
+    isSpectator?: boolean;
+    opponentName?: string;
+    myColor?: "white" | "black" | "spectator";
+    gameStartTime?: number;
+  };
 };
 export const getInitialGameState = (): GameState => ({
   board: initializeBoard(),
@@ -54,8 +62,8 @@ export const getInitialGameState = (): GameState => ({
   sideInCheck: null,
   history: [],
   playerInfo: {
-    white: { name: "", remainingTime: PLAYER_MAX_GAME_TIME + 1000 },
-    black: { name: "", remainingTime: PLAYER_MAX_GAME_TIME },
+    white: { name: "Player 1", remainingTime: PLAYER_MAX_GAME_TIME + 1000 },
+    black: { name: "Player 2", remainingTime: PLAYER_MAX_GAME_TIME },
   },
   isPaused: false,
   gameMode: "local",
@@ -63,7 +71,173 @@ export const getInitialGameState = (): GameState => ({
   pendingPromotion: null,
 });
 
-export const initialGameState = getInitialGameState(); // Keep for backward compatibility if needed, but preferably remove usage
+export const initialGameState = getInitialGameState();
+
+// --- Server Types & Adapters ---
+
+export interface ServerChessState {
+  board: (Piece | null)[][];
+  currentTurn: "white" | "black";
+  winner: "white" | "black" | "draw" | string | null;
+  history: Move[];
+  playerIds: { white: string; black: string };
+  isFinished: boolean;
+  timers: Record<string, { totalTime: number; lastMoveTimestamp: number }>;
+  lastMoveTimestamp: number;
+  gameStartTime?: number;
+}
+
+export const mapServerStateToLocal = (
+  serverState: ServerChessState,
+  myPlayerId: string | undefined, // can be undefined if connecting
+  currentLocalState: GameState,
+  players: any[] = [], // New argument
+): GameState => {
+  const whiteId = serverState.playerIds.white;
+  const blackId = serverState.playerIds.black;
+
+  // Timers
+  const whiteTimer = serverState.timers[whiteId];
+  const blackTimer = serverState.timers[blackId];
+  const now = Date.now();
+
+  const getAdjustedTime = (
+    timer: { totalTime: number; lastMoveTimestamp: number } | undefined,
+    isTurn: boolean,
+  ) => {
+    if (!timer) return PLAYER_MAX_GAME_TIME;
+    // If it's not this player's turn, or game is over, time is static
+    if (!isTurn || serverState.winner || serverState.isFinished) {
+      return timer.totalTime;
+    }
+    // If it IS this player's turn, subtraction elapsed time
+    // We use Math.max(0, ...) to avoid negative elapsed if clocks are skewed weirdly,
+    // though usually we care about totalTime - elapsed.
+    // Also ensure we don't return negative time.
+    const elapsed = Math.max(0, now - timer.lastMoveTimestamp);
+    return Math.max(0, timer.totalTime - elapsed);
+  };
+
+  // Helper to find name
+  const getName = (id: string, color: string) => {
+    const p = players.find((x) => x.id === id);
+    return p ? p.username : color.charAt(0).toUpperCase() + color.slice(1);
+  };
+
+  const pInfo = {
+    white: {
+      name: getName(whiteId, "white"),
+      remainingTime: getAdjustedTime(
+        whiteTimer,
+        serverState.currentTurn === "white",
+      ),
+    },
+    black: {
+      name: getName(blackId, "black"),
+      remainingTime: getAdjustedTime(
+        blackTimer,
+        serverState.currentTurn === "black",
+      ),
+    },
+  };
+
+  // Find Kings
+  let whiteKing: [number, number] = [7, 4];
+  let blackKing: [number, number] = [0, 4];
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = serverState.board[r][c];
+      if (p?.type === "king") {
+        if (p.color === "white") whiteKing = [r, c];
+        else blackKing = [r, c];
+      }
+    }
+  }
+
+  // Check status (re-calc locally for highlighting)
+  const sideInCheck = isCheck(serverState.board, "white", whiteKing)
+    ? "white"
+    : isCheck(serverState.board, "black", blackKing)
+      ? "black"
+      : null;
+
+  // Determine mode/params
+  // If we are playing online, we should identify our role
+  const isSpectator = myPlayerId !== whiteId && myPlayerId !== blackId;
+  const opponentName = myPlayerId === whiteId ? "Black" : "White"; // Placeholder, real names in Room object
+
+  // Helper to check if selection is valid on new board
+  let selectedCell = currentLocalState.selectedCell;
+  let availableMoves: [number, number][] = [];
+  let pendingPromotion = currentLocalState.pendingPromotion;
+
+  if (selectedCell) {
+    const piece = serverState.board[selectedCell[0]][selectedCell[1]];
+    // If piece is gone or changed color (shouldn't happen in normal flow but possible), deselect
+    if (!piece || piece.color !== serverState.currentTurn) {
+      selectedCell = null;
+      pendingPromotion = null;
+    } else {
+      // Re-calculate moves for the new board state
+      availableMoves = getAvailableMoves(
+        {
+          ...currentLocalState,
+          board: serverState.board,
+          currentTurn: serverState.currentTurn,
+          kingsPositions: { white: whiteKing, black: blackKing },
+          sideInCheck,
+        },
+        selectedCell,
+      );
+    }
+  }
+
+  // If it's not our turn, we shouldn't have a selection usually, but let's be safe
+  // actually, pre-move is receiving updates? No, only current turn allowed.
+  if (myPlayerId) {
+    const myColor = myPlayerId === whiteId ? "white" : "black";
+    if (serverState.currentTurn !== myColor) {
+      selectedCell = null;
+      availableMoves = [];
+      pendingPromotion = null;
+    }
+  }
+
+  return {
+    ...currentLocalState,
+    board: serverState.board,
+    currentTurn: serverState.currentTurn,
+    winner:
+      serverState.winner === "white" || serverState.winner === whiteId
+        ? "white"
+        : serverState.winner === "black" || serverState.winner === blackId
+          ? "black"
+          : serverState.winner === "draw" || serverState.winner === "draw" // redundant but safe
+            ? "draw"
+            : null,
+    history: serverState.history,
+    playerInfo: pInfo,
+    kingsPositions: { white: whiteKing, black: blackKing },
+    sideInCheck,
+    isPaused: false,
+    availableMoves,
+    selectedCell,
+    pendingPromotion,
+    gameMode: "online",
+    onlineParams: {
+      roomId: "", // filled by context/hook
+      playerId: myPlayerId || "",
+      isSpectator,
+      opponentName,
+      myColor: isSpectator
+        ? "spectator"
+        : myPlayerId === whiteId
+          ? "white"
+          : "black",
+      gameStartTime: serverState.gameStartTime, // Map it here
+    },
+  };
+};
 
 function initializeBoard(): (Piece | null)[][] {
   const backRank: Piece["type"][] = [
@@ -227,18 +401,15 @@ export const isEnPassantAvailable = (
   if (!isPawnDoubleJump) return false;
 
   const isEnemyAdjacent =
-    lastMove.to[0] === from[0] && Math.abs(lastMove.to[1] - from[1]) === 1; // Enemy pawn is next to ours
+    lastMove.to[0] === from[0] && Math.abs(lastMove.to[1] - from[1]) === 1;
 
-  const isMovingToEnemyFile = to[1] === lastMove.to[1]; // We are moving into the file of the enemy pawn
+  if (!isEnemyAdjacent) return false;
 
-  const direction = piece.color === "white" ? -1 : 1;
-  // const isMovingBehindEnemy = to[0] === lastMove.to[0] + direction; // Moving strictly behind
+  const isMovingToEnemyFile = to[1] === lastMove.to[1];
 
-  // NOTE: In the original logic: "isMovingToEnemyFile" was used.
-  // Original: if (isEnemyAdjacent && isMovingToEnemyFile) return true;
-  // But wait, the diagonal move validation already checks `dRow === direction`.
+  if (!isMovingToEnemyFile) return false;
 
-  return isEnemyAdjacent && isMovingToEnemyFile;
+  return true;
 };
 
 const isPathClear = (
@@ -481,13 +652,21 @@ export const wouldBeInCheck = (
   const targetPiece = board[to[0]][to[1]];
 
   // 1. Mutate Board (Move)
-  board[to[0]][to[1]] = { ...piece, hasMoved: true }; // Cloning piece is cheap, board is not
+  board[to[0]][to[1]] = { ...piece, hasMoved: true };
   board[from[0]][from[1]] = null;
 
+  // Handle EP Capture Simulation
+  let capturedEpPawn: Piece | null = null;
+  const isEnPassantCapture =
+    piece.type === "pawn" && from[1] !== to[1] && !targetPiece; // If diagonal pawn move to empty square
+
+  if (isEnPassantCapture) {
+    // The captured pawn is at [from[0], to[1]]
+    capturedEpPawn = board[from[0]][to[1]];
+    board[from[0]][to[1]] = null;
+  }
+
   // 2. Find King (Optimized: only search if we don't know or if king moved)
-  // Logic: We usually know King pos from state, but this function signature only takes board.
-  // We can scan or pass it in. For safety, let's scan but break early.
-  // Actually, if we moved the king, we know where it is (to).
   let kingPos: [number, number] | null = null;
 
   if (piece.type === "king") {
@@ -507,11 +686,14 @@ export const wouldBeInCheck = (
   }
 
   // 3. Check
-  const inCheck = kingPos ? isCheck(board, color, kingPos) : false; // Should always find king
+  const inCheck = kingPos ? isCheck(board, color, kingPos) : false;
 
   // 4. Revert Board (Unmake)
-  board[from[0]][from[1]] = piece; // Put original piece back
-  board[to[0]][to[1]] = targetPiece; // Put target back
+  board[from[0]][from[1]] = piece;
+  board[to[0]][to[1]] = targetPiece;
+  if (isEnPassantCapture && capturedEpPawn) {
+    board[from[0]][to[1]] = capturedEpPawn;
+  }
 
   return inCheck;
 };
@@ -1183,3 +1365,5 @@ const getPieceLetter = (type: Piece["type"]): string => {
       return "";
   }
 };
+
+// --- Adapter Function ---

@@ -64,8 +64,8 @@ const ConnectFourStartMenu: React.FC = () => {
       isValid = false;
     }
     if (
-      areColorsTooSimilar(playerOneColor, "#232930", 90) ||
-      areColorsTooSimilar(playerOneColor, "#181818", 90)
+      areColorsTooSimilar(playerOneColor, "#232930", 50) ||
+      areColorsTooSimilar(playerOneColor, "#181818", 50)
     ) {
       setPlayerOneError(
         "Player 1 cannot have the same color as the field or colors that are too similar to it",
@@ -73,19 +73,19 @@ const ConnectFourStartMenu: React.FC = () => {
       isValid = false;
     }
     if (
-      areColorsTooSimilar(playerTwoColor, "#232930", 90) ||
-      areColorsTooSimilar(playerTwoColor, "#181818", 90)
+      areColorsTooSimilar(playerTwoColor, "#232930", 50) ||
+      areColorsTooSimilar(playerTwoColor, "#181818", 50)
     ) {
       setPlayerTwoError(
         "Player 2 cannot have the same color as the field or colors that are too similar to it",
       );
       isValid = false;
     }
-    if (areColorsTooSimilar(playerOneColor, "#FFFFFF", 80)) {
+    if (areColorsTooSimilar(playerOneColor, "#FFFFFF", 70)) {
       setPlayerTwoError("Player 1 cannot have too light color");
       isValid = false;
     }
-    if (areColorsTooSimilar(playerTwoColor, "#FFFFFF", 80)) {
+    if (areColorsTooSimilar(playerTwoColor, "#FFFFFF", 70)) {
       setPlayerTwoError("Player 2 cannot have too light color");
       isValid = false;
     }

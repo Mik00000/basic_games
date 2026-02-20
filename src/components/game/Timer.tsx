@@ -15,9 +15,8 @@ interface TimerProps {
   onComplete?: any;
   isGrowing?: boolean;
   className?: string;
-  // НОВІ ПРОПСИ ДЛЯ ОНЛАЙНУ
-  syncTime?: number; // Якщо передано, таймер форсується до цього часу
-  isServerControlled?: boolean; // Прапорець режиму
+  syncTime?: number;
+  isServerControlled?: boolean;
 }
 
 export interface TimerHandle {
@@ -39,16 +38,30 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
     },
     ref,
   ) => {
-    // Локальний хук використовуємо тільки якщо це НЕ серверний режим
     const [storedMilliseconds, setStoredMilliseconds] =
       useStickyStateWithExpiry(startTime, timerName, timeToForgotTimer, "time");
 
-    // Внутрішній стейт для відображення
     const [milliseconds, setMilliseconds] = useState(
       isServerControlled && syncTime !== undefined
         ? syncTime
         : storedMilliseconds,
     );
+
+    const [prevSyncTime, setPrevSyncTime] = useState(syncTime);
+    const [prevIsServerControlled, setPrevIsServerControlled] =
+      useState(isServerControlled);
+
+    if (
+      syncTime !== prevSyncTime ||
+      isServerControlled !== prevIsServerControlled
+    ) {
+      setPrevSyncTime(syncTime);
+      setPrevIsServerControlled(isServerControlled);
+
+      if (isServerControlled && syncTime !== undefined) {
+        setMilliseconds(syncTime);
+      }
+    }
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -67,30 +80,39 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
 
     // 2. ІНТЕРВАЛ (Тікання)
     useEffect(() => {
-      // Якщо на паузі, час вийшов АБО керує сервер - стоп локальний інтервал
-      if (pause || (!isGrowing && milliseconds <= 0) || isServerControlled) {
+      // Якщо на паузі або час вийшов - стоп локальний інтервал
+      if (pause || (!isGrowing && milliseconds <= 0)) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         return;
       }
 
+      const lastTickRef = { current: Date.now() };
+
       intervalRef.current = setInterval(() => {
+        const now = Date.now();
+        const delta = now - lastTickRef.current;
+        lastTickRef.current = now;
+
         setMilliseconds((prev) => {
-          const nextVal = Math.max(isGrowing ? prev + 10 : prev - 10, 0);
+          let nextVal;
+          if (isGrowing) {
+            nextVal = prev + delta;
+          } else {
+            nextVal = Math.max(prev - delta, 0);
+          }
 
           // В локальному режимі зберігаємо в localStorage
           if (!isServerControlled) {
-            // Це трохи важко для performance кожні 10мс писати в storage,
-            // але залишаємо як було у тебе для сумісності
             setStoredMilliseconds(nextVal);
           }
           return nextVal;
         });
-      }, 10);
+      }, 100); // 100ms interval is enough for UI updates, delta handles accuracy
 
       return () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
-    }, [pause, isGrowing, isServerControlled, setStoredMilliseconds]); // Прибрав milliseconds з deps щоб не було re-create інтервалу
+    }, [pause, isGrowing, isServerControlled, setStoredMilliseconds]);
 
     // 3. ЗАВЕРШЕННЯ
     useEffect(() => {
@@ -100,9 +122,8 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
       }
     }, [milliseconds, onComplete, isServerControlled]);
 
-    // Визначаємо час для відображення: якщо керує сервер - беремо syncTime, інакше - локальний стейт
-    const displayTime =
-      isServerControlled && syncTime !== undefined ? syncTime : milliseconds;
+    // Використовуємо milliseconds для відображення (воно тепер синхронізоване + тікає)
+    const displayTime = milliseconds;
 
     return (
       <div className={`number-timer ${className ? className : ""}`}>

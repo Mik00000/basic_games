@@ -55,7 +55,7 @@ function App() {
                   element={<ConnectFour />}
                 />
                 <Route
-                  path="/games/chess/:gameMode/:onlineGameId?"
+                  path="/games/chess/:gameModeOrId?"
                   element={<Chess />}
                 />
               </Route>
@@ -72,10 +72,7 @@ function App() {
                 path="/games/minesweeper-menu"
                 element={<MinesweeperStartMenu />}
               />
-              <Route
-                path="/games/chess-menu"
-                element={<ChessStartMenu />}
-              />
+              <Route path="/games/chess-menu" element={<ChessStartMenu />} />
               <Route
                 path="/games/chess/lobby/:roomId"
                 element={<ChessLobby />}

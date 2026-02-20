@@ -265,19 +265,58 @@ div {
 // --- GLOBAL MODAL STYLES ---
 
 .pause-overlay {
-  position: fixed; // Fixed to cover entire screen regardless of scroll
+  position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  backdrop-filter: blur(5px);
-  background: rgba(0, 0, 0, 0.6); // Slightly darker
-  z-index: 999; // High z-index
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  gap: 40px;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+
+  .pause-icon-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    width: auto;
+    height: auto;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+
+    .icon {
+      width: 100px;
+      height: 100px;
+      // filter: invert(1); // Removed invert(1) because we are using a white icon component directly, or maybe we should keep it if user wants it specifically? user provided it. I will keep it but maybe it will invert white to black? Let's check. Default color is white. Invert(1) makes it black.
+      // Re-reading user request: "make the button pause with styles".
+      // Previous icon was white. If I invert white I get black.
+      // I'll keep the styles exactly as provided and adjust the icon color prop if needed.
+      filter: invert(1);
+      opacity: 0.8;
+      transition:
+        transform 0.2s,
+        opacity 0.2s;
+      display: block;
+    }
+
+    &:hover .icon {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+
+    &:active .icon {
+      transform: scale(0.95);
+    }
+
+    span {
+      display: none;
+    }
+  }
 
   .pop-up {
     position: relative; // Reset position since overlay handles centering
@@ -337,11 +376,10 @@ div {
       .primary,
       .secondary {
         // Added exit-button, primary, secondary aliases
-        @include for-button($bg-color: $secondary, $padding: 14px 46px);
+        @include for-button($bg-color: $secondary, $padding: 10px);
         width: 100%;
         max-width: 200px;
-        text-wrap: nowrap; 
-
+        text-wrap: nowrap;
       }
 
       .secondary {

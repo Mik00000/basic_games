@@ -6,14 +6,17 @@
   align-items: center;
   width: 100%;
   margin: 0 auto;
+  position: relative;
+  flex-grow: 1;
   @include for-size(mobile) {
-    height: 100%;
     justify-content: space-between;
     padding: 40px 0;
     --cell-size: calc((100vw - 30px) / 8);
   }
   @media screen and (max-width: 450px) {
     --cell-size: calc((100vw - 20px) / 8);
+    justify-content: flex-start;
+    padding: 8px 0;
   }
 
   .top-bar {
@@ -36,6 +39,12 @@
       display: flex;
       gap: 35px;
       align-items: center;
+      .current-player {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
     }
 
     .right-part {
@@ -57,6 +66,10 @@
         display: flex;
         justify-content: space-between;
         gap: 2px;
+        @media screen and (max-width: 450px) {
+          bottom: 8px;
+          position: absolute;
+        }
       }
 
       .mid-part {
@@ -66,10 +79,9 @@
 
         @media screen and (max-width: 410px) {
           flex-wrap: wrap;
-          justify-content: center;
           gap: 10px;
 
-          .nickname-display {
+          .current-player {
             order: -1;
             width: 100%;
             margin-bottom: 5px;
@@ -111,6 +123,8 @@
     display: flex;
     flex-direction: column;
     user-select: none;
+    @media screen and (max-width: 450px) {
+    }
     @include for-size(mobile) {
       justify-content: space-around;
       // height: 100%;

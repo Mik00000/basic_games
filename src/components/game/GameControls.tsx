@@ -80,6 +80,7 @@ export const RestartButton: React.FC<
   onClick,
   className = "",
   disabled,
+  style,
   title,
   text,
   isStartAnimation,
@@ -95,6 +96,7 @@ export const RestartButton: React.FC<
     title={title}
     style={
       {
+        ...style,
         "--vote-count": voteCount && voteCount !== 0 ? `"${voteCount}"` : "",
       } as React.CSSProperties
     }
