@@ -1,7 +1,7 @@
 import React, { useReducer, useState, useEffect, useMemo } from "react";
 import { FirstPlayerSelector } from "../../components/game/FirstPlayerSelector/FirstPlayerSelector";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import PauseIcon from "../../assets/icons/pause.svg?react";
+
 import {
   hexToRgb,
   useStickyStateWithExpiry,
@@ -41,11 +41,11 @@ interface C4OnlineState {
 
 import {
   ExitButton,
-  MobileExitButton,
   PauseButton,
   RestartButton,
 } from "../../components/game/GameControls";
 import { PauseOverlay } from "../../components/game/PauseOverlay";
+import { GameTopBar } from "../../components/game/GameTopBar";
 
 export const ConnectFour: React.FC = () => {
   const navigate = useNavigate();
@@ -158,10 +158,14 @@ export const ConnectFour: React.FC = () => {
   // --- FIX 1: Додано tick в залежності ---
   // Тепер useMemo перераховується кожні 200мс, перевіряючи Date.now()
   const isStartAnimation = useMemo(() => {
-    if (!isOnline || !onlineState?.gameStartTime) return false;
-    // Використовуємо стейт now
-    return now < onlineState.gameStartTime;
-  }, [isOnline, onlineState?.gameStartTime, now]);
+    if (!isOnline || !onlineState?.gameStartTime || !currentRoom?.id) return false;
+    
+    const animKey = `c4_anim_shown_${currentRoom.id}_${onlineState.gameStartTime}`;
+    if (sessionStorage.getItem(animKey)) return false;
+
+    // Use current 'now' state for consistency
+    return now < onlineState.gameStartTime + 2000;
+  }, [isOnline, onlineState?.gameStartTime, now, currentRoom?.id]);
 
   const displayState: LocalGameState = useMemo(() => {
     if (isOnline) {
@@ -190,6 +194,8 @@ export const ConnectFour: React.FC = () => {
     }
     return localState;
   }, [isOnline, onlineState, localState, currentRoom, isStartAnimation]);
+
+  const state = displayState;
 
   // --- NAMES & COLORS ---
   const p1Id = isOnline ? onlineState?.players?.[0] : undefined;
@@ -292,7 +298,7 @@ export const ConnectFour: React.FC = () => {
   const [circleTimer1Key, setCircleTimer1Key] = useState(1);
   const [circleTimer2Key, setCircleTimer2Key] = useState(1);
 
-  const cleanLocalStorage = () => {
+  const cleanLocalStorage = React.useCallback(() => {
     // If we have a specific localGameId, clear its specific keys.
     // If not, clear the default legacy keys (or both for safety, but focus on current context).
     const suffix = localGameId ? `_${localGameId}` : "";
@@ -322,18 +328,18 @@ export const ConnectFour: React.FC = () => {
     setCircleTimer2Key((p) => p + 1);
     setTimer1RemainingTime(CIRCLE_TIMER_DURATION);
     setTimer2RemainingTime(CIRCLE_TIMER_DURATION);
-  };
+  }, [localGameId, setTimer1RemainingTime, setTimer2RemainingTime]);
 
-  const handleExit = async () => {
+  const handleExit = React.useCallback(async () => {
     if (isOnline) {
       // Manual leave -> Forfeit if playing
       await leaveRoom();
     }
     cleanLocalStorage();
     navigate("/games/connect4-menu");
-  };
+  }, [isOnline, leaveRoom, navigate, cleanLocalStorage]);
 
-  const handleRestart = async () => {
+  const handleRestart = React.useCallback(async () => {
     // Ця перевірка тепер працюватиме коректно, бо state.showCoinToss оновиться
     if (state.showCoinToss) return;
     if (isOnline) {
@@ -346,7 +352,7 @@ export const ConnectFour: React.FC = () => {
       dispatch({ type: "RESET" });
       cleanLocalStorage();
     }
-  };
+  }, [state.showCoinToss, isOnline, sendVote, cleanLocalStorage]);
 
   const getRestartButtonText = () => {
     if (state.showCoinToss) return "Starting..."; // Візуальна підказка
@@ -408,7 +414,7 @@ export const ConnectFour: React.FC = () => {
     return Math.max(Math.ceil(remainingMs / 1000), 0);
   };
 
-  const handlePauseToggle = async () => {
+  const handlePauseToggle = React.useCallback(async () => {
     if (!isOnline) {
       if (!isGameBlocked) setIsPause((p) => !p);
       return;
@@ -418,7 +424,7 @@ export const ConnectFour: React.FC = () => {
     } catch (e) {
       console.error("Failed to vote pause", e);
     }
-  };
+  }, [isOnline, isGameBlocked, sendVote]);
 
   const getPauseButtonText = () => {
     if (isStartAnimation) return "Starting...";
@@ -460,12 +466,15 @@ export const ConnectFour: React.FC = () => {
     isOnline,
   ]);
 
-  const handleFirstPlayerSelected = (winnerIndex: number) => {
+  const handleFirstPlayerSelected = React.useCallback((winnerIndex: number) => {
+    if (currentRoom?.id && onlineState?.gameStartTime) {
+      sessionStorage.setItem(`c4_anim_shown_${currentRoom.id}_${onlineState.gameStartTime}`, "true");
+    }
     dispatch({ type: "SET_PLAYER", player: winnerIndex + 1 });
     dispatch({ type: "HIDE_COIN_TOSS" });
     setIsGameBlocked(false);
     setIsPause(false);
-  };
+  }, [currentRoom?.id, onlineState?.gameStartTime]);
 
   useEffect(() => {
     if (isOnline) return;
@@ -483,6 +492,10 @@ export const ConnectFour: React.FC = () => {
     timer1RemainingTime,
     timer2RemainingTime,
     isOnline,
+    setCircleTimer1Key,
+    setCircleTimer2Key,
+    setTimer1RemainingTime,
+    setTimer2RemainingTime,
   ]);
 
   useEffect(() => {
@@ -503,9 +516,10 @@ export const ConnectFour: React.FC = () => {
     isPause,
     localState.field,
     difficulty,
+    localState,
   ]);
 
-  const handleCellClick = (columnIndex: number) => {
+  const handleCellClick = React.useCallback((columnIndex: number) => {
     if (displayState.winner !== null || isPause) return;
 
     if (isOnline) {
@@ -528,17 +542,10 @@ export const ConnectFour: React.FC = () => {
         dispatch({ type: "DROP_CHECKER", column: columnIndex });
       }
     }
-  };
+  }, [displayState.winner, isPause, isOnline, onlineMe, currentRoom, displayState.currentPlayer, makeMove, gameMode, localState.currentPlayer, localState.field]);
 
   const rgbPlayer1 = hexToRgb(p1Color);
   const rgbPlayer2 = hexToRgb(p2Color);
-  const state = displayState;
-
-  const isWaitingForOpponent =
-    isOnline &&
-    isConnected &&
-    currentRoom &&
-    (currentRoom.players?.length || 0) < 2;
 
   if (isOnline) {
     if (!isConnected || !currentRoom || !onlineMe) {
@@ -568,244 +575,246 @@ export const ConnectFour: React.FC = () => {
         />
       )} */}
 
-      <div className="top-bar">
-        <div className="left-part">
-          <ExitButton onClick={handleExit} />
-        </div>
-        <div className="mid-part">
-          <div className="player-1-timers">
-            {!isOnline ? (
-              <Timer
-                startTime={PLAYER_MAX_GAME_TIME}
-                timerName={
-                  localGameId
-                    ? `connectFourTimerTime1_${localGameId}`
-                    : "connectFourTimerTime1"
+      <GameTopBar
+        leftContent={<ExitButton onClick={handleExit} />}
+        midContent={
+          <>
+            <div className="player-1-timers">
+              {!isOnline ? (
+                <Timer
+                  startTime={PLAYER_MAX_GAME_TIME}
+                  timerName={
+                    localGameId
+                      ? `connectFourTimerTime1_${localGameId}`
+                      : "connectFourTimerTime1"
+                  }
+                  timeToForgotTimer={TIME_TO_FORGOT_GAME}
+                  pause={
+                    state.currentPlayer !== 1 ||
+                    state.currentPlayer !== 1 ||
+                    Boolean(state.winner) ||
+                    isPause ||
+                    isStartAnimation
+                  }
+                  key={player1TimerKey}
+                  onComplete={() => dispatch({ type: "SET_WINNER", winner: 2 })}
+                />
+              ) : (
+                <Timer
+                  startTime={PLAYER_MAX_GAME_TIME}
+                  timerName="online_p1"
+                  isServerControlled={true}
+                  syncTime={
+                    isOnline && currentRoom?.status === "paused"
+                      ? undefined
+                      : p1Time
+                  }
+                  pause={
+                    onlineState?.currentTurn !== p1Id ||
+                    !!onlineState?.winner ||
+                    isStartAnimation ||
+                    (isOnline && currentRoom?.status === "paused") ||
+                    (isOnline &&
+                      currentRoom?.players?.length === 2 &&
+                      !currentRoom.players[1].isOnline)
+                  }
+                  className="online-timer"
+                />
+              )}
+              <CountdownCircleTimer
+                key={
+                  isOnline
+                    ? `p1-turn-${
+                        onlineState?.timers?.[p1Id || ""]?.lastMoveTimestamp
+                      }-${state.currentPlayer}-${timerSyncKey}`
+                    : circleTimer1Key
                 }
-                timeToForgotTimer={TIME_TO_FORGOT_GAME}
-                pause={
-                  state.currentPlayer !== 1 ||
-                  state.currentPlayer !== 1 ||
-                  Boolean(state.winner) ||
-                  isPause ||
-                  isStartAnimation
+                isPlaying={
+                  isOnline
+                    ? !isStartAnimation &&
+                      state.currentPlayer === 1 &&
+                      currentRoom?.status === "playing" &&
+                      !state.winner
+                    : state.currentPlayer === 1 && !isPause && !state.winner
                 }
-                key={player1TimerKey}
-                onComplete={() => dispatch({ type: "SET_WINNER", winner: 2 })}
-              />
-            ) : (
-              <Timer
-                startTime={PLAYER_MAX_GAME_TIME}
-                timerName="online_p1"
-                isServerControlled={true}
-                syncTime={
-                  isOnline && currentRoom?.status === "paused"
-                    ? undefined
-                    : p1Time
+                duration={CIRCLE_TIMER_DURATION}
+                initialRemainingTime={
+                  isOnline ? calculateTurnTime(p1Id) : timer1RemainingTime
                 }
-                pause={
-                  onlineState?.currentTurn !== p1Id ||
-                  !!onlineState?.winner ||
-                  isStartAnimation ||
-                  (isOnline && currentRoom?.status === "paused") ||
-                  (isOnline &&
-                    currentRoom?.players?.length === 2 &&
-                    !currentRoom.players[1].isOnline)
-                }
-                className="online-timer"
-              />
-            )}
-            <CountdownCircleTimer
-              key={
-                isOnline
-                  ? `p1-turn-${
-                      onlineState?.timers?.[p1Id || ""]?.lastMoveTimestamp
-                    }-${state.currentPlayer}-${timerSyncKey}`
-                  : circleTimer1Key
-              }
-              isPlaying={
-                isOnline
-                  ? !isStartAnimation &&
-                    state.currentPlayer === 1 &&
-                    currentRoom?.status === "playing" &&
-                    !state.winner
-                  : state.currentPlayer === 1 && !isPause && !state.winner
-              }
-              duration={CIRCLE_TIMER_DURATION}
-              initialRemainingTime={
-                isOnline ? calculateTurnTime(p1Id) : timer1RemainingTime
-              }
-              colors={"#d9d9d9"}
-              trailColor={`rgb(${rgbPlayer1})`}
-              size={40}
-              strokeWidth={3}
-              onUpdate={(t) => {
-                if (!isOnline) {
-                  setTimer1RemainingTime(t);
-                } else {
-                  // Drift Check
-                  if (
-                    state.currentPlayer === 1 &&
-                    onlineState?.currentTurn === p1Id
-                  ) {
-                    const realTime = calculateTurnTime(p1Id);
-                    if (Math.abs(realTime - t) > 1) {
-                      setTimerSyncKey((prev) => prev + 1);
+                colors={"#d9d9d9"}
+                trailColor={`rgb(${rgbPlayer1})`}
+                size={40}
+                strokeWidth={3}
+                onUpdate={(t) => {
+                  if (!isOnline) {
+                    setTimer1RemainingTime(t);
+                  } else {
+                    // Drift Check
+                    if (
+                      state.currentPlayer === 1 &&
+                      onlineState?.currentTurn === p1Id
+                    ) {
+                      const realTime = calculateTurnTime(p1Id);
+                      if (Math.abs(realTime - t) > 1) {
+                        setTimerSyncKey((prev) => prev + 1);
+                      }
                     }
                   }
-                }
-              }}
-              onComplete={() => {
-                dispatch({ type: "SET_PLAYER", player: 2 });
-              }}
-            >
-              {({ remainingTime }) => Math.ceil(remainingTime)}
-            </CountdownCircleTimer>
-          </div>
-          <div
-            className="nickname-display"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <h1>
-              {!state.showCoinToss &&
-                (state.winner !== null
-                  ? state.winner === 1
-                    ? `${p1Name} wins`
-                    : state.winner === 2
-                      ? `${effectivePlayerTwoName} wins`
-                      : "Draw"
-                  : state.currentPlayer === 1
-                    ? p1Name
-                    : state.currentPlayer === 2
-                      ? effectivePlayerTwoName
-                      : "Waiting...")}
-            </h1>
-            {isOnline && currentRoom && (
-              <span
-                style={{ fontSize: "0.8rem", color: "#aaa", marginTop: "4px" }}
+                }}
+                onComplete={() => {
+                  dispatch({ type: "SET_PLAYER", player: 2 });
+                }}
               >
-                Room: {currentRoom.id}
-              </span>
-            )}
-          </div>
-          <div className="player-2-timers">
-            <CountdownCircleTimer
-              key={
-                isOnline
-                  ? `p2-turn-${
-                      onlineState?.timers?.[p2Id || ""]?.lastMoveTimestamp
-                    }-${state.currentPlayer}-${timerSyncKey}`
-                  : circleTimer2Key
-              }
-              isPlaying={
-                isOnline
-                  ? !isStartAnimation &&
-                    state.currentPlayer === 2 &&
-                    currentRoom?.status === "playing" &&
-                    !state.winner
-                  : state.currentPlayer === 2 && !isPause && !state.winner
-              }
-              duration={CIRCLE_TIMER_DURATION}
-              initialRemainingTime={
-                isOnline ? calculateTurnTime(p2Id) : timer2RemainingTime
-              }
-              colors={"#d9d9d9"}
-              trailColor={`rgb(${rgbPlayer2})`}
-              size={40}
-              strokeWidth={3}
-              onUpdate={(t) => {
-                if (!isOnline) {
-                  setTimer2RemainingTime(t);
-                } else {
-                  // Drift Check
-                  if (
-                    state.currentPlayer === 2 &&
-                    onlineState?.currentTurn === p2Id
-                  ) {
-                    const realTime = calculateTurnTime(p2Id);
-                    if (Math.abs(realTime - t) > 1) {
-                      setTimerSyncKey((prev) => prev + 1);
-                    }
-                  }
-                }
-              }}
-              onComplete={() => {
-                if (!isOnline) dispatch({ type: "SET_PLAYER", player: 1 });
+                {({ remainingTime }) => Math.ceil(remainingTime)}
+              </CountdownCircleTimer>
+            </div>
+            <div
+              className="nickname-display"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
               }}
             >
-              {({ remainingTime }) => Math.ceil(remainingTime)}
-            </CountdownCircleTimer>
-            {!isOnline ? (
-              <Timer
-                startTime={PLAYER_MAX_GAME_TIME}
-                timerName={
-                  localGameId
-                    ? `connectFourTimerTime2_${localGameId}`
-                    : "connectFourTimerTime2"
+              <h1>
+                {!state.showCoinToss &&
+                  (state.winner !== null
+                    ? state.winner === 1
+                      ? `${p1Name} wins`
+                      : state.winner === 2
+                        ? `${effectivePlayerTwoName} wins`
+                        : "Draw"
+                    : state.currentPlayer === 1
+                      ? p1Name
+                      : state.currentPlayer === 2
+                        ? effectivePlayerTwoName
+                        : "Waiting...")}
+              </h1>
+              {isOnline && currentRoom && (
+                <span
+                  style={{ fontSize: "0.8rem", color: "#aaa", marginTop: "4px" }}
+                >
+                  Room: {currentRoom.id}
+                </span>
+              )}
+            </div>
+            <div className="player-2-timers">
+              <CountdownCircleTimer
+                key={
+                  isOnline
+                    ? `p2-turn-${
+                        onlineState?.timers?.[p2Id || ""]?.lastMoveTimestamp
+                      }-${state.currentPlayer}-${timerSyncKey}`
+                    : circleTimer2Key
                 }
-                timeToForgotTimer={TIME_TO_FORGOT_GAME}
-                pause={
-                  state.currentPlayer !== 2 ||
-                  Boolean(state.winner) ||
-                  isPause ||
-                  isStartAnimation
+                isPlaying={
+                  isOnline
+                    ? !isStartAnimation &&
+                      state.currentPlayer === 2 &&
+                      currentRoom?.status === "playing" &&
+                      !state.winner
+                    : state.currentPlayer === 2 && !isPause && !state.winner
                 }
-                key={player2TimerKey * -1}
-                onComplete={() => dispatch({ type: "SET_WINNER", winner: 1 })}
-              />
-            ) : (
-              <Timer
-                startTime={PLAYER_MAX_GAME_TIME}
-                timerName="online_p2"
-                isServerControlled={true}
-                syncTime={
-                  isOnline && currentRoom?.status === "paused"
-                    ? undefined
-                    : p2Time
+                duration={CIRCLE_TIMER_DURATION}
+                initialRemainingTime={
+                  isOnline ? calculateTurnTime(p2Id) : timer2RemainingTime
                 }
-                pause={
-                  onlineState?.currentTurn !== p2Id ||
-                  !!onlineState?.winner ||
-                  isStartAnimation ||
-                  (isOnline && currentRoom?.status === "paused") ||
-                  (isOnline &&
-                    currentRoom?.players?.length === 2 &&
-                    !currentRoom.players[0].isOnline)
-                }
-                className="online-timer"
-              />
-            )}
-          </div>
-        </div>
-        <div className="right-part">
-          <PauseButton
-            onClick={handlePauseToggle}
-            isPaused={
-              (isOnline && currentRoom?.status === "paused") ||
-              (!isOnline && isPause)
-            }
-            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-            disabled={
-              (isOnline && currentRoom?.activeVote?.type === "restart") ||
-              isStartAnimation
-            }
-            text={getPauseButtonText()}
-            voteCount={getActiveVoteCount("pause")}
-          />
-          <RestartButton
-            onClick={handleRestart}
-            disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
-            isStartAnimation={isStartAnimation}
-            text={getRestartButtonText()}
-            voteCount={getActiveVoteCount("restart")}
-          />
-        </div>
-      </div>
+                colors={"#d9d9d9"}
+                trailColor={`rgb(${rgbPlayer2})`}
+                size={40}
+                strokeWidth={3}
+                onUpdate={(t) => {
+                  if (!isOnline) {
+                    setTimer2RemainingTime(t);
+                  } else {
+                    // Drift Check
+                    if (
+                      state.currentPlayer === 2 &&
+                      onlineState?.currentTurn === p2Id
+                    ) {
+                      const realTime = calculateTurnTime(p2Id);
+                      if (Math.abs(realTime - t) > 1) {
+                        setTimerSyncKey((prev) => prev + 1);
+                      }
+                    }
+                  }
+                }}
+                onComplete={() => {
+                  if (!isOnline) dispatch({ type: "SET_PLAYER", player: 1 });
+                }}
+              >
+                {({ remainingTime }) => Math.ceil(remainingTime)}
+              </CountdownCircleTimer>
+              {!isOnline ? (
+                <Timer
+                  startTime={PLAYER_MAX_GAME_TIME}
+                  timerName={
+                    localGameId
+                      ? `connectFourTimerTime2_${localGameId}`
+                      : "connectFourTimerTime2"
+                  }
+                  timeToForgotTimer={TIME_TO_FORGOT_GAME}
+                  pause={
+                    state.currentPlayer !== 2 ||
+                    Boolean(state.winner) ||
+                    isPause ||
+                    isStartAnimation
+                  }
+                  key={player2TimerKey * -1}
+                  onComplete={() => dispatch({ type: "SET_WINNER", winner: 1 })}
+                />
+              ) : (
+                <Timer
+                  startTime={PLAYER_MAX_GAME_TIME}
+                  timerName="online_p2"
+                  isServerControlled={true}
+                  syncTime={
+                    isOnline && currentRoom?.status === "paused"
+                      ? undefined
+                      : p2Time
+                  }
+                  pause={
+                    onlineState?.currentTurn !== p2Id ||
+                    !!onlineState?.winner ||
+                    isStartAnimation ||
+                    (isOnline && currentRoom?.status === "paused") ||
+                    (isOnline &&
+                      currentRoom?.players?.length === 2 &&
+                      !currentRoom.players[0].isOnline)
+                  }
+                  className="online-timer"
+                />
+              )}
+            </div>
+          </>
+        }
+        rightContent={
+          <>
+            <PauseButton
+              onClick={handlePauseToggle}
+              isPaused={
+                (isOnline && currentRoom?.status === "paused") ||
+                (!isOnline && isPause)
+              }
+              style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+              disabled={
+                (isOnline && currentRoom?.activeVote?.type === "restart") ||
+                isStartAnimation
+              }
+              text={getPauseButtonText()}
+              voteCount={getActiveVoteCount("pause")}
+            />
+            <RestartButton
+              onClick={handleRestart}
+              disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
+              isStartAnimation={isStartAnimation}
+              text={getRestartButtonText()}
+              voteCount={getActiveVoteCount("restart")}
+            />
+          </>
+        }
+      />
 
       {/* OPPONENT DISCONNECTED MODAL */}
       <OpponentDisconnectedModal
@@ -912,7 +921,7 @@ export const ConnectFour: React.FC = () => {
         />
       </div>
 
-      {state.showCoinToss && isBoardEmpty(state.field) && (
+      {state.showCoinToss && (
         <FirstPlayerSelector
           players={[
             { name: p1Name, color: p1Color },
@@ -984,30 +993,7 @@ export const ConnectFour: React.FC = () => {
           </div>
         </div>
       )}
-      <div className="top-bar mobile">
-        <MobileExitButton onClick={handleExit} />
-        <PauseButton
-          onClick={handlePauseToggle}
-          isPaused={
-            (isOnline && currentRoom?.status === "paused") ||
-            (!isOnline && isPause)
-          }
-          style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-          disabled={
-            (isOnline && currentRoom?.activeVote?.type === "restart") ||
-            isStartAnimation
-          }
-          text={getPauseButtonText()}
-          voteCount={getActiveVoteCount("pause")}
-        />
-        <RestartButton
-          onClick={handleRestart}
-          disabled={isOnline && (currentRoom?.players?.length || 0) < 2}
-          isStartAnimation={isStartAnimation}
-          text={getRestartButtonText()}
-          voteCount={getActiveVoteCount("restart")}
-        />
-      </div>
+
     </section>
   );
 };

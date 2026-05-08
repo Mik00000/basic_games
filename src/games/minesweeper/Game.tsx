@@ -8,6 +8,7 @@ import bombIcon from "../../assets/icons/bomb.svg";
 import flagIcon from "../../assets/icons/flag-1.svg";
 import { gameReducer } from "./gameReducer";
 import { createInitialGameState, GameState } from "./gameLogic";
+import { GameTopBar } from "../../components/game/GameTopBar";
 
 const MIN_ROWS = 3;
 const MIN_COLS = 3;
@@ -16,27 +17,20 @@ const TimeToForgotGame = 0.5 * 60 * 60 * 1000;
 export const Minesweeper: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const settings = location.state || {};
+  const settings = React.useMemo(() => location.state || {}, [location.state]);
   const { rows = 4, columns = 4, bombCount = 20 } = settings;
   const gameRows = Math.max(rows, MIN_ROWS);
   const gameCols = Math.max(columns, MIN_COLS);
   const bombNumber = bombCount;
   const timerRef = useRef<TimerHandle>(null);
+  const losingAnimStarted = useRef(false);
+  const losingTimeouts = useRef<NodeJS.Timeout[]>([]);
 
-  useEffect(() => {
-    if (localStorage.getItem("minesweeperState") === null) handleRestart();
-    if (Object.keys(settings).length === 0) navigate("/games/minesweeper-menu");
-  }, [settings, navigate]);
-
-  useEffect(() => {
-    if (Object.keys(settings).length === 0) navigate("/games/minesweeper-menu");
-  }, []);
-
-  const initialGameState: GameState = createInitialGameState(
+  const initialGameState: GameState = React.useMemo(() => createInitialGameState(
     gameRows,
     gameCols,
     bombNumber,
-  );
+  ), [gameRows, gameCols, bombNumber]);
 
   const [persistedGameState, setPersistedGameState] =
     useStickyStateWithExpiry<GameState>(
@@ -51,17 +45,37 @@ export const Minesweeper: React.FC = () => {
   );
 
   const [showPopup, setShowPopup] = useState(false);
-  const [pickedTool, setPickedTool] = useState<null | "shovel" | "flag">(
-    window.innerWidth <= 768 ? "shovel" : null,
-  );
+
+  const handleRestart = React.useCallback(() => {
+    losingTimeouts.current.forEach(clearTimeout);
+    losingTimeouts.current = [];
+    dispatch({ type: "RESET_GAME" });
+    timerRef.current?.reset();
+    setShowPopup(false);
+    losingAnimStarted.current = false;
+  }, [dispatch, timerRef]);
+
+  useEffect(() => {
+    if (Object.keys(settings).length === 0) {
+      navigate("/games/minesweeper-menu");
+    }
+  }, [settings, navigate]);
+
+  useEffect(() => {
+    if (state.rows !== gameRows || state.cols !== gameCols || state.bombCount !== bombNumber) {
+      // Використовуємо setTimeout, щоб уникнути помилки каскадного рендеру
+      const timeout = setTimeout(() => handleRestart(), 0);
+      return () => clearTimeout(timeout);
+    }
+  }, [gameRows, gameCols, bombNumber, handleRestart, state.rows, state.cols, state.bombCount]);
 
   useEffect(() => {
     setPersistedGameState(state);
-  }, [state]);
+  }, [state, setPersistedGameState]);
 
   useEffect(() => {
-    if (state.isPlayerLoose) {
-      const timeouts: NodeJS.Timeout[] = [];
+    if (state.isPlayerLoose && !losingAnimStarted.current) {
+      losingAnimStarted.current = true;
       state.field.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
           if (cell.bomb && !cell.revealed) {
@@ -69,97 +83,82 @@ export const Minesweeper: React.FC = () => {
             const timeout = setTimeout(() => {
               dispatch({ type: "REVEAL_BOMB", row: rowIndex, col: colIndex });
             }, delay);
-            timeouts.push(timeout);
+            losingTimeouts.current.push(timeout);
           }
         });
       });
       const popupTimer = setTimeout(() => {
         setShowPopup(true);
       }, 2500);
-      timeouts.push(popupTimer);
-      return () => {
-        timeouts.forEach((timeout) => clearTimeout(timeout));
-      };
+      losingTimeouts.current.push(popupTimer);
     }
-  }, [state.isPlayerLoose]);
+  }, [state.isPlayerLoose, state.field, dispatch]);
 
-  function handleRestart() {
-    dispatch({ type: "RESET_GAME" });
-    timerRef.current?.reset();
-    setShowPopup(false);
-    setPickedTool(null);
-  }
+  useEffect(() => {
+    return () => {
+      losingTimeouts.current.forEach(clearTimeout);
+    };
+  }, []);
+
+
 
   return (
     <div className="minesweeper">
-      <div className="top-bar top-bar-1">
-        <div className="left-part">
-          <button
-            onClick={() => navigate("/games/minesweeper-menu")}
-            className="exit-btn"
-          >
-            Exit to Menu
-          </button>
-        </div>
-        <div className="mid-part"></div>
-        <div className="right-part">
-          <button onClick={handleRestart} className="restart-btn">
-            Restart
-          </button>
-        </div>
-      </div>
-
-      <div className="top-bar">
-        <div className="left-part">
-          <button
-            onClick={() => navigate("/games/minesweeper-menu")}
-            className="exit-btn"
-          >
-            Exit to Menu
-          </button>
-          <button
-            className={`shovel-pick picker ${
-              pickedTool === "shovel" ? "picked" : ""
-            }`}
-            onClick={() => setPickedTool("shovel")}
-          >
-            <img src={shovelIcon} alt="shovel" draggable="false" />
-          </button>
-        </div>
-
-        <div className="mid-part">
-          <div className="time">
-            <img src={clockIcon} draggable="false" alt="clock" />
-            <Timer
-              startTime={0}
-              timerName={"minesweeperTimer"}
-              isGrowing={true}
-              timeToForgotTimer={TimeToForgotGame}
-              pause={state.isPlayerLoose}
-              ref={timerRef}
-              className="timer"
-            />
-          </div>
-          <div className="flag-count">
-            <h1>{state.flagCount}</h1>
-            <img src={flagIcon} draggable="false" alt="flag" />
-          </div>
-        </div>
-
-        <div className="right-part">
-          <button
-            className={`flag-pick picker ${
-              pickedTool === "flag" ? "picked" : ""
-            }`}
-            onClick={() => setPickedTool("flag")}
-          >
-            <img src={flagIcon} alt="flag" draggable="false" />
-          </button>
-          <button onClick={handleRestart} className="restart-btn">
-            Restart
-          </button>
-        </div>
-      </div>
+      <GameTopBar
+        leftContent={
+          <>
+            <button
+              onClick={() => navigate("/games/minesweeper-menu")}
+              className="exit-btn"
+            >
+              Exit to Menu
+            </button>
+            <button
+              className={`shovel-pick picker ${
+                state.pickedTool === "shovel" ? "picked" : ""
+              }`}
+              onClick={() => dispatch({ type: "SET_PICKED_TOOL", tool: "shovel" })}
+            >
+              <img src={shovelIcon} alt="shovel" draggable="false" />
+            </button>
+          </>
+        }
+        midContent={
+          <>
+            <div className="time">
+              <img src={clockIcon} draggable="false" alt="clock" />
+              <Timer
+                startTime={0}
+                timerName={"minesweeperTimer"}
+                isGrowing={true}
+                timeToForgotTimer={TimeToForgotGame}
+                pause={state.isPlayerLoose || state.isPlayerWin}
+                ref={timerRef}
+                className="timer"
+              />
+            </div>
+            <div className="flag-count">
+              <h1>{state.flagCount}</h1>
+              <img src={flagIcon} draggable="false" alt="flag" />
+            </div>
+          </>
+        }
+        rightContent={
+          <>
+            <button
+              className={`flag-pick picker ${
+                state.pickedTool === "flag" ? "picked" : ""
+              }`}
+              onClick={() => dispatch({ type: "SET_PICKED_TOOL", tool: "flag" })}
+            >
+              <img src={flagIcon} alt="flag" draggable="false" />
+            </button>
+            <button onClick={handleRestart} className="restart-btn">
+              Restart
+            </button>
+          </>
+        }
+      />
 
       <div id="field">
         {state.field.map((row, rowIndex) => (
@@ -179,13 +178,13 @@ export const Minesweeper: React.FC = () => {
                 }`}
                 key={`cell-${rowIndex}-${cellIndex}`}
                 onClick={() => {
-                  if (pickedTool === "shovel" || pickedTool === null) {
+                  if (state.pickedTool === "shovel" || state.pickedTool === null) {
                     dispatch({
                       type: "CELL_CLICK",
                       row: rowIndex,
                       col: cellIndex,
                     });
-                  } else if (pickedTool === "flag") {
+                  } else if (state.pickedTool === "flag") {
                     dispatch({
                       type: "CELL_RIGHT_CLICK",
                       row: rowIndex,
@@ -201,8 +200,8 @@ export const Minesweeper: React.FC = () => {
                   })
                 }
                 onContextMenu={(e) => {
-                  if (pickedTool === null) {
-                    e.preventDefault();
+                  e.preventDefault();
+                  if (state.pickedTool === null) {
                     dispatch({
                       type: "CELL_RIGHT_CLICK",
                       row: rowIndex,

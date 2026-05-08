@@ -24,6 +24,7 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
   showNames = true,
 }) => {
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
+  const startTimeRef = React.useRef(Date.now());
 
   useEffect(() => {
     // Only support 2 players for coin toss animation currently
@@ -48,11 +49,38 @@ export const FirstPlayerSelector: React.FC<FirstPlayerSelectorProps> = ({
   useEffect(() => {
     if (winnerIndex === null) return;
 
-    const t2 = setTimeout(() => {
-      onComplete(winnerIndex);
-    }, duration);
+    // We store the exact end time to handle background tab scenarios
+    const endTime = startTimeRef.current + duration;
 
-    return () => clearTimeout(t2);
+    const checkAndComplete = (force: boolean = false) => {
+      // Add a small tolerance (50ms) to Date.now() check just in case,
+      // and allow forcing completion if called directly from the natural timeout.
+      if (force || Date.now() >= endTime - 50) {
+        onComplete(winnerIndex);
+        return true;
+      }
+      return false;
+    };
+
+    // Standard timer
+    const remainingTime = Math.max(0, endTime - Date.now());
+    const t2 = setTimeout(() => {
+      checkAndComplete(true);
+    }, remainingTime);
+
+    // Visibility listener to "fast-forward" if we were backgrounded
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkAndComplete(false);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearTimeout(t2);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [winnerIndex, duration, onComplete]);
 
   // CSS variables for dynamic colors

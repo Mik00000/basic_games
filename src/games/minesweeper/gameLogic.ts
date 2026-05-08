@@ -15,6 +15,7 @@ export type Cell = {
     rows: number;
     cols: number;
     bombCount: number;
+    pickedTool: "shovel" | "flag" | null;
   };
   
   export type Action =
@@ -22,6 +23,7 @@ export type Cell = {
     | { type: "CELL_RIGHT_CLICK"; row: number; col: number }
     | { type: "REVEAL_BOMB"; row: number; col: number }
     | { type: "CELL_DOUBLE_CLICK"; row: number; col: number }
+    | { type: "SET_PICKED_TOOL"; tool: "shovel" | "flag" | null }
     | { type: "RESET_GAME" };
   
   export function createBombField(
@@ -253,6 +255,7 @@ export type Cell = {
     bombCount: number
   ): GameState {
     const initialField = mapFieldToCells(createBombField(rows, cols, bombCount));
+    const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
     return {
       field: initialField,
       firstClick: true,
@@ -262,6 +265,7 @@ export type Cell = {
       rows,
       cols,
       bombCount,
+      pickedTool: isMobile ? "shovel" : null,
     };
   }
   

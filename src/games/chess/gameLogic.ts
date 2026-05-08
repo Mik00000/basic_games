@@ -2,13 +2,15 @@ export const TIME_TO_FORGOT_GAME = 0.5 * 60 * 60 * 1000;
 export const PLAYER_MAX_GAME_TIME = 10 * 60 * 1000;
 export const TIME_REWARD_FOR_MOVE = 3;
 
+import { computeHash } from "./ai/zobrist";
+
 export type Piece = {
   type: "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
   color: "white" | "black";
   hasMoved: boolean;
 };
 // Difficulty type definition
-export type Difficulty = "monkey" | "easy" | "medium" | "hard";
+export type Difficulty = "monkey" | "easy" | "medium" | "hard" | "optimized";
 
 type PlayerInfo = {
   name: string;
@@ -51,6 +53,7 @@ export type GameState = {
     myColor?: "white" | "black" | "spectator";
     gameStartTime?: number;
   };
+  positionCounts: Record<string, number>;
 };
 export const getInitialGameState = (): GameState => ({
   board: initializeBoard(),
@@ -69,6 +72,7 @@ export const getInitialGameState = (): GameState => ({
   gameMode: "local",
   difficulty: "monkey",
   pendingPromotion: null,
+  positionCounts: {},
 });
 
 export const initialGameState = getInitialGameState();
@@ -223,6 +227,7 @@ export const mapServerStateToLocal = (
     availableMoves,
     selectedCell,
     pendingPromotion,
+    positionCounts: currentLocalState.positionCounts || {},
     gameMode: "online",
     onlineParams: {
       roomId: "", // filled by context/hook
@@ -651,31 +656,30 @@ export const wouldBeInCheck = (
   const color = piece.color;
   const targetPiece = board[to[0]][to[1]];
 
-  // 1. Mutate Board (Move)
-  board[to[0]][to[1]] = { ...piece, hasMoved: true };
-  board[from[0]][from[1]] = null;
+  // 1. Create a shadow copy of the board for simulation
+  const tempBoard = board.map((row) => [...row]);
+
+  // 2. Simulate Move
+  tempBoard[to[0]][to[1]] = { ...piece, hasMoved: true };
+  tempBoard[from[0]][from[1]] = null;
 
   // Handle EP Capture Simulation
-  let capturedEpPawn: Piece | null = null;
   const isEnPassantCapture =
-    piece.type === "pawn" && from[1] !== to[1] && !targetPiece; // If diagonal pawn move to empty square
+    piece.type === "pawn" && from[1] !== to[1] && !targetPiece;
 
   if (isEnPassantCapture) {
     // The captured pawn is at [from[0], to[1]]
-    capturedEpPawn = board[from[0]][to[1]];
-    board[from[0]][to[1]] = null;
+    tempBoard[from[0]][to[1]] = null;
   }
 
-  // 2. Find King (Optimized: only search if we don't know or if king moved)
+  // 3. Find King in the simulated state
   let kingPos: [number, number] | null = null;
-
   if (piece.type === "king") {
     kingPos = to;
   } else {
-    // Find king
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
-        const p = board[r][c];
+        const p = tempBoard[r][c];
         if (p?.type === "king" && p.color === color) {
           kingPos = [r, c];
           break;
@@ -685,17 +689,8 @@ export const wouldBeInCheck = (
     }
   }
 
-  // 3. Check
-  const inCheck = kingPos ? isCheck(board, color, kingPos) : false;
-
-  // 4. Revert Board (Unmake)
-  board[from[0]][from[1]] = piece;
-  board[to[0]][to[1]] = targetPiece;
-  if (isEnPassantCapture && capturedEpPawn) {
-    board[from[0]][to[1]] = capturedEpPawn;
-  }
-
-  return inCheck;
+  // 4. Check for Check
+  return kingPos ? isCheck(tempBoard, color, kingPos) : false;
 };
 
 export const isCastlingAvailable = (
@@ -976,11 +971,16 @@ export const handleCastling = (
   const checkSymbol = isCheckmateVal ? "#" : isCheckVal ? "+" : "";
   const finalNotation = tempMove.notation + checkSymbol;
 
+  const newHash = computeHash(newBoard, intermediateState.currentTurn).toString();
+  const newPositionCounts = { ...state.positionCounts, [newHash]: (state.positionCounts[newHash] || 0) + 1 };
+  const isFiveFold = newPositionCounts[newHash] >= 5;
+
   return {
     ...intermediateState,
     history: [...state.history, { ...tempMove, notation: finalNotation }],
     selectedCell: null,
     availableMoves: [],
+    positionCounts: newPositionCounts,
     sideInCheck: isCheckVal ? intermediateState.currentTurn : null,
     playerInfo: {
       ...state.playerInfo,
@@ -989,7 +989,7 @@ export const handleCastling = (
         remainingTime: newRemainingTime,
       },
     },
-    winner: isCheckmateVal ? state.currentTurn : isStalemateVal ? "draw" : null,
+    winner: isCheckmateVal ? state.currentTurn : isStalemateVal || isFiveFold ? "draw" : null,
   };
 };
 
@@ -1050,7 +1050,13 @@ export const handleRegularMove = (
   const newKingsPositions = { ...state.kingsPositions };
   if (piece.type === "king") {
     newKingsPositions[piece.color] = to;
+  } else {
+    // Safety re-scan for the king position if we just made a move that wasn't a king move
+    // to ensure our tracked coordinates stay in sync with the board.
+    const foundKing = findKingInBoard(newBoard, piece.color);
+    if (foundKing) newKingsPositions[piece.color] = foundKing;
   }
+
   const remainingTime = state.playerInfo[state.currentTurn].remainingTime;
   const newRemainingTime = Math.min(
     remainingTime + TIME_REWARD_FOR_MOVE * 1000,
@@ -1058,7 +1064,6 @@ export const handleRegularMove = (
   );
 
   // Create intermediate state to check for checkmate/stalemate
-  // We need to add the current move to history so En Passant checks work for the opponent
   const tempMove: Move = {
     from,
     to,
@@ -1076,6 +1081,11 @@ export const handleRegularMove = (
     history: [...state.history, tempMove],
   };
 
+  // Re-verify the current player's king position as well for safety
+  const opponentSide = intermediateState.currentTurn;
+  const foundOpponentKing = findKingInBoard(newBoard, opponentSide);
+  if (foundOpponentKing) newKingsPositions[opponentSide] = foundOpponentKing;
+
   const isCheckVal = isCheck(
     newBoard,
     intermediateState.currentTurn,
@@ -1091,7 +1101,7 @@ export const handleRegularMove = (
     from,
     to,
     targetPiece,
-    newBoard, // purely for geometry if needed
+    newBoard, 
     newKingsPositions,
     isCheckVal,
     isCheckmateVal,
@@ -1099,11 +1109,16 @@ export const handleRegularMove = (
 
   const finalMove: Move = { ...tempMove, notation };
 
+  const newHash = computeHash(newBoard, intermediateState.currentTurn).toString();
+  const newPositionCounts = { ...state.positionCounts, [newHash]: (state.positionCounts[newHash] || 0) + 1 };
+  const isFiveFold = newPositionCounts[newHash] >= 5;
+
   return {
     ...intermediateState,
     history: [...state.history, finalMove],
     selectedCell: null,
     availableMoves: [],
+    positionCounts: newPositionCounts,
     sideInCheck: isCheckVal ? intermediateState.currentTurn : null,
     playerInfo: {
       ...state.playerInfo,
@@ -1114,7 +1129,7 @@ export const handleRegularMove = (
     },
     winner: isCheckmateVal
       ? state.currentTurn
-      : isStalemate(intermediateState, intermediateState.currentTurn)
+      : isStalemate(intermediateState, intermediateState.currentTurn) || isFiveFold
         ? "draw"
         : null,
   };
@@ -1135,18 +1150,16 @@ export const handlePromotion = (
   // Promote piece
   newBoard[to[0]][to[1]] = { ...piece, type: promoteTo };
 
-  // Now we finalize the move: switch turn, check checks, etc.
-  const newKingsPositions = { ...state.kingsPositions }; // King didn't move in promotion step (already moved)
+  // Finalize the move: switch turn, check checks, etc.
+  const newKingsPositions = { ...state.kingsPositions }; 
+  const foundKing = findKingInBoard(newBoard, piece.color);
+  if (foundKing) newKingsPositions[piece.color] = foundKing;
 
   const remainingTime = state.playerInfo[state.currentTurn].remainingTime;
   const newRemainingTime = Math.min(
     remainingTime + TIME_REWARD_FOR_MOVE * 1000,
     PLAYER_MAX_GAME_TIME,
   );
-
-  // Handle Promotion
-  // We need to form the final move with check status
-  // Basically similar logic to handleRegularMove but starting from pending state
 
   const tempMove: Move = {
     from: state.pendingPromotion.from,
@@ -1167,6 +1180,11 @@ export const handlePromotion = (
     history: [...state.history, tempMove],
   };
 
+  // Also verify opponent king position
+  const opponentSide = intermediateState.currentTurn;
+  const foundOpponentKing = findKingInBoard(newBoard, opponentSide);
+  if (foundOpponentKing) newKingsPositions[opponentSide] = foundOpponentKing;
+
   const isCheckVal = isCheck(
     newBoard,
     intermediateState.currentTurn,
@@ -1174,7 +1192,7 @@ export const handlePromotion = (
   );
   const isCheckmateVal = isCheckmate(
     intermediateState,
-    intermediateState.currentTurn,
+    opponentSide,
   );
 
   const notation = generateMoveNotation(
@@ -1199,15 +1217,20 @@ export const handlePromotion = (
     promoteTo,
   );
 
+  const newHash = computeHash(newBoard, intermediateState.currentTurn).toString();
+  const newPositionCounts = { ...state.positionCounts, [newHash]: (state.positionCounts[newHash] || 0) + 1 };
+  const isFiveFold = newPositionCounts[newHash] >= 5;
+
   return {
     ...intermediateState,
     history: [...state.history, { ...tempMove, notation }],
     selectedCell: null,
     availableMoves: [],
+    positionCounts: newPositionCounts,
     sideInCheck: isCheckVal ? intermediateState.currentTurn : null,
     winner: isCheckmateVal
       ? state.currentTurn
-      : isStalemate(intermediateState, intermediateState.currentTurn)
+      : isStalemate(intermediateState, intermediateState.currentTurn) || isFiveFold
         ? "draw"
         : null,
     playerInfo: {
@@ -1269,9 +1292,11 @@ export const isCheckmate = (
   state: GameState,
   side: "white" | "black",
 ): boolean => {
-  // Note: isCheck only needs board and positions, which are in state
+  const kingPos = findKingInBoard(state.board, side);
+  if (!kingPos) return false;
+  
   return (
-    isCheck(state.board, side, state.kingsPositions[side]) &&
+    isCheck(state.board, side, kingPos) &&
     !hasLegalMoves(state, side)
   );
 };
@@ -1280,10 +1305,25 @@ export const isStalemate = (
   state: GameState,
   side: "white" | "black",
 ): boolean => {
+  const kingPos = findKingInBoard(state.board, side);
+  if (!kingPos) return false;
+
   return (
-    !isCheck(state.board, side, state.kingsPositions[side]) &&
+    !isCheck(state.board, side, kingPos) &&
     !hasLegalMoves(state, side)
   );
+};
+
+export const findKingInBoard = (board: (Piece | null)[][], color: "white" | "black"): [number, number] | null => {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p?.type === "king" && p.color === color) {
+        return [r, c];
+      }
+    }
+  }
+  return null;
 };
 
 export const getCheckmateStatus = (
@@ -1364,6 +1404,11 @@ const getPieceLetter = (type: Piece["type"]): string => {
     default:
       return "";
   }
+};
+
+export const checkTripleRepetition = (state: GameState): boolean => {
+  const currentHash = computeHash(state.board, state.currentTurn).toString();
+  return (state.positionCounts[currentHash] || 0) >= 3;
 };
 
 // --- Adapter Function ---

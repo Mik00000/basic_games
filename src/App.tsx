@@ -8,7 +8,6 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
 } from "react-router-dom";
 import { Partners } from "./sections/Partners";
 import { Testimonials } from "./sections/Testimonials";
@@ -24,6 +23,8 @@ import GameLayout from "./sections/GameLayout";
 import { GameProvider } from "./context/GameContext";
 import ChessStartMenu from "./games/chess/StartMenu";
 import Chess from "./games/chess/Game";
+import Sudoku from "./games/sudoku/Game";
+import SudokuStartMenu from "./games/sudoku/StartMenu";
 import ChessLobby from "./games/chess/Lobby";
 function App() {
   return (
@@ -58,6 +59,8 @@ function App() {
                   path="/games/chess/:gameModeOrId?"
                   element={<Chess />}
                 />
+              <Route path="/games/sudoku" element={<Sudoku />} />
+
               </Route>
 
               <Route
@@ -77,6 +80,7 @@ function App() {
                 path="/games/chess/lobby/:roomId"
                 element={<ChessLobby />}
               />
+              <Route path="/games/sudoku-menu" element={<SudokuStartMenu />} />
             </Routes>
           </div>
           <Footer />

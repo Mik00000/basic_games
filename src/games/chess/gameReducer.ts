@@ -72,7 +72,7 @@ export const gameReducer = (
     }
 
     case "RESET":
-      return getInitialGameState();
+      return { ...getInitialGameState(), difficulty: state.difficulty };
 
     case "UPDATE_TIME":
       return handleTimeUpdate(state, action.player, action.time);

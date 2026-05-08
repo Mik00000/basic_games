@@ -1,7 +1,6 @@
 import {
   GameState,
   Piece,
-  getAvailableMoves,
   getPseudoLegalMoves,
   isCastlingAvailable,
   Difficulty,
@@ -198,6 +197,7 @@ let HASH: bigint;
 let KINGS: { white: [number, number]; black: [number, number] }; // Track Kings for quick check
 let CURRENT_TURN: "white" | "black";
 let HISTORY_LIST: LogicMove[];
+let POSITION_COUNTS: Record<string, number> = {};
 
 // Piece Lists for fast generation: store 0-63 indices
 // Using Int8Array for performance [index, -1, -1 ...]
@@ -591,6 +591,15 @@ const alphabeta = (
 
   const isMaximizing = CURRENT_TURN === "white";
 
+  // Repetition Penalty Factor (calculated based on true history)
+  const hashStr = HASH.toString();
+  const repCount = POSITION_COUNTS[hashStr] || 0;
+  
+  let penaltyFactor = 0;
+  if (repCount === 1) penaltyFactor = 0.2;
+  else if (repCount === 2) penaltyFactor = 0.5;
+  else if (repCount >= 3) penaltyFactor = 0.9;
+
   // 1. TT Lookup
   const ttEntry = TT.get(HASH);
   if (ttEntry && ttEntry.depth >= depth && !isRoot) {
@@ -739,6 +748,20 @@ const alphabeta = (
     }
   }
 
+  // Apply Repetition Penalty before returning
+  if (penaltyFactor > 0 && !isRoot) {
+    const absolutePenalty = 2000 * penaltyFactor;
+    // We penalize the player who made the move resulting in this position.
+    // The player who made the move is the opponent of CURRENT_TURN.
+    if (CURRENT_TURN === "black") {
+      // White made the move. Penalize White (decrease score).
+      value = value * (1 - penaltyFactor) - absolutePenalty;
+    } else {
+      // Black made the move. Penalize Black (increase score).
+      value = value * (1 - penaltyFactor) + absolutePenalty;
+    }
+  }
+
   if (!ABORT) {
     if (TT.size > MAX_TT_SIZE) TT.clear();
     TT.set(HASH, { depth, score: value, flag: bound, bestMove });
@@ -833,9 +856,9 @@ export const getBestMove = (
   CURRENT_TURN = gameState.currentTurn;
   KINGS = { ...gameState.kingsPositions };
   SCORE = evaluateFull(BOARD);
-  SCORE = evaluateFull(BOARD);
   HASH = computeHash(BOARD, CURRENT_TURN);
   HISTORY_LIST = [...gameState.history];
+  POSITION_COUNTS = gameState.positionCounts || {};
 
   // Initialize Piece Lists
   WHITE_PIECES = [];
@@ -865,18 +888,39 @@ export const getBestMove = (
     case "hard":
       TIME_LIMIT = 3000;
       break;
+    case "optimized":
+      TIME_LIMIT = 150;
+      break;
   }
 
   // 3. Iterative Deepening
   let bestMove: Move | null = null;
   let maxDepth = difficulty === "hard" ? 8 : difficulty === "medium" ? 5 : 3;
   if (difficulty === "monkey" || difficulty === "easy") maxDepth = 2; // Random fallback?
+  if (difficulty === "optimized") maxDepth = 4;
+
+  const m = generateMoves(false);
+  const legal: Move[] = [];
+  for (const move of m) {
+    makeMove(move);
+    const colorThatMoved = CURRENT_TURN === "white" ? "black" : "white";
+    if (!isCheck(BOARD, colorThatMoved, KINGS[colorThatMoved])) {
+      legal.push(move);
+    }
+    unmakeMove(move);
+  }
+
+  // If no legal moves, game is over (checkmate or stalemate)
+  if (legal.length === 0) {
+    return null; 
+  }
 
   // Randomness for low levels
   if (difficulty === "monkey") {
-    const m = generateMoves(false);
-    return m[Math.floor(Math.random() * m.length)];
+    return legal[Math.floor(Math.random() * legal.length)];
   }
+
+  const fallbackMove = legal[0]; // First pseudo-legal, or even better, randomized
 
   for (let d = 1; d <= maxDepth; d++) {
     alphabeta(d, -Infinity, Infinity, true);
@@ -893,5 +937,5 @@ export const getBestMove = (
     }
   }
 
-  return bestMove;
+  return bestMove || fallbackMove;
 };

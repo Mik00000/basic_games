@@ -11,6 +11,8 @@ export function gameReducer(state: GameState, action: Action): GameState {
     return state;
   }
   switch (action.type) {
+    case "SET_PICKED_TOOL":
+      return { ...state, pickedTool: action.tool };
     case "CELL_CLICK":
       return processCellClick(state, action.row, action.col);
     case "CELL_RIGHT_CLICK": {

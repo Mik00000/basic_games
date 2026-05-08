@@ -6,7 +6,7 @@ import logo from "../assets/logo.png";
 import { useGameStatus } from "../context/GameContext";
 
 const navData = [
-  { name: "Home", url: "/home" },
+  { name: "Home", url: "/" },
   { name: "Games", url: "/games" },
   { name: "About", url: "/about" },
   { name: "Services", url: "/services" },

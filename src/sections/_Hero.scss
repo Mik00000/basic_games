@@ -1,16 +1,17 @@
 .hero {
   margin-bottom: 100px;
+  position: relative;
   .heading {
     padding: 0 15px;
-    margin-top: 35px;
+    // margin-top: 35px;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     padding: 60px 0;
-    @include for-size(mobile){
-      padding: 60px 20px;
 
+    @include for-size(mobile) {
+      padding: 60px 20px;
     }
     gap: 27px;
     h1 {
@@ -30,35 +31,68 @@
     justify-content: center;
     gap: 35px;
     padding: 35px 15px;
-    .try-btn{
-      @include for-button(
-        $bg-color: $primary,
-        $padding: 20px 40px
-      );
+    .try-btn {
+      @include for-button($bg-color: $primary, $padding: 20px 40px);
     }
-    .learn-btn{
-      @include for-button(
-        $bg-color: transparent,
-        $padding: 20px 40px
-      );
+    .learn-btn {
+      @include for-button($bg-color: transparent, $padding: 20px 40px);
     }
-    
   }
-  .banner-background{
+  .banner-background {
     width: 100%;
-    height: 993px;
-    background-color: $primary;
-    position: relative;
-    &::after{
-      content:"";
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #0e0e0e 66.15%);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    overflow: hidden;
+
+    .parallax-layer {
       width: 100%;
-      position: absolute;
-      height: 66%;
-      bottom: 0;
+      height: 100%;
     }
-    &>*{
-      max-height: 850px;
+
+    .overlay-dark {
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.65);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle,
+        rgba(0, 0, 0, 0) 30%,
+        rgba(0, 0, 0, 0.85) 100%
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .gradient-fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40%;
+      background: linear-gradient(to bottom, transparent, $dark-background);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    // &::after{
+    //   content:"";
+    //   // background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #0e0e0e 66.15%);
+    //   width: 100%;
+    //   position: absolute;
+    //   height: 66%;
+    //   bottom: 0;
+    // }
+    & > * {
       width: 100%;
     }
   }
