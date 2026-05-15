@@ -4,20 +4,20 @@ import feature2 from "../assets/banner/features-2.png";
 const benefits = [
   {
     id:0,
-    heading: "A single source of truth",
-    text: "When you add work to your Slate calendar we automatically calculate useful insights ",
+    heading: "Instant Play",
+    text: "Jump straight into the action directly from your browser. No downloads, no installations required.",
     icon: "benefits1.svg",
   },
   {
     id:1,
-    heading: "Intuitive interface",
-    text: "When you add work to your Slate calendar we automatically calculate useful insights ",
+    heading: "Cross-Platform",
+    text: "Whether you're on desktop, tablet, or mobile, our games are fully optimized for all devices.",
     icon: "benefits2.svg",
   },
   {
     id:2,
-    heading: "Or with rules",
-    text: "When you add work to your Slate calendar we automatically calculate useful insights ",
+    heading: "Play with Friends",
+    text: "Create private lobbies, share a link, and start playing with your friends in seconds.",
     icon: "benefits3.svg",
   },
 ];
@@ -26,10 +26,9 @@ export const Features = () => {
   return (
     <section className="features">
       <div className="heading">
-        <h1>FEATURES</h1>
+        <h1>WHY PLAY HERE</h1>
         <h2>
-          Most calendars are designed for teams. Slate is designed for
-          freelancers who want a simple way to plan their schedule.
+          Our platform is designed for gamers who want a seamless, fast, and engaging experience.
         </h2>
       </div>
       <div className="info-block">

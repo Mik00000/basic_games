@@ -1,0 +1,130 @@
+.game-collection {
+  padding: 80px 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 50px;
+    gap: 15px;
+
+    h1 {
+      @include for-text(headline);
+      font-size: 2.5rem;
+    }
+
+    h2 {
+      @include for-text(sub-heading);
+      color: #b0b0b0;
+    }
+  }
+
+  .collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+
+    .collection-item {
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+      height: 300px;
+      text-decoration: none;
+      display: block;
+      group: hover;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+
+      .bg-image {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.5s ease;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.9) 0%,
+          rgba(0, 0, 0, 0.2) 60%,
+          transparent 100%
+        );
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 25px;
+        transition: background 0.3s ease;
+
+        .content {
+          transform: translateY(20px);
+          transition: transform 0.3s ease;
+
+          h3 {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+          }
+
+          p {
+            color: #ccc;
+            font-size: 0.95rem;
+            margin: 0 0 15px 0;
+            line-height: 1.4;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+
+          .play-link {
+            color: $primary;
+            font-weight: bold;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+
+            @include for-button(
+              $bg-color: darken($primary, 15%),
+              $padding: 7px 10px
+            );
+            width: fit-content;
+            margin-top: 10px;
+            font-size: 1rem;
+            border-radius: 3px;
+            font-weight: 500;
+            filter: brightness(0.9);
+            &:hover {
+              filter: brightness(1);
+            }
+          }
+        }
+      }
+
+      &:hover {
+        .bg-image {
+          transform: scale(1.1);
+        }
+
+        .overlay {
+          background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.95) 0%,
+            rgba(0, 0, 0, 0.4) 100%
+          );
+
+          .content {
+            transform: translateY(0);
+
+            p,
+            .play-link {
+              opacity: 1;
+            }
+          }
+        }
+      }
+    }
+  }
+}

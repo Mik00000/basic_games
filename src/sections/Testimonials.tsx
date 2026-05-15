@@ -3,29 +3,26 @@ import { Link } from "react-router-dom";
 const testimonials = [
   {
     author: "Claire Bell",
-    subtitle: "designer",
-    text: "Slate helps you see how many more days you need to work to reach your financial goal for the month and year.",
+    subtitle: "chess enthusiast",
+    text: "I love how easy it is to set up a private match with my friends. The chess interface is clean and responsive.",
     photo: "user1.png",
   },
   {
     author: "Francisco Lane",
-    subtitle: "designer",
-    text: "Slate helps you see how many more days you need to work to reach your financial goal for the month and year.",
-
+    subtitle: "casual gamer",
+    text: "Minesweeper and Sudoku are my go-to games for a quick break. This site runs perfectly on my phone!",
     photo: "user2.png",
   },
   {
     author: "Ralph Fisher",
-    subtitle: "designer",
-    text: "Slate helps you see how many more days you need to work to reach your financial goal for the month and year.",
-
+    subtitle: "competitive player",
+    text: "Connect Four online is surprisingly competitive. I've spent hours challenging random players.",
     photo: "user3.png",
   },
   {
     author: "Jorge Murphy",
-    subtitle: "designer",
-    text: "Slate helps you see how many more days you need to work to reach your financial goal for the month and year.",
-
+    subtitle: "puzzle solver",
+    text: "The AI difficulty in Chess and Connect Four is well-balanced. Great way to train before playing real opponents.",
     photo: "user4.png",
   },
 ];
@@ -33,7 +30,7 @@ export const Testimonials = () => {
   return (
     <section className="testimonials">
       <div className="heading">
-        <h1>Testimonials</h1>
+        <h1>Player Reviews</h1>
       </div>
       <div className="content">
         {testimonials.map((testimonial, index) => (

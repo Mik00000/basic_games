@@ -1,6 +1,3 @@
-import { Contents } from "./sections/Contents";
-import { Gallery } from "./sections/Gallery";
-import { Features } from "./sections/Features";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
 import "./styles/App.css";
@@ -9,7 +6,9 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-import { Partners } from "./sections/Partners";
+import { FeaturedGames } from "./sections/FeaturedGames";
+import { GameCollection } from "./sections/GameCollection";
+import { Features } from "./sections/Features";
 import { Testimonials } from "./sections/Testimonials";
 import { Footer } from "./sections/Footer";
 
@@ -31,19 +30,17 @@ function App() {
     <GameProvider>
       <div className="App">
         <Router>
-          <Header />
+          {/* <Header /> */}
           <div className="main">
             <Routes>
               <Route
                 path="/"
                 element={
                   <>
-                    <Hero />
-                    <Features />
-                    <Contents />
-                    <Gallery />
-                    <Partners />
-                    <Testimonials />
+                    <Hero /> 
+                    {/*<Features />*/}
+                    <FeaturedGames />
+                    <GameCollection />
                   </>
                 }
               />

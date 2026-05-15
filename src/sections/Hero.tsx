@@ -17,25 +17,33 @@ export const Hero = () => {
   const blurValue = Math.min(2 + scrollY * 0.015, maxBlur);
   const parallaxY = scrollY * 0.4;
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="hero">
       <div className="heading">
-        <h1>Work at the speed of thought</h1>
+        <h1>Play the Best Classic Games</h1>
         <h2>
-          Most calendars are designed for teams. Slate is designed for
-          freelancers who want a simple way to plan their schedule.
+          Compete with friends online or challenge our AI in Chess, Connect Four, Minesweeper, and Sudoku.
         </h2>
       </div>
       <div className="buttons">
-        <button className="try-btn">Try For Free</button>
-        <button className="learn-btn">Learn More</button>
+        <button className="try-btn" onClick={() => scrollToSection('featured-games')}>Play Online</button>
+        <button className="learn-btn" onClick={() => scrollToSection('all-games')}>Explore Games</button>
       </div>
       <div className="banner-background">
         <div
           className="parallax-layer"
           style={{
-            transform: `translateY(${parallaxY}px)`,
+            transform: `translateY(${parallaxY}px) translateZ(0)`,
             filter: `blur(${blurValue}px)`,
+            willChange: "transform, filter",
+            WebkitTransform: `translateY(${parallaxY}px) translateZ(0)`,
             width: "100%",
             height: "100%",
             position: "absolute",
