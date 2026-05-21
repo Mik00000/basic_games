@@ -25,7 +25,7 @@ const Sudoku = () => {
   }, [location.state]);
 
   const handleExit = () => {
-    navigate("/games");
+    navigate("/");
   };
 
   const handlePauseToggle = () => {

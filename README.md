@@ -1,46 +1,60 @@
-# Getting Started with Create React App
+# 🎮 Gaming Hub (Basic Games)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a web platform for classic games that brings together popular board and puzzle games. The project was developed with a focus on modern design, a user-friendly interface, and multiplayer support for select games.
 
-## Available Scripts
+## 🎲 Available Games
 
-In the project directory, you can run:
+- **Chess** - A classic game with support for single-player and multiplayer modes.
+- **Connect Four** - A popular two-player game with the option to play online.
+- **Minesweeper** - A classic single-player puzzle game.
+- **Sudoku** - A number puzzle with various difficulty levels.
 
-### `npm start`
+## 🛠 Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Frontend:** React 19, TypeScript, Vite
+- **Styling:** SCSS / CSS
+- **Routing:** React Router v7
+- **Network/Multiplayer:** Socket.io-client
+- **Icons:** Lucide React
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🚀 Running the project locally
 
-### `npm test`
+1. **Clone the repository:**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+   ```bash
+   git clone github.com/Mik00000/basic_games
+   cd basic_games
+   ```
 
-### `npm run build`
+2. **Install dependencies:**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+   ```bash
+   npm install
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. **Start the development server:**
+   ```bash
+   npm run start
+   ```
+   _Note: For multiplayer games (Chess, Connect Four), you also need to run the [backend server](https://github.com/Mik00000/connect-games-server)._
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📦 Creating a production build
 
-### `npm run eject`
+To build an optimized version for production:
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+npm run build
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+After that, you can test the build locally:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+npm run preview
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
-## Learn More
+## 💡 Project Features
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Modern and responsive design (Responsive UI).
+- Lobby system for multiplayer matches.
+- Use of the Context API to manage game states.

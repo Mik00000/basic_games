@@ -198,4 +198,4 @@ export interface CallbackResponse {
     details?: any;
   };
 }
-export type VoteType = "restart" | "draw" | "pause";
+export type VoteType = "restart" | "draw" | "pause" | "undo" | "resign";

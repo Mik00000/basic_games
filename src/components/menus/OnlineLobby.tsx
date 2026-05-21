@@ -118,7 +118,7 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
   const [playerOneError, setPlayerOneError] = useState<string | null>(null);
   const [playerTwoError, setPlayerTwoError] = useState<string | null>(null);
 
-  // [FIX] New state for error modal
+
   const [errorModal, setErrorModal] = useState<{
     title: string;
     message: string;
@@ -163,7 +163,7 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
       setIsInitializing(true);
       initializedRoomId.current = roomId;
 
-      // [FIX] Persistence for reload: Check localStorage if navState is empty
+      // Persistence for reload: Check localStorage if navState is empty
       const savedPrefs = localStorage.getItem("user_preferences");
       const prefs = savedPrefs ? JSON.parse(savedPrefs) : {};
 
@@ -279,7 +279,7 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
             gameType: res.error.details.gameType,
           });
         } else {
-          // [FIX] Use Modal instead of alert
+          // Use Modal instead of alert
           setErrorModal({
             title: "Failed to join room",
             message: res.error?.message || "Unknown error",
@@ -491,6 +491,7 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({
     fixedPlayerColors,
     currentPlayer?.id,
     currentPlayer?.gameData?.color,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   if (conflictRoom) {

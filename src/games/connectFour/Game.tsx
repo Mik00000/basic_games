@@ -107,7 +107,7 @@ export const ConnectFour: React.FC = () => {
       }
     }, 5000);
 
-    // [FIX] Redirect to lobby if no session found after connection
+    // Redirect to lobby if no session found after connection
     if (
       isConnected &&
       !currentRoom &&
@@ -135,7 +135,6 @@ export const ConnectFour: React.FC = () => {
       // Cleanup on unmount (navigation away)
       const { isConnected, currentRoom } = connectionRef.current;
       if (isOnline && isConnected && currentRoom) {
-        console.log("Leaving room on unmount");
         leaveRoom();
       }
     };
@@ -155,8 +154,6 @@ export const ConnectFour: React.FC = () => {
     }
   }, [isOnline, onlineState]); // Sync when state updates as well
 
-  // --- FIX 1: Додано tick в залежності ---
-  // Тепер useMemo перераховується кожні 200мс, перевіряючи Date.now()
   const isStartAnimation = useMemo(() => {
     if (!isOnline || !onlineState?.gameStartTime || !currentRoom?.id) return false;
     
@@ -340,7 +337,6 @@ export const ConnectFour: React.FC = () => {
   }, [isOnline, leaveRoom, navigate, cleanLocalStorage]);
 
   const handleRestart = React.useCallback(async () => {
-    // Ця перевірка тепер працюватиме коректно, бо state.showCoinToss оновиться
     if (state.showCoinToss) return;
     if (isOnline) {
       try {
@@ -525,14 +521,12 @@ export const ConnectFour: React.FC = () => {
     if (isOnline) {
       if (!onlineMe || !currentRoom || !currentRoom.players) return;
       if (currentRoom.players.length < 2) {
-        console.log("Waiting for opponent...");
         return;
       }
       const isPlayer1 = currentRoom.players?.[0]?.id === onlineMe.id;
       const myPlayerNum = isPlayer1 ? 1 : 2;
 
       if (displayState.currentPlayer !== myPlayerNum) {
-        console.log("Not your turn!");
         return;
       }
       makeMove({ column: columnIndex });

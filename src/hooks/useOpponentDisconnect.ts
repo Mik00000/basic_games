@@ -20,14 +20,15 @@ export const useOpponentDisconnect = ({
   const [offlineTimer, setOfflineTimer] = useState(timeoutSeconds);
   const offlineTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const players = currentRoom?.players;
   const opponent = useMemo(() => {
-    if (!isOnline || !currentRoom?.players || !currentUser) return null;
-    return currentRoom.players.find((p) => p.id !== currentUser.id);
-  }, [isOnline, currentRoom?.players, currentUser]);
+    if (!isOnline || !players || !currentUser) return null;
+    return players.find((p) => p.id !== currentUser.id);
+  }, [isOnline, players, currentUser]);
 
   useEffect(() => {
     if (!isOnline || !opponent) {
-      setShowOfflineModal(false);
+      setTimeout(() => setShowOfflineModal(false), 0);
       if (offlineTimeoutRef.current) {
         clearTimeout(offlineTimeoutRef.current);
         offlineTimeoutRef.current = null;
@@ -49,7 +50,7 @@ export const useOpponentDisconnect = ({
         clearTimeout(offlineTimeoutRef.current);
         offlineTimeoutRef.current = null;
       }
-      setShowOfflineModal(false);
+      setTimeout(() => setShowOfflineModal(false), 0);
     }
   }, [
     isOnline,

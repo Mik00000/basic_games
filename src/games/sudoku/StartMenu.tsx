@@ -29,7 +29,7 @@ const SudokuStartMenu: React.FC = () => {
   };
 
   const exitGame = () => {
-    navigate("/games");
+    navigate("/");
   };
 
   return (

@@ -12,6 +12,7 @@ import { Piece, cleanLocalStorage, getAvailableMoves } from "./gameLogic";
 import Timer from "../../components/game/Timer";
 import { ConnectingScreen } from "../../components/modals/ConnectingScreen";
 import { OpponentDisconnectedModal } from "../../components/modals/OpponentDisconnectedModal";
+import { Modal } from "../../components/modals/Modal";
 import { useOpponentDisconnect } from "../../hooks/useOpponentDisconnect";
 import {
   ExitButton,
@@ -87,10 +88,15 @@ const Chess = () => {
     handleMove,
     togglePause,
     sendVote,
+    handleUndo,
+    handleDraw,
+    handleResign,
   } = useGame(gameMode, onlineGameId);
-
+  console.log(state);
   const [resetKey, setResetKey] = useState(0);
   const [now, setNow] = useState(Date.now());
+  const [isFlippedManually, setIsFlippedManually] = useState(false);
+  const [isResignModalOpen, setIsResignModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOnline) {
@@ -122,14 +128,15 @@ const Chess = () => {
   // 3. Waiting for opponent (already checked in some places but good to be explicit)
 
   const isStartAnimation = React.useMemo(() => {
-    if (!isOnline || !state.onlineParams?.gameStartTime || !currentRoom?.id) return false;
+    if (!isOnline || !state.onlineParams?.gameStartTime || !currentRoom?.id)
+      return false;
 
     // Check session storage to see if we've already seen this specific game's animation
     const animKey = `chess_anim_shown_${currentRoom.id}_${state.onlineParams.gameStartTime}`;
     if (sessionStorage.getItem(animKey)) return false;
 
     // Show animation if we are still within the start window (plus a small grace period)
-    const animEndWindow = state.onlineParams.gameStartTime + 2000; 
+    const animEndWindow = state.onlineParams.gameStartTime + 2000;
     return now < animEndWindow;
   }, [isOnline, state.onlineParams?.gameStartTime, now, currentRoom?.id]);
 
@@ -142,7 +149,8 @@ const Chess = () => {
     !isGameStarted ||
     isWaitingForOpponent ||
     state.isPaused ||
-    (isOnline && currentRoom?.status === "paused");
+    (isOnline && currentRoom?.status === "paused") ||
+    (gameMode === "bot" && state.currentTurn === "black");
 
   // Force re-render to check time (optional, but good for removing block exactly when time comes)
   useEffect(() => {
@@ -251,19 +259,35 @@ const Chess = () => {
     return baseAction;
   };
 
+  const getButtonTitle = (baseTitle: string, voteType: string) => {
+    if (!isOnline) return baseTitle;
+    const activeVote = currentRoom?.activeVote;
+    if (activeVote?.type === voteType) {
+      const hasVoted = currentPlayer && activeVote.voters.includes(currentPlayer.id);
+      if (!hasVoted) {
+        return `Opponent wants to ${voteType.toLowerCase()}`;
+      }
+      return `Waiting for opponent`;
+    }
+    return baseTitle;
+  };
+
   const handleExit = React.useCallback(async () => {
     if (leaveRoom) await leaveRoom();
     cleanLocalStorage();
     navigate("/games/chess-menu");
   }, [leaveRoom, navigate]);
 
-  const handlePromotion = React.useCallback((type: Piece["type"]) => {
-    if (isOnline) {
-      if (onOnlinePromote) onOnlinePromote(type);
-    } else {
-      dispatch({ type: "PROMOTE_PAWN", pieceType: type });
-    }
-  }, [isOnline, onOnlinePromote, dispatch]);
+  const handlePromotion = React.useCallback(
+    (type: Piece["type"]) => {
+      if (isOnline) {
+        if (onOnlinePromote) onOnlinePromote(type);
+      } else {
+        dispatch({ type: "PROMOTE_PAWN", pieceType: type });
+      }
+    },
+    [isOnline, onOnlinePromote, dispatch],
+  );
 
   const { showOfflineModal, offlineTimer, opponentName } =
     useOpponentDisconnect({
@@ -283,49 +307,47 @@ const Chess = () => {
     isReturning: boolean;
   } | null>(null);
 
-  const handleMouseDown = React.useCallback((
-    e: React.MouseEvent,
-    r: number,
-    c: number,
-    cell: any,
-  ) => {
-    // Prevent default to avoid native drag behavior
-    e.preventDefault();
+  const handleMouseDown = React.useCallback(
+    (e: React.MouseEvent, r: number, c: number, cell: any) => {
+      // Prevent default to avoid native drag behavior
+      e.preventDefault();
 
-    if (isBlocked) return; // BLOCK INTERACTION
+      if (isBlocked) return; // BLOCK INTERACTION
 
-    if (!cell) return;
+      if (!cell) return;
 
-    // Check if this is a click on a Valid Move target (Capture)
-    const isTarget = state.availableMoves.some(
-      ([mr, mc]) => mr === r && mc === c,
-    );
+      // Check if this is a click on a Valid Move target (Capture)
+      const isTarget = state.availableMoves.some(
+        ([mr, mc]) => mr === r && mc === c,
+      );
 
-    if (isTarget) {
+      if (isTarget) {
+        onCellClick(r, c);
+        return;
+      }
+
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+
+      // Calculate offset to keep piece under cursor at the same relative position
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+
+      setDragState({
+        isDragging: true,
+        piece: cell,
+        origin: { r, c },
+        startRect: rect,
+        currentPos: { x: rect.left, y: rect.top },
+        offset: { x: offsetX, y: offsetY },
+        isReturning: false,
+      });
+
+      // Select the cell immediately to show available moves
       onCellClick(r, c);
-      return;
-    }
-
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-
-    // Calculate offset to keep piece under cursor at the same relative position
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-
-    setDragState({
-      isDragging: true,
-      piece: cell,
-      origin: { r, c },
-      startRect: rect,
-      currentPos: { x: rect.left, y: rect.top },
-      offset: { x: offsetX, y: offsetY },
-      isReturning: false,
-    });
-
-    // Select the cell immediately to show available moves
-    onCellClick(r, c);
-  }, [isBlocked, state.availableMoves, onCellClick]);
+    },
+    [isBlocked, state.availableMoves, onCellClick],
+  );
 
   useEffect(() => {
     if (!dragState || dragState.isReturning) return;
@@ -438,12 +460,14 @@ const Chess = () => {
 
   const onCompleteAnim = React.useCallback(() => {
     if (currentRoom?.id && state.onlineParams?.gameStartTime) {
-      sessionStorage.setItem(`chess_anim_shown_${currentRoom.id}_${state.onlineParams.gameStartTime}`, "true");
+      sessionStorage.setItem(
+        `chess_anim_shown_${currentRoom.id}_${state.onlineParams.gameStartTime}`,
+        "true",
+      );
     }
     // No need to setAnimDone, useMemo will re-evaluate on next 'now' tick or room update
   }, [currentRoom?.id, state.onlineParams?.gameStartTime]);
 
-  console.log(state);
   return (
     <section className="chess">
       {isOnline && !isConnected && <ConnectingScreen onCancel={handleExit} />}
@@ -496,6 +520,37 @@ const Chess = () => {
         onExit={handleExit}
       />
 
+      <Modal
+        isOpen={isResignModalOpen}
+        title="Resign?"
+        onClose={() => setIsResignModalOpen(false)}
+        className="modal--resign-modal"
+        actions={
+          <>
+            <button
+              className="back-btn"
+              onClick={() => setIsResignModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="leave-btn"
+              style={{ backgroundColor: "var(--danger)", borderColor: "var(--danger)" }}
+              onClick={() => {
+                setIsResignModalOpen(false);
+                handleResign();
+              }}
+            >
+              Resign
+            </button>
+          </>
+        }
+      >
+        <div className="modal-body" style={{ color: "white", padding: "10px 0" }}>
+          <p>Are you sure you want to resign? This will result in a loss.</p>
+        </div>
+      </Modal>
+
       <GameTopBar
         leftContent={<ExitButton onClick={handleExit} />}
         midContent={
@@ -503,23 +558,36 @@ const Chess = () => {
             <Timer
               startTime={state.playerInfo.white.remainingTime}
               timerName={`chess_white_${onlineGameId || "local"}`}
-              pause={state.currentTurn !== "white" || !!state.winner || isBlocked}
+              pause={
+                state.currentTurn !== "white" || !!state.winner || isBlocked
+              }
               onComplete={() => onTimeout("white")}
               key={`white_${onlineGameId || "local"}_${resetKey}`}
               isServerControlled={isOnline}
-              syncTime={isOnline && !isBlocked ? state.playerInfo.white.remainingTime : undefined}
+              syncTime={
+                isOnline && !isBlocked
+                  ? state.playerInfo.white.remainingTime
+                  : undefined
+              }
             />
             <h1 className="current-player">
-              {state.currentTurn.charAt(0).toUpperCase() + state.currentTurn.slice(1)}
+              {state.currentTurn.charAt(0).toUpperCase() +
+                state.currentTurn.slice(1)}
             </h1>
             <Timer
               startTime={state.playerInfo.black.remainingTime}
               timerName={`chess_black_${onlineGameId || "local"}`}
-              pause={state.currentTurn !== "black" || !!state.winner || isBlocked}
+              pause={
+                state.currentTurn !== "black" || !!state.winner || isBlocked
+              }
               onComplete={() => onTimeout("black")}
               key={`black_${onlineGameId || "local"}_${resetKey}`}
               isServerControlled={isOnline}
-              syncTime={isOnline && !isBlocked ? state.playerInfo.black.remainingTime : undefined}
+              syncTime={
+                isOnline && !isBlocked
+                  ? state.playerInfo.black.remainingTime
+                  : undefined
+              }
             />
           </>
         }
@@ -527,26 +595,48 @@ const Chess = () => {
           <>
             <PauseButton
               onClick={handlePauseToggle}
-              isPaused={(isOnline && currentRoom?.status === "paused") || (!isOnline && state.isPaused)}
+              isPaused={
+                (isOnline && currentRoom?.status === "paused") ||
+                (!isOnline && state.isPaused)
+              }
               text={getPauseButtonText()}
               voteCount={getActiveVoteCount("pause")}
-              disabled={(isOnline && currentRoom?.activeVote?.type === "restart") || isStartAnimation}
+              disabled={
+                (isOnline && currentRoom?.activeVote?.type === "restart") ||
+                isStartAnimation
+              }
               style={{ opacity: isStartAnimation ? 0.5 : 1 }}
             />
             <RestartButton
               onClick={handleRestart}
               text={getRestartButtonText()}
               voteCount={getActiveVoteCount("restart")}
-              disabled={(isOnline && currentRoom?.activeVote?.type === "pause") || isStartAnimation}
+              disabled={
+                (isOnline && currentRoom?.activeVote?.type === "pause") ||
+                isStartAnimation
+              }
               style={{ opacity: isStartAnimation ? 0.5 : 1 }}
             />
           </>
         }
       />
-      <div className="game-layout" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: '24px', width: '100%', flexWrap: 'wrap' }}>
+      <div
+        className="game-layout"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          gap: "24px",
+          width: "100%",
+          flexWrap: "wrap",
+        }}
+      >
         <div className="board">
           {(() => {
-            const isFlipped = isOnline && state.onlineParams?.myColor === "black";
+            const isFlippedBase =
+              isOnline && state.onlineParams?.myColor === "black";
+            const isFlipped = isFlippedBase !== isFlippedManually;
             const rows = isFlipped ? [...state.board].reverse() : state.board;
 
             return rows.map((logicalRow, displayR) => {
@@ -573,14 +663,19 @@ const Chess = () => {
                           }
                         }}
                         className={`cell ${(r + c) % 2 === 0 ? "white" : "black"} ${
-                          (state.history[state.history.length - 1]?.from[0] === r &&
-                            state.history[state.history.length - 1]?.from[1] === c) ||
-                          (state.history[state.history.length - 1]?.to[0] === r &&
-                            state.history[state.history.length - 1]?.to[1] === c)
+                          (state.history[state.history.length - 1]?.from[0] ===
+                            r &&
+                            state.history[state.history.length - 1]?.from[1] ===
+                              c) ||
+                          (state.history[state.history.length - 1]?.to[0] ===
+                            r &&
+                            state.history[state.history.length - 1]?.to[1] ===
+                              c)
                             ? "last-move"
                             : ""
                         } ${
-                          state.selectedCell?.[0] === r && state.selectedCell?.[1] === c
+                          state.selectedCell?.[0] === r &&
+                          state.selectedCell?.[1] === c
                             ? "selected"
                             : ""
                         } ${cell?.type === "king" && state.sideInCheck === cell?.color ? "in-check" : ""}`}
@@ -588,24 +683,51 @@ const Chess = () => {
                         {state.pendingPromotion &&
                           state.pendingPromotion.to[0] === r &&
                           state.pendingPromotion.to[1] === c &&
-                          (gameMode !== "bot" || state.currentTurn === "white") && (
+                          (gameMode !== "bot" ||
+                            state.currentTurn === "white") && (
                             <span className="pawn-promotion-dialog">
-                              <button title="Queen" onClick={() => handlePromotion("queen")}>
-                                <PieceDisplay type="queen" color={state.currentTurn} />
+                              <button
+                                title="Queen"
+                                onClick={() => handlePromotion("queen")}
+                              >
+                                <PieceDisplay
+                                  type="queen"
+                                  color={state.currentTurn}
+                                />
                               </button>
-                              <button title="Rook" onClick={() => handlePromotion("rook")}>
-                                <PieceDisplay type="rook" color={state.currentTurn} />
+                              <button
+                                title="Rook"
+                                onClick={() => handlePromotion("rook")}
+                              >
+                                <PieceDisplay
+                                  type="rook"
+                                  color={state.currentTurn}
+                                />
                               </button>
-                              <button title="Bishop" onClick={() => handlePromotion("bishop")}>
-                                <PieceDisplay type="bishop" color={state.currentTurn} />
+                              <button
+                                title="Bishop"
+                                onClick={() => handlePromotion("bishop")}
+                              >
+                                <PieceDisplay
+                                  type="bishop"
+                                  color={state.currentTurn}
+                                />
                               </button>
-                              <button title="Knight" onClick={() => handlePromotion("knight")}>
-                                <PieceDisplay type="knight" color={state.currentTurn} />
+                              <button
+                                title="Knight"
+                                onClick={() => handlePromotion("knight")}
+                              >
+                                <PieceDisplay
+                                  type="knight"
+                                  color={state.currentTurn}
+                                />
                               </button>
                             </span>
                           )}
                         {displayC === 0 && (
-                          <span className="coordinate-label rank-label">{8 - r}</span>
+                          <span className="coordinate-label rank-label">
+                            {8 - r}
+                          </span>
                         )}
                         {displayR === 7 && (
                           <span className="coordinate-label file-label">
@@ -619,7 +741,9 @@ const Chess = () => {
                           <PieceDisplay
                             type={cell.type}
                             color={cell.color}
-                            className={isDraggingSource ? "dragging-hidden" : ""}
+                            className={
+                              isDraggingSource ? "dragging-hidden" : ""
+                            }
                           />
                         )}
                       </div>
@@ -632,17 +756,38 @@ const Chess = () => {
         </div>
 
         {/* === Панель керування === */}
-        <div className="controls" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px', border: '3px solid #152e4d', width: '280px', boxSizing: 'border-box', flexShrink: 0, background: '#1a1a1a', minHeight: '400px' }}>
-
-          {/* Статус ходу */}
+        <div
+          className="controls"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+            padding: "20px",
+            border: "3px solid #152e4d",
+            width: "280px",
+            boxSizing: "border-box",
+            flexShrink: 0,
+            background: "#1a1a1a",
+            minHeight: "400px",
+          }}
+        >
           <div className="status-section">
             <div className={`turn-indicator ${state.currentTurn}`}>
               <div className="turn-dot" />
-              <span>{state.currentTurn === "white" ? "White" : "Black"} to move</span>
+              <span>
+                {state.currentTurn === "white" ? "White" : "Black"} to move
+              </span>
             </div>
             {state.sideInCheck && !state.winner && (
               <div className="check-alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -653,32 +798,122 @@ const Chess = () => {
           </div>
 
           <div className="action-buttons">
-            <button className="action-btn" title="Undo last move">
+            <button
+              className={`action-btn ${getActiveVoteCount("undo") > 0 ? "active-vote" : ""}`}
+              style={{ 
+                position: "relative",
+                backgroundColor: getActiveVoteCount("undo") > 0 ? "var(--warning)" : undefined 
+              }}
+              title={getButtonTitle("Undo last move", "undo")}
+              onClick={handleUndo}
+            >
               <span className="icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 7v6h6" /><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 7v6h6" />
+                  <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
                 </svg>
               </span>
+              {getActiveVoteCount("undo") > 0 && (
+                <span style={{
+                  position: "absolute",
+                  top: "-6px",
+                  right: "-6px",
+                  backgroundColor: "var(--danger)",
+                  color: "white",
+                  fontSize: "0.7rem",
+                  fontWeight: "bold",
+                  padding: "2px 6px",
+                }}>
+                  {getActiveVoteCount("undo")}/{currentRoom?.players?.length || 2}
+                </span>
+              )}
             </button>
-            <button className="action-btn" title="Offer draw">
-              <span className="icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" /><line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </span>
+            {state.gameMode === "online" && (
+              <button
+                className={`action-btn ${getActiveVoteCount("draw") > 0 ? "active-vote" : ""}`}
+                style={{ 
+                  position: "relative",
+                  backgroundColor: getActiveVoteCount("draw") > 0 ? "var(--warning)" : undefined 
+                }}
+                title={getButtonTitle("Offer draw", "draw")}
+                onClick={handleDraw}
+              >
+                <span className="icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </span>
+                {getActiveVoteCount("draw") > 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: "-6px",
+                    right: "-6px",
+                    backgroundColor: "var(--danger)",
+                    color: "white",
+                    fontSize: "0.7rem",
+                    fontWeight: "bold",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                  }}>
+                    {getActiveVoteCount("draw")}/{currentRoom?.players?.length || 2}
+                  </span>
+                )}
+              </button>
+            )}
+            <button
+              className="action-btn action-btn--danger"
+              title="Resign"
+              onClick={() => setIsResignModalOpen(true)}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 21V4C5 4 6 3 9 3C12 3 12 5 15 5C18 5 19 4 19 4V13C19 13 18 14 15 14C12 14 12 12 9 12C6 12 5 13 5 13"
+                  stroke="white"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </button>
-            <button className="action-btn action-btn--danger" title="Resign">
+            <button
+              className="action-btn"
+              title="Flip board"
+              onClick={() => setIsFlippedManually((p) => !p)}
+            >
               <span className="icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 3 21 3" /><polyline points="3 3 3 15" /><path d="M3 15c5 0 8-4 10-7" />
-                </svg>
-              </span>
-            </button>
-            <button className="action-btn" title="Flip board">
-              <span className="icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
-                  <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="17 1 21 5 17 9" />
+                  <path d="M3 11V9a4 4 0 014-4h14" />
+                  <polyline points="7 23 3 19 7 15" />
+                  <path d="M21 13v2a4 4 0 01-4 4H3" />
                 </svg>
               </span>
             </button>
@@ -686,7 +921,44 @@ const Chess = () => {
 
           {/* Захоплені фігури */}
           <div className="captured-section">
-            <h3 className="section-title">Captured</h3>
+            <div className="section-title">
+              <h3 className="captured-title">Captured</h3>
+              <h3 className="timer">
+                {state.currentTurn === "white" ? (
+                  <Timer
+                    startTime={state.playerInfo.white.remainingTime}
+                    timerName={`chess_sidebar_white_${onlineGameId || "local"}`}
+                    pause={
+                      state.currentTurn !== "white" ||
+                      !!state.winner ||
+                      isBlocked
+                    }
+                    isServerControlled={isOnline}
+                    syncTime={
+                      isOnline && !isBlocked
+                        ? state.playerInfo.white.remainingTime
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <Timer
+                    startTime={state.playerInfo.black.remainingTime}
+                    timerName={`chess_sidebar_black_${onlineGameId || "local"}`}
+                    pause={
+                      state.currentTurn !== "black" ||
+                      !!state.winner ||
+                      isBlocked
+                    }
+                    isServerControlled={isOnline}
+                    syncTime={
+                      isOnline && !isBlocked
+                        ? state.playerInfo.black.remainingTime
+                        : undefined
+                    }
+                  />
+                )}
+              </h3>
+            </div>
             <div className="captured-row">
               <span className="captured-label">W</span>
               <div className="captured-pieces">
@@ -695,8 +967,15 @@ const Chess = () => {
                   .filter((m) => m.captured)
                   .map((m, i) => (
                     <span key={i} className="cap-piece">
-                      {m.captured === "queen" ? "♛" : m.captured === "rook" ? "♜" :
-                       m.captured === "bishop" ? "♝" : m.captured === "knight" ? "♞" : "♟"}
+                      {m.captured === "queen"
+                        ? "♛"
+                        : m.captured === "rook"
+                          ? "♜"
+                          : m.captured === "bishop"
+                            ? "♝"
+                            : m.captured === "knight"
+                              ? "♞"
+                              : "♟"}
                     </span>
                   ))}
               </div>
@@ -709,8 +988,15 @@ const Chess = () => {
                   .filter((m) => m.captured)
                   .map((m, i) => (
                     <span key={i} className="cap-piece">
-                      {m.captured === "queen" ? "♕" : m.captured === "rook" ? "♖" :
-                       m.captured === "bishop" ? "♗" : m.captured === "knight" ? "♘" : "♙"}
+                      {m.captured === "queen"
+                        ? "♕"
+                        : m.captured === "rook"
+                          ? "♖"
+                          : m.captured === "bishop"
+                            ? "♗"
+                            : m.captured === "knight"
+                              ? "♘"
+                              : "♙"}
                     </span>
                   ))}
               </div>
@@ -724,17 +1010,24 @@ const Chess = () => {
               {state.history.length === 0 ? (
                 <p className="history-empty">No moves yet</p>
               ) : (
-                Array.from({ length: Math.ceil(state.history.length / 2) }, (_, i) => {
-                  const white = state.history[i * 2];
-                  const black = state.history[i * 2 + 1];
-                  return (
-                    <div key={i} className="history-row">
-                      <span className="move-num">{i + 1}.</span>
-                      <span className="move white-move">{white?.notation}</span>
-                      <span className="move black-move">{black?.notation ?? ""}</span>
-                    </div>
-                  );
-                })
+                Array.from(
+                  { length: Math.ceil(state.history.length / 2) },
+                  (_, i) => {
+                    const white = state.history[i * 2];
+                    const black = state.history[i * 2 + 1];
+                    return (
+                      <div key={i} className="history-row">
+                        <span className="move-num">{i + 1}.</span>
+                        <span className="move white-move">
+                          {white?.notation}
+                        </span>
+                        <span className="move black-move">
+                          {black?.notation ?? ""}
+                        </span>
+                      </div>
+                    );
+                  },
+                )
               )}
             </div>
           </div>
@@ -774,20 +1067,26 @@ const Chess = () => {
             <h1 className="heading">
               {state.winner === "draw"
                 ? "Draw"
-                : `${state.winner.charAt(0).toUpperCase() + state.winner.slice(1)} wins!`}
+                : state.winReason === "resign"
+                  ? isOnline
+                    ? state.winner === state.onlineParams?.myColor
+                      ? "Opponent resigned!"
+                      : "You resigned!"
+                    : `${state.winner === "white" ? "Black" : "White"} resigned!`
+                  : `${state.winner === "white" ? "White" : "Black"} won!`}
             </h1>
             <div className="control-buttons">
-    <RestartButton
-            onClick={handleRestart}
-            text={getRestartButtonText()}
-            voteCount={getActiveVoteCount("restart")}
-            disabled={
-              (isOnline && currentRoom?.activeVote?.type === "pause") ||
-              isStartAnimation
-            }
-            style={{ opacity: isStartAnimation ? 0.5 : 1 }}
-            forceText={true}
-          />
+              <RestartButton
+                onClick={handleRestart}
+                text={getRestartButtonText()}
+                voteCount={getActiveVoteCount("restart")}
+                disabled={
+                  (isOnline && currentRoom?.activeVote?.type === "pause") ||
+                  isStartAnimation
+                }
+                style={{ opacity: isStartAnimation ? 0.5 : 1 }}
+                forceText={true}
+              />
               <button className="leave-btn" onClick={handleExit}>
                 Leave
               </button>

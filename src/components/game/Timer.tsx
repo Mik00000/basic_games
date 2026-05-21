@@ -78,10 +78,15 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
     // щоб уникнути помилки "setState synchronously within an effect".
     // Тепер ми просто використовуємо syncTime безпосередньо при рендері (див. displayTime нижче).
 
+    const millisecondsRef = useRef(milliseconds);
+    useEffect(() => {
+      millisecondsRef.current = milliseconds;
+    }, [milliseconds]);
+
     // 2. ІНТЕРВАЛ (Тікання)
     useEffect(() => {
       // Якщо на паузі або час вийшов - стоп локальний інтервал
-      if (pause || (!isGrowing && milliseconds <= 0)) {
+      if (pause || (!isGrowing && millisecondsRef.current <= 0)) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         return;
       }
@@ -112,7 +117,7 @@ const Timer = forwardRef<TimerHandle, TimerProps>(
       return () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
-    }, [pause, isGrowing, isServerControlled, setStoredMilliseconds]);
+    }, [pause, isGrowing, isServerControlled, setStoredMilliseconds]); // milliseconds excluded safely via ref
 
     // 3. ЗАВЕРШЕННЯ
     useEffect(() => {

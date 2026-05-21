@@ -48,6 +48,7 @@ export const useGame = (
     makeMove,
     joinRoom,
     sendVote,
+    undoMove,
   } = useOnlineGame<ServerChessState>();
 
   // 4. Compute Final State (Hybrid)
@@ -329,7 +330,7 @@ export const useGame = (
 
   const onRestart = () => {
     if (mode === "online") {
-      // Send Vote
+      sendVote("restart");
     } else {
       if (botMoveTimeoutRef.current) {
         clearTimeout(botMoveTimeoutRef.current);
@@ -345,6 +346,33 @@ export const useGame = (
     }
   };
 
+  const handleUndo = async () => {
+    if (mode === "online") {
+      await sendVote("undo");
+    } else {
+      dispatch({ type: "UNDO" });
+    }
+  };
+
+  const handleDraw = async () => {
+    if (mode === "online") {
+      await sendVote("draw");
+    } else {
+      dispatch({ type: "DRAW" });
+    }
+  };
+
+  const handleResign = async () => {
+    if (mode === "online") {
+      await sendVote("resign");
+    } else {
+      // Find my color if possible, otherwise resign as currentTurn
+      let myColor = state.currentTurn;
+      if (mode === "bot") myColor = "white"; // Usually local user is white against bot
+      dispatch({ type: "RESIGN", player: myColor });
+    }
+  };
+
   return {
     state,
     onCellClick,
@@ -357,10 +385,13 @@ export const useGame = (
     currentRoom,
     currentPlayer: onlineMe,
     leaveRoom: mode === "lobby" || mode === "online" ? leaveRoom : undefined,
-    dispatch, // Still useful?
+    dispatch, 
     joinRoom,
-    handleMove, // Exported for Drag-and-Drop
+    handleMove, 
     togglePause,
-    sendVote, // Export sendVote
+    sendVote, 
+    handleUndo,
+    handleDraw,
+    handleResign,
   };
 };

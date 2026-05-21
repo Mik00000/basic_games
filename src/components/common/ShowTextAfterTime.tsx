@@ -11,7 +11,7 @@ const ShowTextAfterTime = ({ text, time }: { text: string; time: number }) => {
 
       return () => clearTimeout(timer); // Очищаємо таймер при зміні text або демонтажі
     }
-  }, [text]);
+  }, [text, time]);
 
   return <div>{delayedPlayer===null ? " ": delayedPlayer}</div>;
 };

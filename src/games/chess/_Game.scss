@@ -27,7 +27,7 @@
     padding: 0;
     padding-bottom: 8px;
   }
-  
+
   .current-player {
     display: flex;
     flex-direction: column;
@@ -307,6 +307,7 @@
     flex-direction: row;
     align-items: flex-start;
     gap: 24px;
+    
     justify-content: center;
     width: 100%;
 
@@ -339,16 +340,27 @@
       padding: 14px;
       gap: 12px;
     }
-
     .section-title {
-      margin: 0 0 8px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba($c-control-text, 0.45);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .captured-title {
+        margin: 0 0 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba($c-control-text, 0.45);
+      }
+      .timer h1 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        // color: rgba($c-control-text, 0.45);
+      }
     }
-
     // --- Статус ходу ---
     .status-section {
       display: flex;
@@ -509,9 +521,16 @@
         // Тонкий скролбар
         scrollbar-width: thin;
         scrollbar-color: $c-control-border transparent;
-        &::-webkit-scrollbar { width: 4px; }
-        &::-webkit-scrollbar-track { background: transparent; }
-        &::-webkit-scrollbar-thumb { background: $c-control-border; border-radius: 2px; }
+        &::-webkit-scrollbar {
+          width: 4px;
+        }
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+          background: $c-control-border;
+          border-radius: 2px;
+        }
 
         .history-empty {
           margin: 0;
@@ -539,12 +558,16 @@
           }
 
           .move {
-            font-family: 'Roboto Mono', monospace, sans-serif;
+            font-family: "Roboto Mono", monospace, sans-serif;
             color: $c-control-text;
             padding: 0 4px;
 
-            &.white-move { color: rgba($c-control-text, 0.9); }
-            &.black-move { color: rgba($c-control-text, 0.65); }
+            &.white-move {
+              color: rgba($c-control-text, 0.9);
+            }
+            &.black-move {
+              color: rgba($c-control-text, 0.65);
+            }
           }
         }
       }
@@ -552,11 +575,14 @@
   }
 
   @keyframes checkPulse {
-    from { opacity: 1; }
-    to   { opacity: 0.5; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.5;
+    }
   }
 }
-
 
 @keyframes promotionPop {
   from {

@@ -160,7 +160,7 @@ const ConnectFourStartMenu: React.FC = () => {
 
   const exitGame = () => {
     console.log("Exiting game...");
-    navigate("/games");
+    navigate("/");
   };
 
   return (

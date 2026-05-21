@@ -42,7 +42,7 @@ const MinesweeperStartMenu: React.FC = () => {
   };
 
   const exitGame = () => {
-    navigate("/games");
+    navigate("/");
   };
 
   return (

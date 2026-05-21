@@ -2930,12 +2930,24 @@ footer.footer .right-part .social a {
   }
 }
 .chess .controls .section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chess .controls .section-title .captured-title {
   margin: 0 0 8px;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(224, 224, 224, 0.45);
+}
+.chess .controls .section-title .timer h1 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .chess .controls .status-section {
   display: flex;

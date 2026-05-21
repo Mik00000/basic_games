@@ -31,6 +31,7 @@ export type GameState = {
   board: (Piece | null)[][];
   currentTurn: "white" | "black";
   winner: "white" | "black" | "draw" | null;
+  winReason?: "resign";
   selectedCell: [number, number] | null;
   availableMoves: [number, number][];
   kingsPositions: { white: [number, number]; black: [number, number] };
@@ -54,6 +55,7 @@ export type GameState = {
     gameStartTime?: number;
   };
   positionCounts: Record<string, number>;
+  pastStates?: GameState[];
 };
 export const getInitialGameState = (): GameState => ({
   board: initializeBoard(),
@@ -83,6 +85,7 @@ export interface ServerChessState {
   board: (Piece | null)[][];
   currentTurn: "white" | "black";
   winner: "white" | "black" | "draw" | string | null;
+  winReason?: "resign";
   history: Move[];
   playerIds: { white: string; black: string };
   isFinished: boolean;
@@ -190,6 +193,7 @@ export const mapServerStateToLocal = (
           currentTurn: serverState.currentTurn,
           kingsPositions: { white: whiteKing, black: blackKing },
           sideInCheck,
+          history: serverState.history,
         },
         selectedCell,
       );
@@ -219,6 +223,7 @@ export const mapServerStateToLocal = (
           : serverState.winner === "draw" || serverState.winner === "draw" // redundant but safe
             ? "draw"
             : null,
+    winReason: serverState.winReason,
     history: serverState.history,
     playerInfo: pInfo,
     kingsPositions: { white: whiteKing, black: blackKing },
@@ -324,7 +329,7 @@ const validatePawnMove = (
 };
 
 const validateKnightMove = (
-  state: GameState,
+  _state: GameState,
   from: [number, number],
   to: [number, number],
 ): boolean => {
@@ -356,7 +361,7 @@ const validateLinearMove = (
 };
 
 const validateKingMove = (
-  state: GameState,
+  _state: GameState,
   from: [number, number],
   to: [number, number],
 ): boolean => {
@@ -1022,7 +1027,7 @@ export const handleRegularMove = (
     !targetPiece
   ) {
     // Remove the captured pawn
-    const direction = piece.color === "white" ? -1 : 1;
+    // const direction = piece.color === "white" ? -1 : 1;
     // The captured pawn is at [from[0], to[1]] (same rank as from, file as to)
     // Wait, En Passant: White pawn at row 3 (index 3? no, rank 5 is index 3)
     // White moves -1. From row 3 (Rank 5). Target row 2 (Rank 6).
@@ -1356,8 +1361,8 @@ const generateMoveNotation = (
   from: [number, number],
   to: [number, number],
   captured: Piece | null,
-  finalBoard: (Piece | null)[][], // Board AFTER move to check for check/mate
-  kingsPositions: { white: [number, number]; black: [number, number] },
+  _finalBoard: (Piece | null)[][], // Board AFTER move to check for check/mate
+  _kingsPositions: { white: [number, number]; black: [number, number] },
   isCheckVal: boolean,
   isCheckmateVal: boolean,
   promotion?: Piece["type"],

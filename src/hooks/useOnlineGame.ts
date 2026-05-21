@@ -134,7 +134,6 @@ export function useOnlineGame<T extends GameState = GameState>(
     // --- Визначаємо обробники подій ---
 
     const onConnect = () => {
-      console.log("🔌 Connected to server");
       setIsConnected(true);
       setIsConnecting(false);
       setSocketId(socket.id || null);
@@ -142,7 +141,6 @@ export function useOnlineGame<T extends GameState = GameState>(
     };
 
     const onDisconnect = (reason: string) => {
-      console.log("🔌 Disconnected:", reason);
       setIsConnected(false);
       setSocketId(null);
       if (reason === "io server disconnect") socket.connect();
@@ -181,7 +179,6 @@ export function useOnlineGame<T extends GameState = GameState>(
       player: Player;
       gameData?: unknown;
     }) => {
-      console.log("🔄 Session restored");
       setCurrentRoom(room);
       setCurrentPlayer(player);
       setGameState(room.state as T);
@@ -254,14 +251,9 @@ export function useOnlineGame<T extends GameState = GameState>(
     socket.on("error", onError);
     socket.on("inactivityWarning", onInactivityWarning);
 
-    // Додаткові події (логи)
-    // Примітка: "gameStarted" має бути в ServerToClientEvents, інакше TS тут підкреслить
-    socket.on("gameStarted", () =>
-      console.log("Game started logic handled by routing"),
-    );
-    socket.on("playerJoined", (p: Player) =>
-      console.log("Joined:", p.username),
-    );
+    // Додаткові події
+    socket.on("gameStarted", () => {});
+    socket.on("playerJoined", (p: Player) => {});
 
     // 3. CLEANUP
     return () => {
@@ -356,7 +348,6 @@ export function useOnlineGame<T extends GameState = GameState>(
           error: { code: "OFFLINE", message: "Offline" },
         };
 
-      // [FIX] If forcing a join, assume we are leaving the old room.
       // Clear local state immediately to prevents "zombie" UI state.
       if (data.force) {
         setCurrentRoom(null);

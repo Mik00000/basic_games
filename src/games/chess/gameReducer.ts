@@ -35,7 +35,10 @@ type GameAction =
       to: [number, number];
     }
   | { type: "RESET_SELECTION_ONLINE" }
-  | { type: "TOGGLE_PAUSE" };
+  | { type: "TOGGLE_PAUSE" }
+  | { type: "UNDO" }
+  | { type: "DRAW" }
+  | { type: "RESIGN"; player: "white" | "black" };
 
 export const gameReducer = (
   state: GameState,
@@ -44,14 +47,17 @@ export const gameReducer = (
   switch (action.type) {
     case "MAKE_MOVE": {
       if (state.winner) return state;
-      // ... (existing helper usage logic? No, let's keep it simple and just use handleRegularMove for local)
-      // BUT WAIT, the existing code had logic inside the case. I must preserve it.
-      // Re-reading Step 49 content...
       const { from, to } = action;
-      // ... logic ...
-      // I will copy the original logic to be safe, or just insert the new cases before default.
-      // Let's replace the whole reducer to be safe and include new cases.
-      return handleMoveAction(state, from, to);
+      const nextState = handleMoveAction(state, from, to);
+      if (nextState !== state && nextState.currentTurn !== state.currentTurn) {
+        // Save current state to pastStates (limit history size if necessary, e.g., to 100)
+        const savedState = { ...state, pastStates: [] };
+        return { 
+          ...nextState, 
+          pastStates: [...(state.pastStates || []).slice(-99), savedState] 
+        };
+      }
+      return nextState;
     }
 
     case "SELECT_CELL": {
@@ -136,6 +142,24 @@ export const gameReducer = (
 
     case "TOGGLE_PAUSE":
       return { ...state, isPaused: !state.isPaused };
+
+    case "UNDO": {
+      if (!state.pastStates || state.pastStates.length === 0) return state;
+      let undoCount = state.gameMode === "bot" ? 2 : 1;
+      if (state.pastStates.length < undoCount) undoCount = state.pastStates.length;
+      
+      const previousState = state.pastStates[state.pastStates.length - undoCount];
+      return {
+        ...previousState,
+        pastStates: state.pastStates.slice(0, state.pastStates.length - undoCount)
+      };
+    }
+
+    case "DRAW":
+      return { ...state, winner: "draw" };
+
+    case "RESIGN":
+      return { ...state, winner: action.player === "white" ? "black" : "white", winReason: "resign" };
 
     default:
       return state;

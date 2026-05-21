@@ -8,6 +8,7 @@ interface ModalProps {
   children: React.ReactNode;
   actions?: React.ReactNode;
   onClose?: () => void;
+  className?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,13 +17,14 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   actions,
   onClose,
+  className,
 }) => {
   const shouldRender = useDelayedVisibility(isOpen, 500);
 
   if (!isOpen || !shouldRender) return null;
 
   return (
-    <div className="pause-overlay" onClick={onClose}>
+    <div className={`pause-overlay ${className}`} onClick={onClose}>
       <div className="pop-up" onClick={(e) => e.stopPropagation()}>
         <div className="content">
           <h1 className="heading">{title}</h1>

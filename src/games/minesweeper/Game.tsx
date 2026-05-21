@@ -237,7 +237,7 @@ export const Minesweeper: React.FC = () => {
               <button onClick={handleRestart} className="restart-btn">
                 Restart
               </button>
-              <button className="leave-btn" onClick={() => navigate("/games")}>
+              <button className="leave-btn" onClick={() => navigate("/")}>
                 Leave
               </button>
               <button
