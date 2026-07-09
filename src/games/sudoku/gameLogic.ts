@@ -13,6 +13,7 @@ export interface GameState {
   gameId: number;
   mistakesCount: number;
   hint: HintData | null;
+  difficulty: Difficulty;
 }
 
 export interface HintData {
@@ -293,6 +294,7 @@ export function generateInitialGameState(
     gameId: Date.now(),
     mistakesCount: 0,
     hint: null,
+    difficulty: difficulty,
   };
 }
 

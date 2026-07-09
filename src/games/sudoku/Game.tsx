@@ -1,7 +1,7 @@
 import { useReducer, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { gameReducer } from "./gameReducer";
-import { initialGameState } from "./gameLogic";
+import { initialGameState, generateInitialGameState } from "./gameLogic";
 import Timer from "../../components/game/Timer";
 import {
   ExitButton,
@@ -14,15 +14,18 @@ import { GameTopBar } from "../../components/game/GameTopBar";
 const Sudoku = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, dispatch] = useReducer(gameReducer, initialGameState);
+  const [state, dispatch] = useReducer(gameReducer, null, () => {
+    const difficulty = (location.state && location.state.difficulty) || "EASY";
+    return generateInitialGameState(difficulty);
+  });
   const [isNotesActive, setIsNotesActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (location.state && location.state.difficulty) {
+    if (location.state && location.state.difficulty && location.state.difficulty !== state.difficulty) {
       dispatch({ type: "START_GAME", difficulty: location.state.difficulty });
     }
-  }, [location.state]);
+  }, [location.state, state.difficulty]);
 
   const handleExit = () => {
     navigate("/");

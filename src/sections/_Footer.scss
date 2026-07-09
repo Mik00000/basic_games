@@ -1,84 +1,149 @@
 footer.footer {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   flex-wrap: wrap;
-  .left-part {
-    width: 47%;
-    display: flex;
-    justify-content: flex-end;
+  background-color: lighten($dark-background, 2%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 60px 17.8vw;
+
+  @include for-size(mobile) {
+    padding: 40px 16px;
+    flex-direction: column;
     align-items: center;
+    gap: 40px;
+    text-align: center;
+  }
+  @include for-size(tablet) {
+    padding: 50px 10vw;
+  }
+  @include for-size(laptop) {
+    padding: 60px 17.8vw;
+  }
+
+  .left-part {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+
+    @include for-size(mobile) {
+      width: 100%;
+      justify-content: center;
+    }
+
     nav {
       display: flex;
+      gap: 80px;
+
+      @include for-size(mobile) {
+        gap: 40px;
+        justify-content: center;
+      }
 
       .menu {
         h3 {
-          @include for-text(title);
-          padding-top: 0;
-          margin-bottom: 30px;
+          font-size: 15px;
+          line-height: 22px;
+          font-family: "Graphik-Medium";
+          font-weight: 500;
+          color: $light-text;
+          margin-bottom: 20px;
+          padding: 0;
+          text-transform: uppercase;
+          letter-spacing: 1px;
         }
+
         ul {
           display: flex;
           flex-direction: column;
-          gap: 9px;
+          gap: 12px;
+          list-style: none;
+
           a {
-            @include for-text(link);
+            font-size: 14px;
+            line-height: 20px;
+            font-family: "Graphik";
+            font-weight: 400;
+            color: darken($light-text, 35%);
             text-decoration: none;
-            padding: 5px;
+            padding: 0;
+            transition: color 0.25s ease;
+
+            &:hover {
+              color: $light-text;
+            }
           }
         }
       }
     }
   }
+
   .right-part {
-    width: 47%;
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+
+    @include for-size(mobile) {
+      width: 100%;
+      align-items: center;
+    }
+
     .company-info {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 30px;
+      gap: 12px;
+      margin-bottom: 24px;
+
       .info-block {
         display: flex;
         align-items: center;
-        justify-content: center;
-        img {
-          max-width: 40px;
-          
-        }
-        span{
-            @include for-text(link);
-            padding: 0 8px;
-        }
-      }
-    }
-    .social{
-        display: flex;
-        gap:4px;
-        a{
-            padding: 10px;
-        }
-    }
-  }
-  @include for-size(mobile){
-    justify-content: center;
-    gap:35px;
-    text-align: center;
-    border-top: 1px solid $light-background;
-    padding-top: 40px;
-    .left-part, .right-part{
-      width: auto;
-      .info-block{
-        img{
-          scale: 0.8;
+        gap: 10px;
 
+        @include for-size(mobile) {
+          justify-content: center;
+        }
+
+        img {
+          width: 20px;
+          height: 20px;
+          opacity: 0.7;
+        }
+
+        span {
+          font-size: 14px;
+          line-height: 20px;
+          font-family: "Graphik";
+          font-weight: 400;
+          color: darken($light-text, 35%);
+          padding: 0;
         }
       }
-      .social{
-        a{
-          scale: 0.9;
+    }
+
+    .social {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+
+      a {
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.04);
+        transition: background-color 0.25s ease, transform 0.25s ease;
+
+        img {
+          width: 20px;
+          height: 20px;
+          filter: brightness(0) invert(1);
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.12);
+          transform: translateY(-2px);
         }
       }
     }

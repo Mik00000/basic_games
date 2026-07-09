@@ -30,7 +30,7 @@ function App() {
     <GameProvider>
       <div className="App">
         <Router>
-          {/* <Header /> */}
+          <Header />
           <div className="main">
             <Routes>
               <Route

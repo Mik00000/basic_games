@@ -74,7 +74,7 @@ export function useOnlineGame<T extends GameState = GameState>(
 ): UseOnlineGameReturn<T> {
   const {
     serverUrl = import.meta.env.REACT_APP_SOCKET_SERVER_URL ||
-      "http://localhost:3001",
+      "http://localhost:4001",
     autoReconnect = true,
     reconnectionAttempts = 5,
     reconnectionDelay = 1000,

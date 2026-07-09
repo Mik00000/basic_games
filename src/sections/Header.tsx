@@ -18,7 +18,7 @@ export const Header = () => {
   const location = useLocation();
 
   const isGameSubPage = location.pathname.startsWith("/games/");
-  const { isInGame } = useGameStatus();
+  const isInGame = isGameSubPage && !location.pathname.endsWith("-menu") && !location.pathname.includes("/lobby/");
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };

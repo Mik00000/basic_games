@@ -1,11 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import geoIcon from "../assets/icons/geopos.svg";
 import phoneIcon from "../assets/icons/mobile.svg";
 import xIcon from "../assets/icons/x.svg";
 import facebookIcon from "../assets/icons/facebook.svg";
 import linkedInIcon from "../assets/icons/linkedIn.svg";
-import { useGameStatus } from "../context/GameContext";
 
 const footerMenus = [
   {
@@ -38,7 +37,10 @@ const footerMenus = [
 ];
 
 export const Footer = () => {
-    const { isInGame } = useGameStatus();
+  const location = useLocation();
+  const isInGame = location.pathname.startsWith("/games/") && 
+                   !location.pathname.endsWith("-menu") && 
+                   !location.pathname.includes("/lobby/");
   
   return !isInGame && (
     <footer className="footer">
@@ -62,7 +64,7 @@ export const Footer = () => {
         <div className="company-info">
           <div className="info-block">
             <img src={geoIcon} draggable="false" alt="geo-position-icon" />
-            <span>7480 Mockingbird Hill undefined </span>
+            <span>7480 Mockingbird Hill, TX 75001</span>
           </div>
           <div className="info-block">
             <img src={phoneIcon} draggable="false" alt="mobile-icon" />

@@ -13,7 +13,7 @@ export const useOpponentDisconnect = ({
   isOnline,
   currentRoom,
   currentUser,
-  debounceTime = 4000,
+  debounceTime = 3000,
   timeoutSeconds = 45,
 }: UseOpponentDisconnectProps) => {
   const [showOfflineModal, setShowOfflineModal] = useState(false);

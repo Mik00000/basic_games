@@ -36,14 +36,24 @@ body {
     }
   }
   .main {
-    min-height: 100vh;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    &:has(.sudoku-start-menu),
+    &:has(.minesweeper-start-menu),
+    &:has(.connect-four-start-menu),
+    &:has(.chess-start-menu) {
+      justify-content: center;
+      align-items: center;
+      padding: 20px 10px;
+    }
   }
 }
 .game-wrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  & > *{
+  & > * {
     flex-grow: 1;
   }
 }

@@ -89,7 +89,7 @@ export const gameReducer = (
       return { ...state, hint };
     }
     case "RESET":
-      return { ...initialGameState};
+      return { ...generateInitialGameState(state.difficulty) };
     case "START_GAME":
       return { ...generateInitialGameState(action.difficulty) };
     case "UNDO_MOVE": {
