@@ -10,19 +10,19 @@ Here you can watch the platform in action, demonstrating both local AI bots and 
 
 ### 1. Landing Page & Connect Four (vs Bot)
 A demonstration of the glassmorphic homepage layout and a Connect Four match against the integrated AI bot:
-<video src="1" width="100%" controls></video>
+https://github.com/user-attachments/assets/b89c1edf-92a1-4afa-aab5-21053e66d29c
 
 ### 2. Chess (vs Bot Mode)
 Playing a game of Chess against the local chess bot:
-<video src="2" width="100%" controls></video>
+https://github.com/user-attachments/assets/ab3a1d84-1dce-445e-ab5f-da7744e7dfb3
 
 ### 3. Online Chess (Multiplayer Lobby System)
 Demonstrating real-time room creation, Room ID sharing, and real-time opponent interaction over WebSockets:
-<video src="3" width="100%" controls></video>
+https://github.com/user-attachments/assets/d819cddc-a17d-489b-9342-b6a262ee04d9
 
 ### 4. Sudoku (with Hints & Note-Taking)
 A walk-through of Sudoku gameplay, highlighting dynamic board initialization, notes toggle, and the automated hint engine:
-<video src="4" width="100%" controls></video>
+https://github.com/user-attachments/assets/3a954370-ec26-4b2f-8655-706f73cb8719
 
 ---
 
